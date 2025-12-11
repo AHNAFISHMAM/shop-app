@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pexels Image</title>
+</head>
+<body>
+    <h1>Testing Pexels Image URLs</h1>
+
+    <h2>Test 1: Direct Pexels URL</h2>
+    <img src="https://images.pexels.com/photos/27352275/pexels-photo-27352275.jpeg?auto=compress&cs=tinysrgb&h=350" alt="Test" style="max-width: 400px;">
+
+    <h2>Test 2: Without h=350 parameter</h2>
+    <img src="https://images.pexels.com/photos/27352275/pexels-photo-27352275.jpeg?auto=compress&cs=tinysrgb" alt="Test 2" style="max-width: 400px;">
+
+    <h2>Test 3: Different size (w=400)</h2>
+    <img src="https://images.pexels.com/photos/27352275/pexels-photo-27352275.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Test 3" style="max-width: 400px;">
+
+    <script>
+        // Check if images load
+        const imgs = document.querySelectorAll('img');
+        imgs.forEach((img, index) => {
+            img.onload = () => console.log(`Image ${index + 1} loaded successfully`);
+            img.onerror = () => console.error(`Image ${index + 1} FAILED to load`);
+        });
+    </script>
+</body>
+</html>
