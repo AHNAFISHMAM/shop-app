@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import StatCard from '../components/admin/StatCard'
-import QuickActions from '../components/admin/QuickActions'
 import RecentActivity from '../components/admin/RecentActivity'
 import LowStockAlerts from '../components/admin/LowStockAlerts'
 import UpdateTimestamp from '../components/UpdateTimestamp'
@@ -33,6 +32,7 @@ function Admin() {
   // Dashboard statistics
   const [stats, setStats] = useState({
     menuItems: 0,
+    unavailableMenuItems: 0,
     orders: 0,
     ordersToday: 0,
     ordersPending: 0,
@@ -46,7 +46,6 @@ function Admin() {
   })
 
   const [loading, setLoading] = useState(true)
-  const [realtimeStatus, setRealtimeStatus] = useState('connecting')
   // Get personalized greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -58,12 +57,22 @@ function Admin() {
   // Fetch menu items count function (for real-time updates)
   const fetchMenuItemsCount = async () => {
     try {
-      const { count } = await supabase
-        .from('menu_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_available', true)
-      if (count !== null) {
-        setStats(prev => ({ ...prev, menuItems: count }))
+      const [availableResult, unavailableResult] = await Promise.all([
+        supabase
+          .from('menu_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_available', true),
+        supabase
+          .from('menu_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_available', false)
+      ])
+      
+      if (availableResult.count !== null) {
+        setStats(prev => ({ ...prev, menuItems: availableResult.count }))
+      }
+      if (unavailableResult.count !== null) {
+        setStats(prev => ({ ...prev, unavailableMenuItems: unavailableResult.count }))
       }
     } catch (err) {
       logger.error('Error fetching menu items count:', err)
@@ -79,6 +88,7 @@ function Admin() {
       // Fetch all counts in parallel for optimal performance
       const [
         { count: menuItemsCount },
+        { count: unavailableMenuItemsCount },
         { count: ordersCount },
         { count: ordersTodayCount },
         { count: ordersPendingCount },
@@ -93,6 +103,10 @@ function Admin() {
         supabase.from('menu_items')
           .select('*', { count: 'exact', head: true })
           .eq('is_available', true),
+        // Unavailable menu items
+        supabase.from('menu_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_available', false),
 
         // Total orders
         supabase.from('orders').select('*', { count: 'exact', head: true }),
@@ -159,6 +173,7 @@ function Admin() {
       // Update all stats
       setStats({
         menuItems: menuItemsCount || 0,
+        unavailableMenuItems: unavailableMenuItemsCount || 0,
         orders: ordersCount || 0,
         ordersToday: ordersTodayCount || 0,
         ordersPending: ordersPendingCount || 0,
@@ -195,9 +210,7 @@ function Admin() {
           fetchMenuItemsCount()
         }
       )
-      .subscribe((status) => {
-        updateRealtimeStatus(status)
-      })
+      .subscribe()
 
     // Cleanup subscriptions
     return () => {
@@ -205,18 +218,9 @@ function Admin() {
     }
   }, [])
 
-  const updateRealtimeStatus = (status) => {
-    if (status === 'SUBSCRIBED') {
-      setRealtimeStatus('connected')
-    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-      setRealtimeStatus('disconnected')
-    } else if (status === 'CLOSED') {
-      setRealtimeStatus('connecting')
-    }
-  }
 
   return (
-    <motion.main
+    <m.main
       ref={containerRef}
       className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
       variants={pageFade}
@@ -226,9 +230,9 @@ function Admin() {
     >
       <UpdateTimestamp />
 
-      {/* Page Header with Greeting and Real-time Status */}
+      {/* Page Header with Greeting */}
       <div
-        className="mb-12 flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4 md:gap-6"
+        className="mb-12"
         data-animate="fade-rise"
         data-animate-active="false"
       >
@@ -239,46 +243,6 @@ function Admin() {
           <p className="text-sm sm:text-base" style={{ color: 'var(--text-subtitle)' }}>
             Welcome to your Star Café admin dashboard
           </p>
-        </div>
-
-        {/* Enhanced Real-time Status Badge */}
-        <div
-          className="flex items-center gap-2.5 px-4 sm:px-6 md:px-10 py-3 rounded-xl sm:rounded-2xl backdrop-blur-xl border min-h-[44px]"
-          data-animate="fade-rise"
-          data-animate-active="false"
-          style={{
-            backgroundColor: realtimeStatus === 'connected'
-              ? 'var(--status-success-bg)'
-              : realtimeStatus === 'connecting'
-                ? 'var(--status-warning-bg)'
-                : 'var(--status-error-bg)',
-            borderColor: realtimeStatus === 'connected'
-              ? 'var(--status-success-border)'
-              : realtimeStatus === 'connecting'
-                ? 'var(--status-warning-border)'
-                : 'var(--status-error-border)'
-          }}
-        >
-          <div
-            className="w-2.5 h-2.5 rounded-full animate-pulse-glow"
-            style={{
-              backgroundColor: realtimeStatus === 'connected'
-                ? '#10b981'
-                : realtimeStatus === 'connecting'
-                ? '#f59e0b'
-                : '#ef4444'
-            }}
-          />
-          {realtimeStatus !== 'connected' && (
-            <span
-              className="text-[10px] sm:text-xs font-semibold tracking-wide"
-              style={{
-                color: realtimeStatus === 'connecting' ? '#f59e0b' : '#ef4444'
-              }}
-            >
-              {realtimeStatus === 'connecting' ? 'Connecting...' : 'Offline'}
-            </span>
-          )}
         </div>
       </div>
 
@@ -301,7 +265,10 @@ function Admin() {
         <StatCard
           title="Menu Items"
           value={stats.menuItems}
-          subtitle={`${stats.menuItems} dishes available`}
+          subtitle={stats.unavailableMenuItems > 0 
+            ? `${stats.unavailableMenuItems} unavailable` 
+            : `${stats.menuItems} available`}
+          subtitleColor={stats.unavailableMenuItems > 0 ? '#f87171' : '#4ade80'}
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -426,7 +393,7 @@ function Admin() {
         />
       </div>
 
-      {/* Welcome Section with Quick Actions and Recent Activity */}
+      {/* Recent Activity Section */}
       <div
         className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-12"
         data-animate="fade-scale"
@@ -513,28 +480,8 @@ function Admin() {
         </div>
       </div>
 
-      {/* Quick Actions Section */}
-      <div
-        className="mb-8"
-        data-animate="fade-scale"
-        data-animate-active="false"
-      >
-        <div
-          className="mb-6"
-          data-animate="fade-rise"
-          data-animate-active="false"
-        >
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight mb-2" style={{ color: 'var(--text-heading)' }}>
-            Quick Actions
-          </h2>
-          <p className="text-[10px] sm:text-xs" style={{ color: 'var(--text-body-muted)' }}>
-            Jump to common administrative tasks
-          </p>
-        </div>
-        <QuickActions />
-      </div>
 
-    </motion.main>
+    </m.main>
   )
 }
 

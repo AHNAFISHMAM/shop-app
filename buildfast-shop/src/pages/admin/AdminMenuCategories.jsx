@@ -1,15 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { m, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { logger } from '../../utils/logger';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 export default function AdminMenuCategories() {
   const containerRef = useViewportAnimationTrigger();
+  const containerElementRef = useRef(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -17,10 +24,50 @@ export default function AdminMenuCategories() {
     sort_order: 0
   });
 
+  // Body scroll lock for modal
+  useBodyScrollLock(showModal);
+
+  // Keyboard handler for modal
+  useEffect(() => {
+    if (!showModal) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showModal]);
+
+  // Combined ref callback
+  const combinedRef = useCallback((node) => {
+    containerRef(node);
+    containerElementRef.current = node;
+  }, [containerRef]);
+
   // Fetch categories
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Force animation activation after categories load
+  useEffect(() => {
+    if (!loading && categories.length > 0 && containerElementRef.current) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        const elements = containerElementRef.current?.querySelectorAll('[data-animate="fade-rise"]');
+        elements?.forEach((el) => {
+          if (el.dataset.animateActive === 'false') {
+            // Trigger activation by simulating intersection
+            el.dataset.animateActive = 'true';
+          }
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, categories.length]);
 
   async function fetchCategories() {
     try {
@@ -82,8 +129,7 @@ export default function AdminMenuCategories() {
       if (error) throw error;
 
       toast.success('Category added successfully');
-      setShowAddForm(false);
-      setFormData({ name: '', slug: '', description: '', sort_order: 0 });
+      closeModal();
       fetchCategories();
     } catch (error) {
       logger.error('Error adding category:', error);
@@ -114,8 +160,7 @@ export default function AdminMenuCategories() {
       if (error) throw error;
 
       toast.success('Category updated successfully');
-      setEditingCategory(null);
-      setFormData({ name: '', slug: '', description: '', sort_order: 0 });
+      closeModal();
       fetchCategories();
     } catch (error) {
       logger.error('Error updating category:', error);
@@ -123,21 +168,27 @@ export default function AdminMenuCategories() {
     }
   }
 
+  // Open delete confirmation
+  function openDeleteConfirm(id, name) {
+    setCategoryToDelete({ id, name });
+    setShowDeleteConfirm(true);
+  }
+
   // Delete category
-  async function handleDeleteCategory(id, name) {
-    if (!confirm(`Delete category "${name}"? This will also delete all menu items in this category.`)) {
-      return;
-    }
+  async function handleDeleteCategory() {
+    if (!categoryToDelete) return;
 
     try {
       const { error } = await supabase
         .from('menu_categories')
         .delete()
-        .eq('id', id);
+        .eq('id', categoryToDelete.id);
 
       if (error) throw error;
 
       toast.success('Category deleted successfully');
+      setShowDeleteConfirm(false);
+      setCategoryToDelete(null);
       fetchCategories();
     } catch (error) {
       logger.error('Error deleting category:', error);
@@ -145,8 +196,15 @@ export default function AdminMenuCategories() {
     }
   }
 
-  // Edit category
-  function startEdit(category) {
+  // Open modal for add
+  function openAddModal() {
+    setEditingCategory(null);
+    setFormData({ name: '', slug: '', description: '', sort_order: 0 });
+    setShowModal(true);
+  }
+
+  // Open modal for edit
+  function openEditModal(category) {
     setEditingCategory(category);
     setFormData({
       name: category.name,
@@ -154,13 +212,13 @@ export default function AdminMenuCategories() {
       description: category.description || '',
       sort_order: category.sort_order
     });
-    setShowAddForm(false);
+    setShowModal(true);
   }
 
-  // Cancel edit/add
-  function cancelForm() {
+  // Close modal
+  function closeModal() {
+    setShowModal(false);
     setEditingCategory(null);
-    setShowAddForm(false);
     setFormData({ name: '', slug: '', description: '', sort_order: 0 });
   }
 
@@ -208,9 +266,9 @@ export default function AdminMenuCategories() {
   }
 
   return (
-    <div ref={containerRef} data-animate="fade-scale" data-animate-active="false" className="admin-page w-full bg-[var(--bg-main)] text-[var(--text-main)]">
+    <div ref={combinedRef} className="admin-page w-full bg-[var(--bg-main)] text-[var(--text-main)]">
       <div className="app-container space-y-8 py-10">
-        <header data-animate="fade-rise" data-animate-active="false" className="glow-surface glow-strong flex flex-col gap-4 rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-6 py-6 shadow-[0_25px_60px_-40px_rgba(5,5,9,0.85)] sm:flex-row sm:items-end sm:justify-between">
+        <header data-animate="fade-rise" data-animate-active="false" className="glow-surface glow-soft flex flex-col gap-4 rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-6 py-6 shadow-[0_25px_60px_-40px_rgba(5,5,9,0.85)] sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-text-main mb-2">Menu Categories</h1>
             <p className="text-text-muted">Manage your Star Café menu categories</p>
@@ -218,106 +276,22 @@ export default function AdminMenuCategories() {
         </header>
 
         {/* Add New Button */}
-        {!showAddForm && !editingCategory && (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary mb-6"
-          >
-            + Add New Category
-          </button>
-        )}
-
-        {/* Add/Edit Form */}
-        {(showAddForm || editingCategory) && (
-          <div data-animate="fade-scale" data-animate-active="false" className="glow-surface glow-strong w-full max-w-xl rounded-3xl border border-theme bg-[rgba(5,5,9,0.97)] shadow-[0_35px_80px_-45px_rgba(5,5,9,0.9)]">
-            <header className="flex items-center justify-between border-b border-theme px-6 py-4">
-              <h2 className="text-lg font-semibold">{editingCategory ? 'Edit Category' : 'Add Category'}</h2>
-            </header>
-            <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-main mb-2">
-                    Category Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-dark-bg-secondary border border-gray-700 rounded-lg text-text-main focus:outline-none focus:border-gold"
-                    placeholder="e.g., Biryani Items"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-main mb-2">
-                    Slug (URL-friendly)
-                  </label>
-                  <input
-                    type="text"
-                    name="slug"
-                    value={formData.slug}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-dark-bg-secondary border border-gray-700 rounded-lg text-text-main focus:outline-none focus:border-gold"
-                    placeholder="Auto-generated from name"
-                  />
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-text-main mb-2">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-dark-bg-secondary border border-gray-700 rounded-lg text-text-main focus:outline-none focus:border-gold"
-                  placeholder="Brief description of this category"
-                  rows="2"
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-text-main mb-2">
-                  Sort Order
-                </label>
-                <input
-                  type="number"
-                  name="sort_order"
-                  value={formData.sort_order}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-dark-bg-secondary border border-gray-700 rounded-lg text-text-main focus:outline-none focus:border-gold"
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button type="submit" className="btn-primary">
-                  {editingCategory ? 'Update Category' : 'Add Category'}
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelForm}
-                  className="btn-outline"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+        <button
+          onClick={openAddModal}
+          className="btn-primary mb-6"
+        >
+          + Add New Category
+        </button>
 
         {/* Categories List */}
-        <section data-animate="fade-scale" data-animate-active="false" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {categories.map((category, index) => (
             <article
               key={category.id}
-              className="glow-surface glow-strong flex flex-col gap-4 rounded-2xl border border-theme bg-[rgba(5,5,9,0.92)] p-5 shadow-[0_20px_65px_-40px_rgba(5,5,9,0.85)]"
+              className="glow-surface glow-soft flex flex-col gap-4 rounded-2xl border border-theme bg-[rgba(5,5,9,0.92)] p-5 shadow-[0_20px_65px_-40px_rgba(5,5,9,0.85)]"
               data-animate="fade-rise"
               data-animate-active="false"
-              style={{ transitionDelay: `${index * 80}ms` }}
+              style={{ transitionDelay: `${index * 50}ms` }}
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
@@ -357,7 +331,7 @@ export default function AdminMenuCategories() {
 
                 {/* Edit */}
                 <button
-                  onClick={() => startEdit(category)}
+                  onClick={() => openEditModal(category)}
                   className="px-4 py-2 bg-gold text-dark-bg rounded-lg hover:bg-gold-dark transition-colors"
                 >
                   Edit
@@ -365,7 +339,7 @@ export default function AdminMenuCategories() {
 
                 {/* Delete */}
                 <button
-                  onClick={() => handleDeleteCategory(category.id, category.name)}
+                  onClick={() => openDeleteConfirm(category.id, category.name)}
                   className="px-4 py-2 bg-red-600 text-black rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Delete
@@ -375,6 +349,163 @@ export default function AdminMenuCategories() {
           ))}
         </section>
       </div>
+
+      {/* Add/Edit Modal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showModal && (
+            <m.div
+              className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 backdrop-blur-sm overflow-y-auto z-[99998]"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="category-modal-title"
+              onClick={closeModal}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                minHeight: '100vh',
+                paddingTop: '1rem',
+                paddingBottom: '1rem'
+              }}
+            >
+              <m.div
+                className="relative w-full max-w-2xl max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl sm:rounded-3xl border-2 border-[rgba(197,157,95,0.3)] bg-[var(--bg-main)] shadow-[0_8px_40px_rgba(0,0,0,0.6)] z-[99999]"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
+                {/* Top Accent Bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C59D5F] via-[#D4AF6A] to-[#C59D5F]"></div>
+
+                {/* Header */}
+                <div className="sticky top-0 z-10 flex items-center justify-between p-6 sm:p-8 border-b border-[rgba(197,157,95,0.2)] bg-[var(--bg-main)]">
+                  <div>
+                    <h2 id="category-modal-title" className="text-2xl sm:text-3xl font-bold text-[var(--text-main)] mb-2">
+                      {editingCategory ? 'Edit Category' : 'Add New Category'}
+                    </h2>
+                    <p className="text-sm sm:text-base text-[var(--text-muted)]">
+                      {editingCategory ? 'Update category details' : 'Create a new menu category'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={closeModal}
+                    className="p-2 rounded-lg hover:bg-[rgba(255,255,255,0.1)] transition-colors focus:outline-none focus:ring-2 focus:ring-[#C59D5F]"
+                    aria-label="Close modal"
+                  >
+                    <svg className="w-6 h-6 text-[var(--text-main)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Form Content */}
+                <div className="p-6 sm:p-8">
+                  <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-[var(--text-main)] mb-2">
+                          Category Name <span className="text-[#C59D5F]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 min-h-[44px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] transition-all duration-300"
+                          placeholder="e.g., Biryani Items"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[var(--text-main)] mb-2">
+                          Slug (URL-friendly)
+                        </label>
+                        <input
+                          type="text"
+                          name="slug"
+                          value={formData.slug}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 min-h-[44px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] transition-all duration-300"
+                          placeholder="Auto-generated from name"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[var(--text-main)] mb-2">
+                        Description
+                      </label>
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 min-h-[100px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] transition-all duration-300 resize-none"
+                        placeholder="Brief description of this category"
+                        rows="3"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[var(--text-main)] mb-2">
+                        Sort Order
+                      </label>
+                      <input
+                        type="number"
+                        name="sort_order"
+                        value={formData.sort_order}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 min-h-[44px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] transition-all duration-300"
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t border-[rgba(197,157,95,0.2)]">
+                      <button
+                        type="submit"
+                        className="flex-1 px-6 py-3 min-h-[44px] bg-gradient-to-r from-[#C59D5F] to-[#D4AF6A] text-black font-semibold rounded-lg hover:from-[#D4AF6A] hover:to-[#C59D5F] transition-all duration-300 shadow-lg hover:shadow-xl"
+                      >
+                        {editingCategory ? 'Update Category' : 'Add Category'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closeModal}
+                        className="px-6 py-3 min-h-[44px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] text-[var(--text-main)] font-semibold rounded-lg hover:bg-[rgba(255,255,255,0.1)] hover:border-[rgba(197,157,95,0.4)] transition-all duration-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </m.div>
+            </m.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setCategoryToDelete(null);
+        }}
+        onConfirm={handleDeleteCategory}
+        title="Delete Category"
+        message={`Are you sure you want to delete "${categoryToDelete?.name}"?\n\nThis will also delete all menu items in this category. This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

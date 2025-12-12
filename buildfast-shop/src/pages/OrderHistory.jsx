@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
@@ -12,6 +12,8 @@ import { addProductToCart, addMenuItemToCart } from '../lib/cartUtils'
 import { addToGuestCart } from '../lib/guestSessionUtils'
 import { pageFade, fadeSlideUp } from '../components/animations/menuAnimations'
 import { resolveLoyaltyState, resolveReferralInfo } from '../lib/loyaltyUtils'
+import CustomDropdown from '../components/ui/CustomDropdown'
+import { OrderCardSkeleton } from '../components/skeletons/OrderCardSkeleton'
 
 const CURRENCY_SYMBOL = '৳'
 
@@ -256,19 +258,40 @@ function OrderHistory() {
     }
   }
 
+  const fetchReturnRequestsRef = useRef(null)
+  
   const fetchReturnRequests = useCallback(async () => {
     if (!user) return
 
+    // Cancel previous request if still pending
+    if (fetchReturnRequestsRef.current) {
+      fetchReturnRequestsRef.current.cancelled = true
+    }
+
+    // Create cancellation token for this request
+    const cancelToken = { cancelled: false }
+    fetchReturnRequestsRef.current = cancelToken
+
     try {
+      // Capture current orders to avoid stale closure
+      const orderIds = orders.map(o => o.id)
+      if (orderIds.length === 0) return
+
       const { data, error } = await supabase
         .from('return_requests')
         .select('*')
-        .in('order_id', orders.map(o => o.id))
+        .in('order_id', orderIds)
+
+      // Check if this request was cancelled
+      if (cancelToken.cancelled) return
 
       if (error) {
         logger.error('Error fetching return requests:', error)
         return
       }
+
+      // Double-check cancellation before setting state
+      if (cancelToken.cancelled) return
 
       const returnMap = {}
       data?.forEach(returnReq => {
@@ -276,7 +299,14 @@ function OrderHistory() {
       })
       setReturnRequests(returnMap)
     } catch (err) {
-      logger.error('Error in fetchReturnRequests:', err)
+      if (!cancelToken.cancelled) {
+        logger.error('Error in fetchReturnRequests:', err)
+      }
+    } finally {
+      // Clear ref if this was the active request
+      if (fetchReturnRequestsRef.current === cancelToken) {
+        fetchReturnRequestsRef.current = null
+      }
     }
   }, [user, orders])
 
@@ -348,6 +378,7 @@ function OrderHistory() {
 
   const handleReturnSuccess = () => {
     setReturnSuccess(true)
+    // Refetch return requests after successful submission
     fetchReturnRequests()
     setTimeout(() => setReturnSuccess(false), 5000)
   }
@@ -420,11 +451,21 @@ function OrderHistory() {
     fetchOrders()
   }, [user, navigate, fetchOrders])
 
-  // Fetch return requests when orders are loaded
+  // Fetch return requests when orders are loaded (with race condition prevention)
   useEffect(() => {
-    if (orders.length > 0) {
-      fetchReturnRequests()
-      fetchRecommendations()
+    if (orders.length === 0) return
+
+    // Fetch return requests and recommendations
+    // fetchReturnRequests handles cancellation internally via ref
+    fetchReturnRequests()
+    fetchRecommendations()
+
+    // Cleanup: cancel any pending requests
+    return () => {
+      if (fetchReturnRequestsRef.current) {
+        fetchReturnRequestsRef.current.cancelled = true
+        fetchReturnRequestsRef.current = null
+      }
     }
   }, [orders.length, fetchReturnRequests, fetchRecommendations])
 
@@ -775,17 +816,36 @@ Thank you for your order!
 
   if (loading) {
      return (
-      <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center text-[var(--text-main)]">
-        <div className="text-center space-y-3">
-          <div className="inline-flex h-12 w-12 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent"></div>
-          <p className="text-sm sm:text-base text-muted">Loading your orders...</p>
+      <m.main
+        className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
+        variants={pageFade}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
+        <UpdateTimestamp />
+        <div className="app-container py-8 sm:py-12">
+          <div className="space-y-6">
+            {/* Header skeleton */}
+            <div className="space-y-4 animate-pulse">
+              <div className="h-8 bg-[var(--bg-elevated)] rounded w-64"></div>
+              <div className="h-4 bg-[var(--bg-elevated)] rounded w-96"></div>
+            </div>
+            
+            {/* Order cards skeleton */}
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <OrderCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      </m.main>
      )
    }
 
   return (
-   <motion.main
+   <m.main
      className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
      data-animate="fade-scale"
      data-animate-active="false"
@@ -796,7 +856,7 @@ Thank you for your order!
    >
       <UpdateTimestamp />
       {/* Header */}
-      <motion.header
+      <m.header
         className="border-b border-theme bg-[rgba(5,5,9,0.92)]"
         data-animate="fade-scale"
         data-animate-active="false"
@@ -838,13 +898,13 @@ Thank you for your order!
             </button>
           </div>
         </div>
-      </motion.header>
+      </m.header>
 
       <div className="app-container px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
         {user ? (
           <>
             {enableLoyalty && loyalty && (
-              <div className="glow-surface glow-strong relative overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 mb-8">
+              <div className="glow-surface glow-soft relative overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 mb-8">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(197,157,95,0.25),transparent_60%)]" />
                 <div className="relative z-10 flex flex-col gap-3 sm:gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-2 max-w-xl">
@@ -962,9 +1022,39 @@ Thank you for your order!
         )}
 
         {/* Personalized Recommendations */}
-         {!loadingRecommendations && recommendations.length > 0 && orders.length > 0 && (
+        {orders.length > 0 && (
+          <>
+            {loadingRecommendations && (
+              <div
+                className="glow-surface glow-soft mb-8 rounded-xl sm:rounded-2xl border border-theme bg-gradient-to-r from-[rgba(197,157,95,0.1)] via-[rgba(255,255,255,0.03)] to-[rgba(197,157,95,0.05)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5"
+                data-animate="fade-scale"
+                data-animate-active="false"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                    <svg className="h-5 w-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    Recommended for You
+                  </h2>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 sm:grid-cols-3 lg:grid-cols-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.05)] p-4 sm:p-6 animate-pulse"
+                    >
+                      <div className="mb-2 aspect-square bg-[var(--bg-elevated)] rounded-lg"></div>
+                      <div className="h-4 bg-[var(--bg-elevated)] rounded mb-2"></div>
+                      <div className="h-4 w-16 bg-[var(--bg-elevated)] rounded"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {!loadingRecommendations && recommendations.length > 0 && (
           <div
-            className="glow-surface glow-strong mb-8 rounded-xl sm:rounded-2xl border border-theme bg-gradient-to-r from-[rgba(197,157,95,0.1)] via-[rgba(255,255,255,0.03)] to-[rgba(197,157,95,0.05)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 shadow-[0_20px_45px_-35px_rgba(197,157,95,0.65)]"
+            className="glow-surface glow-soft mb-8 rounded-xl sm:rounded-2xl border border-theme bg-gradient-to-r from-[rgba(197,157,95,0.1)] via-[rgba(255,255,255,0.03)] to-[rgba(197,157,95,0.05)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 shadow-[0_20px_45px_-35px_rgba(197,157,95,0.65)]"
             data-animate="fade-scale"
             data-animate-active="false"
           >
@@ -1016,12 +1106,14 @@ Thank you for your order!
               ))}
             </div>
           </div>
+            )}
+          </>
         )}
 
         {/* Search and Filter Bar */}
          {orders.length > 0 && (
           <div
-            className="glow-surface glow-strong mb-8 space-y-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 py-3 sm:py-4 md:py-5"
+            className="glow-surface glow-soft mb-8 space-y-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 py-3 sm:py-4 md:py-5"
             data-animate="fade-scale"
             data-animate-active="false"
           >
@@ -1083,28 +1175,34 @@ Thank you for your order!
              {/* Date Filter and Sort Options */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               {/* Date Filter */}
-              <select
+              <CustomDropdown
+                options={[
+                  { value: 'all', label: 'All Time' },
+                  { value: '7days', label: 'Last 7 Days' },
+                  { value: '30days', label: 'Last 30 Days' },
+                  { value: '90days', label: 'Last 90 Days' }
+                ]}
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="min-h-[44px] touch-manipulation rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 py-3 text-sm sm:text-base font-medium text-[var(--text-main)] hover:border-theme-medium focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
-              >
-                <option value="all">All Time</option>
-                <option value="7days">Last 7 Days</option>
-                <option value="30days">Last 30 Days</option>
-                <option value="90days">Last 90 Days</option>
-              </select>
+                placeholder="All Time"
+                className="min-h-[44px]"
+                maxVisibleItems={5}
+              />
 
                {/* Sort Options */}
-              <select
+              <CustomDropdown
+                options={[
+                  { value: 'newest', label: 'Newest First' },
+                  { value: 'oldest', label: 'Oldest First' },
+                  { value: 'highest', label: 'Highest Amount' },
+                  { value: 'lowest', label: 'Lowest Amount' }
+                ]}
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="min-h-[44px] touch-manipulation rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 py-3 text-sm sm:text-base font-medium text-[var(--text-main)] hover:border-theme-medium focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="highest">Highest Amount</option>
-                <option value="lowest">Lowest Amount</option>
-              </select>
+                placeholder="Newest First"
+                className="min-h-[44px]"
+                maxVisibleItems={5}
+              />
             </div>
 
              {/* Active Filters Summary */}
@@ -1130,7 +1228,7 @@ Thank you for your order!
         {orders.length === 0 ? (
            // Empty state - no orders at all
           <div
-            className="glow-surface glow-strong rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
+            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
             data-animate="fade-scale"
             data-animate-active="false"
           >
@@ -1154,7 +1252,7 @@ Thank you for your order!
         ) : sortedOrders.length === 0 ? (
           // Empty state - no matches found
           <div
-            className="glow-surface glow-strong rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
+            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
             data-animate="fade-scale"
             data-animate-active="false"
           >
@@ -1195,7 +1293,7 @@ Thank you for your order!
               return (
                 <div
                   key={order.id}
-                  className="glow-surface glow-strong overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] shadow-[0_20px_45px_-35px_rgba(197,157,95,0.65)] transition-all hover:border-[var(--accent)]/50"
+                  className="glow-surface glow-soft overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] shadow-[0_20px_45px_-35px_rgba(197,157,95,0.65)] transition-all hover:border-[var(--accent)]/50"
                   data-animate="fade-rise"
                   data-animate-active="false"
                   style={{ transitionDelay: `${index * 80}ms` }}
@@ -1522,7 +1620,7 @@ Thank you for your order!
           onClick={() => setReturnModalOpen(false)}
         >
           <div 
-            className="glow-surface glow-strong w-full max-w-lg overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)]"
+            className="glow-surface glow-soft w-full max-w-lg overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)]"
             style={{
               boxShadow: isLightTheme 
                 ? '0 35px 90px -45px rgba(197, 157, 95, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1)' 
@@ -1575,18 +1673,22 @@ Thank you for your order!
                 <label htmlFor="return-reason" className="mb-1 block text-sm sm:text-base font-semibold text-[var(--text-main)]">
                   Reason for return
                 </label>
-                <select
+                <CustomDropdown
                   id="return-reason"
+                  name="return-reason"
+                  options={[
+                    { value: 'defective', label: 'Defective or damaged product' },
+                    { value: 'wrong', label: 'Wrong item received' },
+                    { value: 'quality', label: 'Quality not as expected' },
+                    { value: 'other', label: 'Other' }
+                  ]}
                   value={returnReason}
                   onChange={(e) => setReturnReason(e.target.value)}
-                  className="block w-full rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.04)] px-4 sm:px-6 py-3 text-sm sm:text-base text-[var(--text-main)] focus:border-[var(--accent)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 min-h-[44px]"
+                  placeholder="Select reason"
+                  className="min-h-[44px]"
                   required
-                >
-                  <option value="defective">Defective or damaged product</option>
-                  <option value="wrong">Wrong item received</option>
-                  <option value="quality">Quality not as expected</option>
-                  <option value="other">Other</option>
-                </select>
+                  maxVisibleItems={5}
+                />
               </div>
 
               <div>
@@ -1630,7 +1732,7 @@ Thank you for your order!
           </div>
         </div>
       )}
-    </motion.main>
+    </m.main>
   )
 }
 

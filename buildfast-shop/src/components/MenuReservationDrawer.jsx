@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { createReservation } from '../lib/reservationService';
@@ -159,7 +159,7 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
+          <m.div
             className="fixed inset-0 z-40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -169,20 +169,21 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
             }}
             onClick={onClose}
           />
-          <motion.aside
-            className="fixed inset-y-0 right-0 z-50 w-[420px] max-w-full shadow-2xl border-l border-theme overflow-y-auto"
+          <m.aside
+            className="fixed inset-y-0 right-0 z-50 w-[420px] max-w-full shadow-2xl border-l border-theme flex flex-col"
             style={{
               backgroundColor: isLightTheme 
                 ? 'rgba(255, 255, 255, 0.95)' 
-                : 'rgba(5, 5, 9, 0.95)'
+                : 'rgba(5, 5, 9, 0.95)',
+              overscrollBehavior: 'contain'
             }}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 380, damping: 42 }}
           >
-            <motion.div
-              className="flex items-center justify-between border-b border-theme px-6 py-5"
+            <m.div
+              className="flex items-center justify-between border-b border-theme px-6 py-5 flex-shrink-0"
               variants={fadeSlideUp}
               initial="hidden"
               animate="visible"
@@ -192,7 +193,7 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                 <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-main)]/60">Reserve</p>
                 <h2 className="text-xl font-semibold text-[var(--text-main)]">Table Request</h2>
               </div>
-              <motion.button
+              <m.button
                 type="button"
                 onClick={onClose}
                 className="rounded-full border border-theme p-2 text-[var(--text-main)]/70 hover:bg-white/10 transition"
@@ -203,18 +204,21 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </motion.button>
-            </motion.div>
+              </m.button>
+            </m.div>
 
-            <motion.form
+            <m.form
               onSubmit={handleSubmit}
-              className="px-6 py-6 space-y-6"
+              className="px-6 py-6 pb-8 space-y-6 overflow-y-auto flex-1 min-h-0"
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
+              style={{
+                overscrollBehavior: 'contain'
+              }}
             >
               {/* Required Contact Information */}
-              <motion.label
+              <m.label
                 className="space-y-2 block"
                 variants={fadeSlideUp}
               >
@@ -227,9 +231,9 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                   placeholder="Enter your full name"
                   required
                 />
-              </motion.label>
+              </m.label>
 
-              <motion.label
+              <m.label
                 className="space-y-2 block"
                 variants={fadeSlideUp}
                 custom={0.05}
@@ -243,9 +247,9 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                   placeholder="your.email@example.com"
                   required
                 />
-              </motion.label>
+              </m.label>
 
-              <motion.label
+              <m.label
                 className="space-y-2 block"
                 variants={fadeSlideUp}
                 custom={0.1}
@@ -259,13 +263,13 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                   placeholder="+880 1234-567890"
                   required
                 />
-              </motion.label>
+              </m.label>
 
-              <motion.div
+              <m.div
                 className="grid grid-cols-2 gap-4"
                 variants={fadeSlideUp}
               >
-                <motion.label
+                <m.label
                   className="space-y-2"
                   variants={fadeSlideUp}
                   custom={0.05}
@@ -280,9 +284,9 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                     className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                     required
                   />
-                </motion.label>
+                </m.label>
 
-                <motion.label
+                <m.label
                   className="space-y-2"
                   variants={fadeSlideUp}
                   custom={0.1}
@@ -296,22 +300,22 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                     className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                     required
                   />
-                </motion.label>
+                </m.label>
 
-                <motion.label
+                <m.label
                   className="space-y-2 col-span-2"
                   variants={fadeSlideUp}
                   custom={0.15}
                 >
                   <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Time</span>
-                  <motion.div
+                  <m.div
                     className="flex flex-wrap gap-2"
                     variants={staggerContainer}
                   >
                     {QUICK_TIMES.map((slot, index) => {
                       const isActive = reservationTime === slot.value;
                       return (
-                        <motion.button
+                        <m.button
                           key={slot.value}
                           type="button"
                           onClick={() => setReservationTime(slot.value)}
@@ -326,14 +330,14 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                           custom={index * 0.05}
                         >
                           {slot.label}
-                        </motion.button>
+                        </m.button>
                       );
                     })}
-                  </motion.div>
-                </motion.label>
-              </motion.div>
+                  </m.div>
+                </m.label>
+              </m.div>
 
-              <motion.label
+              <m.label
                 className="flex items-center gap-3 rounded-2xl border border-theme bg-theme-elevated px-4 py-3 text-sm text-[var(--text-main)]/80"
                 variants={fadeSlideUp}
                 custom={0.2}
@@ -350,11 +354,11 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                     We&apos;ll stage your current selection before you arrive.
                   </p>
                 </div>
-              </motion.label>
+              </m.label>
 
               <AnimatePresence>
                 {preOrder && (
-                  <motion.div
+                  <m.div
                     className="space-y-3 rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-4 py-3"
                     variants={fadeSlideUp}
                     initial="hidden"
@@ -369,7 +373,7 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                     <p className="text-xs text-[#FDE68A]/80">
                       You can tweak dishes anytime before arrival. Checkout locks it in for the kitchen.
                     </p>
-                    <motion.div
+                    <m.div
                       variants={fadeSlideUp}
                       custom={0.3}
                     >
@@ -399,12 +403,12 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                       </Link>
-                    </motion.div>
-                  </motion.div>
+                    </m.div>
+                  </m.div>
                 )}
               </AnimatePresence>
 
-              <motion.label
+              <m.label
                 className="space-y-2 block"
                 variants={fadeSlideUp}
                 custom={0.3}
@@ -418,9 +422,9 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                   className="w-full rounded-2xl border border-theme bg-theme-elevated px-3 py-3 text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                 />
                 <span className="block text-right text-[10px] text-[var(--text-main)]/40">{note.length}/240</span>
-              </motion.label>
+              </m.label>
 
-              <motion.button
+              <m.button
                 type="submit"
                 disabled={submitting}
                 className="w-full rounded-2xl bg-[var(--accent)] py-3 text-sm font-semibold text-black transition hover:bg-[#d6b37b] disabled:cursor-not-allowed disabled:opacity-70"
@@ -431,7 +435,7 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
-                    <motion.svg
+                    <m.svg
                       className="h-4 w-4 animate-spin"
                       viewBox="0 0 24 24"
                       fill="none"
@@ -443,15 +447,15 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }) => {
                         strokeLinejoin="round"
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                       />
-                    </motion.svg>
+                    </m.svg>
                     Sending…
                   </span>
                 ) : (
                   'Submit Request'
                 )}
-              </motion.button>
-            </motion.form>
-          </motion.aside>
+              </m.button>
+            </m.form>
+          </m.aside>
         </>
       )}
     </AnimatePresence>

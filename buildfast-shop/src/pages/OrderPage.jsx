@@ -28,7 +28,7 @@ import FilterDrawer from '../components/order/FilterDrawer'
 import { logger } from '../utils/logger'
 import SignupPromptModal from '../components/SignupPromptModal'
 import { getCurrencySymbol, formatPrice } from '../lib/priceUtils'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { 
   pageFade, 
   fadeSlideUp, 
@@ -68,8 +68,8 @@ function OrderPage() {
 
   // Data fetching using new hooks
   const { meals, loading } = useMenuItems()
-  const { sectionConfigs } = useSectionConfigs()
-  const { categories: menuCategories } = useMenuCategories()
+  const { sectionConfigs, loading: loadingSectionConfigs } = useSectionConfigs()
+  const { categories: menuCategories, loading: loadingCategories } = useMenuCategories()
 
   // Custom hooks for cart management
   const {
@@ -198,7 +198,7 @@ function OrderPage() {
   }, [sortedMeals]) // Recalculate when sorted meals change
 
   return (
-    <motion.main
+    <m.main
       className="min-h-screen bg-[var(--bg-main)] px-4 pb-40 pt-12 text-[var(--text-main)]"
       style={{ overflowX: 'clip' }}
       variants={pageFade}
@@ -208,7 +208,7 @@ function OrderPage() {
     >
       <UpdateTimestamp />
 
-      <motion.section
+      <m.section
         className="mx-auto max-w-full space-y-10"
         variants={menuStagger}
         initial="hidden"
@@ -261,7 +261,7 @@ function OrderPage() {
 
         <AnimatePresence mode="wait">
           {searchQuery && sortedMeals.length > 0 && (
-            <motion.p
+            <m.p
               key="search-results"
               variants={fadeSlideUp}
               initial="hidden"
@@ -271,11 +271,11 @@ function OrderPage() {
               className="text-sm text-muted"
             >
               Found {sortedMeals.length} meal{sortedMeals.length !== 1 ? 's' : ''}
-            </motion.p>
+            </m.p>
           )}
         </AnimatePresence>
 
-        <motion.div
+        <m.div
           className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-6"
           variants={fadeSlideUp}
           custom={0.3}
@@ -284,111 +284,86 @@ function OrderPage() {
           exit="exit"
         >
           <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              {/* Sections View */}
-              {viewMode === 'sections' && (
-                <motion.div
+            <AnimatePresence mode="wait" initial={false}>
+              {viewMode === 'sections' ? (
+                <m.div
                   key="sections-view"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <AnimatePresence mode="wait">
-                    {loading ? (
-                      <motion.div
-                        key="sections-loading"
-                        variants={staggerContainer}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="glow-surface glow-soft flex min-h-[300px] items-center justify-center rounded-2xl border border-theme"
-                        style={{
-                          backgroundColor: isLightTheme 
-                            ? 'rgba(0, 0, 0, 0.02)' 
-                            : 'rgba(255, 255, 255, 0.02)',
-                          borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
-                        }}
-                      >
-                        <motion.div
-                          className="space-y-3 text-center"
-                          variants={staggerContainer}
-                        >
-                          <motion.div
-                            className="inline-flex h-12 w-12 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent"
-                            variants={fadeSlideUp}
-                          />
-                          <motion.p
-                            className="text-sm text-muted"
-                            variants={fadeSlideUp}
-                          >
-                            Loading meals...
-                          </motion.p>
-                        </motion.div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="sections-content"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <SectionContainer
-                          allDishes={meals}
-                          sectionConfigs={sectionConfigs}
-                          onAddToCart={handleAddToCartForViews}
-                          getImageUrl={getMealImage}
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              )}
-
-              {/* Grid View */}
-              {viewMode === 'grid' && (
-                <motion.div
+                  {loading ? (
+                    <m.div
+                      key="sections-loading"
+                      variants={staggerContainer}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="space-y-8"
+                    >
+                      {[1, 2, 3].map((section) => (
+                        <div key={section} className="space-y-4 animate-pulse">
+                          <div className="h-8 bg-[var(--bg-elevated)] rounded w-48"></div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[1, 2, 3].map((item) => (
+                              <div key={item} className="space-y-3">
+                                <div className="h-48 bg-[var(--bg-elevated)] rounded-lg"></div>
+                                <div className="h-4 bg-[var(--bg-elevated)] rounded w-3/4"></div>
+                                <div className="h-5 bg-[var(--bg-elevated)] rounded w-1/3"></div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </m.div>
+                  ) : (
+                    <m.div
+                      key="sections-content"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <SectionContainer
+                        allDishes={meals}
+                        sectionConfigs={sectionConfigs}
+                        onAddToCart={handleAddToCartForViews}
+                        getImageUrl={getMealImage}
+                      />
+                    </m.div>
+                  )}
+                </m.div>
+              ) : (
+                <m.div
                   key="grid-view"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <AnimatePresence mode="wait">
-                    {loading ? (
-                      <motion.div
-                        key="grid-loading"
-                        variants={staggerContainer}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="glow-surface glow-soft flex min-h-[300px] items-center justify-center rounded-2xl border border-theme"
-                        style={{
-                          backgroundColor: isLightTheme 
-                            ? 'rgba(0, 0, 0, 0.02)' 
-                            : 'rgba(255, 255, 255, 0.02)',
-                          borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
-                        }}
-                      >
-                        <motion.div
-                          className="space-y-3 text-center"
-                          variants={staggerContainer}
-                        >
-                          <motion.div
-                            className="inline-flex h-12 w-12 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent"
-                            variants={fadeSlideUp}
-                          />
-                          <motion.p
-                            className="text-sm text-muted"
-                            variants={fadeSlideUp}
-                          >
-                            Loading meals...
-                          </motion.p>
-                        </motion.div>
-                      </motion.div>
-                    ) : sortedMeals.length === 0 ? (
-                      <motion.div
+                  {loading ? (
+                    <m.div
+                      key="grid-loading"
+                      variants={staggerContainer}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="space-y-3 animate-pulse">
+                          <div className="h-48 bg-[var(--bg-elevated)] rounded-lg"></div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-[var(--bg-elevated)] rounded w-3/4"></div>
+                            <div className="h-4 bg-[var(--bg-elevated)] rounded w-1/2"></div>
+                          </div>
+                          <div className="h-5 bg-[var(--bg-elevated)] rounded w-1/3"></div>
+                        </div>
+                      ))}
+                    </m.div>
+                  ) : sortedMeals.length === 0 ? (
+                      <m.div
                         key="grid-empty"
                         variants={staggerContainer}
                         initial="hidden"
@@ -402,7 +377,7 @@ function OrderPage() {
                           borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
                         }}
                       >
-                        <motion.div
+                        <m.div
                           className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-theme-strong"
                           variants={fadeSlideUp}
                           style={{
@@ -412,7 +387,7 @@ function OrderPage() {
                             borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.15)' : undefined
                           }}
                         >
-                          <motion.svg
+                          <m.svg
                             className="h-7 w-7 text-muted"
                             fill="none"
                             stroke="currentColor"
@@ -424,24 +399,24 @@ function OrderPage() {
                             ) : (
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             )}
-                          </motion.svg>
-                        </motion.div>
-                        <motion.h3
+                          </m.svg>
+                        </m.div>
+                        <m.h3
                           className="text-xl font-semibold"
                           variants={fadeSlideUp}
                         >
                           {hasActiveFilters ? 'No meals found' : 'No meals available'}
-                        </motion.h3>
-                        <motion.p
+                        </m.h3>
+                        <m.p
                           className="mt-2 text-sm text-muted"
                           variants={fadeSlideUp}
                         >
                           {hasActiveFilters
                             ? 'Try adjusting your filters or browse our full menu.'
                             : 'Check back soon for new meal additions!'}
-                        </motion.p>
+                        </m.p>
                         {hasActiveFilters && (
-                          <motion.button
+                          <m.button
                             onClick={clearAllFilters}
                             className="mt-4 text-sm font-medium text-[var(--accent)] transition hover:opacity-80"
                             variants={fadeSlideUp}
@@ -449,11 +424,11 @@ function OrderPage() {
                             whileTap={{ scale: 0.95 }}
                           >
                             Clear all filters
-                          </motion.button>
+                          </m.button>
                         )}
-                      </motion.div>
+                      </m.div>
                     ) : (
-                      <motion.div
+                      <m.div
                         key="grid-content"
                         className="flex flex-col gap-6"
                         initial={{ opacity: 0 }}
@@ -478,14 +453,14 @@ function OrderPage() {
                               }
 
                           return (
-                            <motion.div
+                            <m.div
                               key={`order-grid-batch-${batchIndex}`}
                               className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3"
                               {...batchMotionProps}
                             >
                               {batch.map((meal) => {
                                 return (
-                                  <motion.div
+                                  <m.div
                                     key={meal.id}
                                     variants={batchFadeSlideUp}
                                     layout
@@ -505,16 +480,16 @@ function OrderPage() {
                                       getImageUrl={getMealImage}
                                       enableCustomization={enableCustomization}
                                     />
-                                  </motion.div>
+                                  </m.div>
                                 )
                               })}
-                            </motion.div>
+                            </m.div>
                           )
                         })}
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>
@@ -525,11 +500,11 @@ function OrderPage() {
             onRemoveItem={handleRemoveFromCart}
             getImageUrl={getMealImage}
           />
-        </motion.div>
-      </motion.section>
+        </m.div>
+      </m.section>
 
       {totalCartQuantity > 0 && (
-        <motion.div
+        <m.div
           className="lg:hidden fixed inset-x-0 bottom-4 z-40 px-6"
           variants={fadeSlideUp}
           initial="hidden"
@@ -543,7 +518,7 @@ function OrderPage() {
             <span>View Order ({totalCartQuantity})</span>
             <span>{getCurrencySymbol('BDT')}{formatPrice(cartSummary.total, 0)}</span>
           </button>
-        </motion.div>
+        </m.div>
       )}
 
       <CartBottomSheet
@@ -575,7 +550,7 @@ function OrderPage() {
         isOpen={showSignupModal}
         onClose={() => setShowSignupModal(false)}
       />
-    </motion.main>
+    </m.main>
   )
 }
 

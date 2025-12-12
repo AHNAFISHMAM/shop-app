@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useStoreSettings } from '../contexts/StoreSettingsContext';
@@ -206,7 +206,7 @@ const ReservationsPage = () => {
 
   if (!enableReservations) {
     return (
-      <motion.main
+      <m.main
         className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]"
         variants={pageFade}
         initial="hidden"
@@ -223,12 +223,12 @@ const ReservationsPage = () => {
             Go to Home
           </button>
         </div>
-      </motion.main>
+      </m.main>
     );
   }
 
   return (
-    <motion.main
+    <m.main
       className="reservations-page-bg min-h-screen space-y-0 bg-cover bg-center bg-scroll md:bg-fixed"
       style={backgroundStyle}
       variants={pageFade}
@@ -631,7 +631,7 @@ const ReservationsPage = () => {
         onSubmit={handleReservationSubmit}
         submitting={submitting}
       />
-    </motion.main>
+    </m.main>
   );
 };
 

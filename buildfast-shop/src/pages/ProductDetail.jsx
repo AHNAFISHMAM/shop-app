@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { addProductToCart } from '../lib/cartUtils'
@@ -71,7 +71,7 @@ function ProductDetail() {
       setIsProductInFavorites(inFavorites)
     }
     checkFavorites()
-  }, [user, id, isMenuItem])
+  }, [user, id, isMenuItem, isInFavorites])
 
   useEffect(() => {
     if (!reviewsEnabled) {
@@ -372,7 +372,7 @@ function ProductDetail() {
   const hasVariants = Object.keys(variants).length > 0
  
    return (
-    <motion.main
+    <m.main
       className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
       variants={pageFade}
       initial="hidden"
@@ -381,7 +381,7 @@ function ProductDetail() {
     >
       <UpdateTimestamp />
       {/* Breadcrumb Navigation */}
-      <motion.div
+      <m.div
         className="border-b border-theme bg-[rgba(5,5,9,0.92)]"
         variants={fadeSlideUp}
         initial="hidden"
@@ -405,10 +405,10 @@ function ProductDetail() {
             <span className="line-clamp-1 font-semibold text-[var(--text-main)]">{product.name}</span>
           </nav>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Product Content */}
-      <motion.section
+      <m.section
         className="app-container py-6 sm:py-8"
         variants={fadeSlideUp}
         initial="hidden"
@@ -672,11 +672,11 @@ function ProductDetail() {
             </div>
           </div>
         </div>
-      </motion.section>
+      </m.section>
 
       {/* Reviews Section */}
       {(reviewsEnabled || isAdmin) && (
-        <motion.section
+        <m.section
           className="app-container py-8 sm:py-10 md:py-12"
           variants={fadeSlideUp}
           initial="hidden"
@@ -742,7 +742,7 @@ function ProductDetail() {
               </Link>
             </div>
           )}
-        </motion.section>
+        </m.section>
       )}
 
       {/* Recommended Products / Similar Items */}
@@ -770,7 +770,7 @@ function ProductDetail() {
           </div>
         </div>
       )}
-    </motion.main>
+    </m.main>
   )
 }
 

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { fadeSlideUp, staggerContainer, fadeSlideFromRight, batchFadeSlideUp } from '../animations/menuAnimations';
 
@@ -57,7 +57,7 @@ const MenuEnhancementsPanel = ({
   }, []);
 
   return (
-    <motion.aside
+    <m.aside
       className="hidden xl:block w-80 flex-shrink-0"
       variants={fadeSlideFromRight}
       initial="hidden"
@@ -66,7 +66,7 @@ const MenuEnhancementsPanel = ({
       custom={0.3}
     >
       <div className="sticky top-20">
-        <motion.div
+        <m.div
           className="rounded-xl sm:rounded-2xl border border-theme backdrop-blur-md overflow-hidden"
           style={{
             backgroundColor: isLightTheme 
@@ -79,7 +79,7 @@ const MenuEnhancementsPanel = ({
           }}
           layout
         >
-          <motion.div
+          <m.div
             className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-theme"
             variants={fadeSlideUp}
             initial="hidden"
@@ -90,7 +90,7 @@ const MenuEnhancementsPanel = ({
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted/70">Refine</p>
               <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">Flavor Controls</h3>
             </div>
-            <motion.button
+            <m.button
               type="button"
               onClick={() => setCollapsed((prev) => !prev)}
               className="rounded-xl sm:rounded-2xl border border-theme px-4 sm:px-6 py-3 min-h-[44px] text-[10px] sm:text-xs text-muted hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-colors"
@@ -98,12 +98,12 @@ const MenuEnhancementsPanel = ({
               whileTap={{ scale: 0.95 }}
             >
               {collapsed ? 'Open' : 'Hide'}
-            </motion.button>
-          </motion.div>
+            </m.button>
+          </m.div>
 
           <AnimatePresence mode="wait">
             {!collapsed && (
-              <motion.div
+              <m.div
                 className="px-4 sm:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 md:space-y-6"
                 variants={staggerContainer}
                 initial="hidden"
@@ -111,18 +111,18 @@ const MenuEnhancementsPanel = ({
                 exit="hidden"
                 layout
               >
-                <motion.div
+                <m.div
                   className="space-y-3 sm:space-y-4 md:space-y-6"
                   variants={fadeSlideUp}
                 >
-                  <motion.label
+                  <m.label
                     htmlFor="refine-search"
                     className="text-sm sm:text-base font-medium text-[var(--text-main)]/80"
                     variants={fadeSlideUp}
                   >
                     Quick Search
-                  </motion.label>
-                  <motion.div
+                  </m.label>
+                  <m.div
                     className="relative"
                     variants={fadeSlideUp}
                   >
@@ -146,21 +146,21 @@ const MenuEnhancementsPanel = ({
                       <circle cx="11" cy="11" r="8" />
                       <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
-                  </motion.div>
-                </motion.div>
+                  </m.div>
+                </m.div>
 
                 {hasDietaryFilters && (
-                  <motion.section
+                  <m.section
                     className="space-y-3 sm:space-y-4 md:space-y-6"
                     variants={fadeSlideUp}
                   >
-                    <motion.div
+                    <m.div
                       className="flex items-center justify-between"
                       variants={fadeSlideUp}
                     >
                       <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Dietary Focus</h4>
                       {activeDietaryTags.length > 0 && (
-                        <motion.button
+                        <m.button
                           type="button"
                           onClick={() => {
                             // Clear all active dietary tags by finding original format and toggling
@@ -182,10 +182,10 @@ const MenuEnhancementsPanel = ({
                           whileTap={{ scale: 0.95 }}
                         >
                           Clear
-                        </motion.button>
+                        </m.button>
                       )}
-                    </motion.div>
-                    <motion.div
+                    </m.div>
+                    <m.div
                       className="flex flex-wrap gap-3 sm:gap-4 md:gap-6"
                       variants={staggerContainer}
                     >
@@ -194,7 +194,7 @@ const MenuEnhancementsPanel = ({
                         const isActive = activeDietaryTags.includes(normalized);
 
                         return (
-                          <motion.button
+                          <m.button
                             key={tag}
                             type="button"
                             onClick={() => onDietaryToggle(tag)}
@@ -209,25 +209,25 @@ const MenuEnhancementsPanel = ({
                             custom={index * 0.05}
                           >
                             {formatLabel(tag)}
-                          </motion.button>
+                          </m.button>
                         );
                       })}
-                    </motion.div>
-                  </motion.section>
+                    </m.div>
+                  </m.section>
                 )}
 
                 {hasAllergenFilters && (
-                  <motion.section
+                  <m.section
                     className="space-y-3 sm:space-y-4 md:space-y-6"
                     variants={fadeSlideUp}
                   >
-                    <motion.div
+                    <m.div
                       className="flex items-center justify-between"
                       variants={fadeSlideUp}
                     >
                       <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Avoid Allergens</h4>
                       {activeAllergenTags.length > 0 && (
-                        <motion.button
+                        <m.button
                           type="button"
                           onClick={() => {
                             // Clear all active allergen tags by finding original format and toggling
@@ -249,10 +249,10 @@ const MenuEnhancementsPanel = ({
                           whileTap={{ scale: 0.95 }}
                         >
                           Clear
-                        </motion.button>
+                        </m.button>
                       )}
-                    </motion.div>
-                    <motion.div
+                    </m.div>
+                    <m.div
                       className="flex flex-wrap gap-3 sm:gap-4 md:gap-6"
                       variants={staggerContainer}
                     >
@@ -261,7 +261,7 @@ const MenuEnhancementsPanel = ({
                         const isActive = activeAllergenTags.includes(normalized);
 
                         return (
-                          <motion.button
+                          <m.button
                             key={tag}
                             type="button"
                             onClick={() => onAllergenToggle(tag)}
@@ -276,32 +276,32 @@ const MenuEnhancementsPanel = ({
                             custom={index * 0.05}
                           >
                             {formatLabel(tag)}
-                          </motion.button>
+                          </m.button>
                         );
                       })}
-                    </motion.div>
-                  </motion.section>
+                    </m.div>
+                  </m.section>
                 )}
 
-                <motion.section
+                <m.section
                   className="space-y-3 sm:space-y-4 md:space-y-6"
                   variants={fadeSlideUp}
                 >
-                  <motion.div
+                  <m.div
                     className="flex items-center justify-between"
                     variants={fadeSlideUp}
                   >
                     <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Quick Reorder</h4>
                     <span className="text-[10px] sm:text-xs text-muted">{hasQuickReorder ? 'Last enjoyed' : 'No history yet'}</span>
-                  </motion.div>
+                  </m.div>
 
                   {hasQuickReorder ? (
-                    <motion.div
+                    <m.div
                       className="space-y-3 sm:space-y-4 md:space-y-6"
                       variants={staggerContainer}
                     >
                       {quickReorderCards.map((item, index) => (
-                        <motion.div
+                        <m.div
                           key={item.id}
                           className="flex gap-3 sm:gap-4 md:gap-6 rounded-xl sm:rounded-2xl border border-theme px-4 sm:px-6 py-3 sm:py-4"
                           style={{
@@ -333,7 +333,7 @@ const MenuEnhancementsPanel = ({
                                 .map((tag) => formatLabel(tag))
                                 .join(' • ')}
                             </p>
-                            <motion.button
+                            <m.button
                               type="button"
                               onClick={() => {
                                 if (onQuickReorder) {
@@ -357,13 +357,13 @@ const MenuEnhancementsPanel = ({
                                 <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9" />
                                 <path d="M14 2.5v4h-4" />
                               </svg>
-                            </motion.button>
+                            </m.button>
                           </div>
-                        </motion.div>
+                        </m.div>
                       ))}
-                    </motion.div>
+                    </m.div>
                   ) : (
-                    <motion.div
+                    <m.div
                       className="rounded-xl sm:rounded-2xl border border-dashed border-theme px-4 sm:px-6 py-3 sm:py-4 text-center"
                       style={{
                         backgroundColor: isLightTheme 
@@ -376,15 +376,15 @@ const MenuEnhancementsPanel = ({
                       <p className="text-[10px] sm:text-xs text-muted">
                         Your picks will land here after the next order.
                       </p>
-                    </motion.div>
+                    </m.div>
                   )}
-                </motion.section>
-              </motion.div>
+                </m.section>
+              </m.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </m.div>
       </div>
-    </motion.aside>
+    </m.aside>
   );
 };
 

@@ -8,7 +8,7 @@
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import ErrorBoundary from './ErrorBoundary';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { fadeSlideUp } from '../../components/animations/menuAnimations';
 
 /**
@@ -22,14 +22,14 @@ import { fadeSlideUp } from '../../components/animations/menuAnimations';
  */
 export function PageErrorBoundary({ children, pageName = 'page' }) {
   const fallback = (error, errorInfo, resetError) => (
-    <motion.div
+    <m.div
       className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] px-4"
       variants={fadeSlideUp}
       initial="hidden"
       animate="visible"
     >
       <div className="max-w-md w-full text-center">
-        <motion.div
+        <m.div
           className="mb-6"
           variants={fadeSlideUp}
         >
@@ -46,21 +46,21 @@ export function PageErrorBoundary({ children, pageName = 'page' }) {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-        </motion.div>
-        <motion.h1
+        </m.div>
+        <m.h1
           className="text-2xl font-bold text-[var(--text-primary)] mb-2"
           variants={fadeSlideUp}
         >
           Oops! Something went wrong
-        </motion.h1>
-        <motion.p
+        </m.h1>
+        <m.p
           className="text-[var(--text-secondary)] mb-6"
           variants={fadeSlideUp}
         >
           We encountered an error while loading the {pageName}. Please try again or return to the homepage.
-        </motion.p>
+        </m.p>
         {error && import.meta.env.DEV && (
-          <motion.details
+          <m.details
             className="text-left mb-6 p-4 bg-[var(--bg-hover)] rounded-lg"
             variants={fadeSlideUp}
           >
@@ -71,9 +71,9 @@ export function PageErrorBoundary({ children, pageName = 'page' }) {
               {error.toString()}
               {errorInfo?.componentStack}
             </pre>
-          </motion.details>
+          </m.details>
         )}
-        <motion.div
+        <m.div
           className="flex flex-col sm:flex-row gap-4 justify-center"
           variants={fadeSlideUp}
         >
@@ -89,9 +89,9 @@ export function PageErrorBoundary({ children, pageName = 'page' }) {
           >
             Go Home
           </Link>
-        </motion.div>
+        </m.div>
       </div>
-    </motion.div>
+    </m.div>
   );
 
   return (

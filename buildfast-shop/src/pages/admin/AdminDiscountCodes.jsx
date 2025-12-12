@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import {
@@ -14,6 +14,8 @@ import {
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger'
 import { pageFade } from '../../components/animations/menuAnimations'
 import { logger } from '../../utils/logger'
+import CustomDropdown from '../../components/ui/CustomDropdown'
+import ConfirmationModal from '../../components/ui/ConfirmationModal'
 
 /**
  * Admin Discount Codes Page
@@ -35,6 +37,8 @@ function AdminDiscountCodes() {
   const [showModal, setShowModal] = useState(false)
   const [editingCode, setEditingCode] = useState(null)
   const [showUsageModal, setShowUsageModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [codeToDelete, setCodeToDelete] = useState(null)
   const [usageStats, setUsageStats] = useState(null)
   const [loadingStats, setLoadingStats] = useState(false)
 
@@ -258,21 +262,27 @@ function AdminDiscountCodes() {
     setSuccess(false)
   }
 
-  const handleDelete = async (codeId) => {
-    if (!confirm('Are you sure you want to delete this discount code? This cannot be undone.')) {
-      return
-    }
+  const openDeleteConfirm = (codeId) => {
+    setCodeToDelete(codeId)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDelete = async () => {
+    if (!codeToDelete) return
 
     try {
-      const result = await deleteDiscountCode(codeId)
+      const result = await deleteDiscountCode(codeToDelete)
 
       if (result.success) {
         setSuccessMessage('Discount code deleted successfully')
         setSuccess(true)
+        setShowDeleteConfirm(false)
+        setCodeToDelete(null)
         setTimeout(() => {
           setSuccess(false)
           setSuccessMessage('')
         }, 3000)
+        fetchCodes()
       } else {
         setError('Failed to delete discount code: ' + (result.error?.message || 'Unknown error'))
       }
@@ -348,7 +358,7 @@ function AdminDiscountCodes() {
     'h-4 w-4 rounded border-theme-medium bg-[rgba(255,255,255,0.05)] text-[var(--accent)] focus:ring-[var(--accent)]/40 focus:ring-offset-0 focus:ring-offset-transparent'
 
   return (
-    <motion.main
+    <m.main
       ref={containerRef}
       className="w-full bg-[var(--bg-main)] text-[var(--text-main)] py-12"
       variants={pageFade}
@@ -418,14 +428,14 @@ function AdminDiscountCodes() {
 
         <section>
           {loading ? (
-            <div className="glow-surface glow-strong rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-12 text-center shadow-[0_35px_80px_-60px_rgba(5,5,9,0.85)]">
+            <div className="glow-surface glow-soft rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-12 text-center shadow-[0_35px_80px_-60px_rgba(5,5,9,0.85)]">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-theme bg-[rgba(255,255,255,0.04)]">
                 <span className="inline-flex h-8 w-8 animate-spin rounded-full border-4 border-[var(--accent)]/70 border-t-transparent"></span>
               </div>
               <p className="mt-4 text-sm text-muted">Loading discount codes…</p>
             </div>
           ) : codes.length === 0 ? (
-            <div className="glow-surface glow-strong rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-12 text-center shadow-[0_35px_80px_-60px_rgba(5,5,9,0.85)]">
+            <div className="glow-surface glow-soft rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-12 text-center shadow-[0_35px_80px_-60px_rgba(5,5,9,0.85)]">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-theme bg-[rgba(255,255,255,0.04)]">
                 <svg className="h-9 w-9 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -519,7 +529,7 @@ function AdminDiscountCodes() {
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleDelete(code.id)}
+                      onClick={() => openDeleteConfirm(code.id)}
                       className="rounded-lg border border-rose-400/30 bg-rose-500/10 p-2 text-rose-200 transition hover:border-rose-400/50 hover:text-rose-100"
                       title="Delete discount code"
                     >
@@ -547,7 +557,7 @@ function AdminDiscountCodes() {
           <div 
             data-animate="fade-scale" 
             data-animate-active="false" 
-            className="glow-surface glow-strong w-full max-w-3xl rounded-3xl border border-theme bg-[var(--bg-main)]"
+            className="glow-surface glow-soft w-full max-w-3xl rounded-3xl border border-theme bg-[var(--bg-main)]"
             style={{
               boxShadow: 'var(--modal-shadow)'
             }}
@@ -557,7 +567,7 @@ function AdminDiscountCodes() {
               <div>
                 <h2 id="modal-title" className="text-xl font-semibold"> {editingCode ? 'Edit Discount Code' : 'Create Discount Code'}</h2>
                 <p className="mt-1 text-sm text-muted">
-                  {editingCode ? 'Fine-tune the details of this promotion.' : 'Configure the incentives below.'}
+                  {editingCode ? 'Fine-tune the details of this prom.' : 'Configure the incentives below.'}
                 </p>
               </div>
               <button
@@ -627,17 +637,19 @@ function AdminDiscountCodes() {
                     <label htmlFor="discount_type" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
                       Discount Type <span className="text-rose-300">*</span>
                     </label>
-                    <select
+                    <CustomDropdown
                       id="discount_type"
                       name="discount_type"
+                      options={[
+                        { value: 'percentage', label: 'Percentage (%)' },
+                        { value: 'fixed', label: 'Fixed Amount ($)' }
+                      ]}
                       value={formData.discount_type}
                       onChange={handleChange}
+                      placeholder="Select discount type"
                       required
-                      className={`${baseInputClass} pr-10`}
-                    >
-                      <option value="percentage">Percentage (%)</option>
-                      <option value="fixed">Fixed Amount ($)</option>
-                    </select>
+                      maxVisibleItems={5}
+                    />
                   </div>
 
                   <div>
@@ -842,7 +854,7 @@ function AdminDiscountCodes() {
           <div 
             data-animate="fade-scale" 
             data-animate-active="false" 
-            className="glow-surface glow-strong w-full max-w-2xl rounded-3xl border border-theme bg-[var(--bg-main)]"
+            className="glow-surface glow-soft w-full max-w-2xl rounded-3xl border border-theme bg-[var(--bg-main)]"
             style={{
               boxShadow: 'var(--modal-shadow)'
             }}
@@ -936,7 +948,22 @@ function AdminDiscountCodes() {
           </div>
         </div>
       )}
-    </motion.main>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setCodeToDelete(null);
+        }}
+        onConfirm={handleDelete}
+        title="Delete Discount Code"
+        message="Are you sure you want to delete this discount code?\n\nThis action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+    </m.main>
   )
 }
 

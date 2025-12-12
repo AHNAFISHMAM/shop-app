@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { m, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useStoreSettings } from '../contexts/StoreSettingsContext';
@@ -59,7 +60,7 @@ const MenuPage = () => {
 
   // Data fetching using new hooks
   const { menuItems, categories, loading, error: menuError } = useMenuData();
-  const { cartCount } = useCartCount({ user });
+  const { cartCount, loading: cartCountLoading } = useCartCount({ user });
 
   // Show error toast if menu fetch fails
   useEffect(() => {
@@ -329,8 +330,7 @@ const MenuPage = () => {
       }
       return prev;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menuItems, searchQuery, selectedCategory]);
+  }, [menuItems, searchQuery, selectedCategory, totalFilteredCount]);
 
   useEffect(() => {
     if (!hasMoreItems) return;
@@ -377,7 +377,7 @@ const MenuPage = () => {
 
   if (loading) {
     return (
-      <motion.main
+      <m.main
         className="space-y-10"
         variants={pageFade}
         initial="hidden"
@@ -385,36 +385,36 @@ const MenuPage = () => {
         exit="exit"
       >
         {/* Loading Skeleton - Using ProductCardSkeleton component */}
-        <motion.div
+        <m.div
           className="text-center space-y-4 py-12"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
         >
-          <motion.div
+          <m.div
             className="h-8 rounded w-64 mx-auto animate-pulse"
             variants={fadeSlideUp}
             style={{
               backgroundColor: 'var(--bg-hover)'
             }}
           />
-          <motion.div
+          <m.div
             className="h-4 rounded w-96 mx-auto animate-pulse"
             variants={fadeSlideUp}
             style={{
               backgroundColor: 'var(--bg-hover)'
             }}
           />
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
           variants={gridReveal}
           initial="hidden"
           animate="visible"
         >
           {[...Array(6)].map((_, i) => (
-            <motion.div
+            <m.div
               key={i}
               className="rounded-2xl overflow-hidden border border-theme animate-pulse"
               variants={batchFadeSlideUp}
@@ -457,10 +457,10 @@ const MenuPage = () => {
                   }}
                 />
               </div>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
-      </motion.main>
+        </m.div>
+      </m.main>
     );
   }
 
@@ -471,14 +471,14 @@ const MenuPage = () => {
         description="Browse our complete menu featuring signature biryanis, family set menus, appetizers, and desserts. Order online or dine in at Star Café."
         keywords="menu, biryani, restaurant menu, order online, Star Café menu"
       />
-      <motion.main
+      <m.main
       className="space-y-6 relative overflow-visible"
       variants={pageFade}
       initial="hidden"
       animate="visible"
       exit="exit"
     >
-      <motion.div
+      <m.div
         className="absolute inset-0 pointer-events-none -z-10"
         variants={pageBackdrop}
         initial="hidden"
@@ -488,7 +488,7 @@ const MenuPage = () => {
       />
 
       {/* Search Bar Component */}
-      <motion.div
+      <m.div
         ref={searchBarRef}
         variants={searchBarSequence}
         initial="hidden"
@@ -499,35 +499,34 @@ const MenuPage = () => {
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
         />
-      </motion.div>
+      </m.div>
 
-      <motion.div
+      <m.div
         className="rounded-xl sm:rounded-2xl border border-theme bg-theme-elevated px-4 py-3 sm:px-5 sm:py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
         custom={0.2}
       >
-        <motion.div className="space-y-1" variants={fadeSlideUp}>
+        <m.div className="space-y-1" variants={fadeSlideUp}>
           <p className="text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.3em] text-muted">Skip the queue</p>
           <p className="text-sm text-[var(--text-main)]/80 leading-relaxed">
             Book a table and stage your cart before you arrive.
           </p>
-        </motion.div>
-        <motion.div
+        </m.div>
+        <m.div
           className="flex flex-wrap gap-2 sm:gap-3"
           variants={fadeSlideUp}
         >
-          <button
-            type="button"
-            onClick={() => setReservationDrawerOpen(true)}
+          <Link
+            to="/reservations"
             className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-xs sm:text-sm font-semibold text-black transition hover:bg-[var(--accent)]/90 active:scale-95 min-h-[44px]"
           >
             Reserve &amp; Pre-Order
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </Link>
           <button
             type="button"
             onClick={scrollMenuToTop}
@@ -535,11 +534,11 @@ const MenuPage = () => {
           >
             Browse Menu
           </button>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
 
       {/* Mobile Sidebar Toggle Button */}
-      <motion.div
+      <m.div
         className="lg:hidden"
         variants={fadeSlideUp}
         initial="hidden"
@@ -576,10 +575,10 @@ const MenuPage = () => {
             </span>
           )}
         </button>
-      </motion.div>
+      </m.div>
 
       {/* Main Layout: Sidebar + Content */}
-      <motion.div
+      <m.div
         className="flex gap-4 sm:gap-6 items-start overflow-visible"
         variants={menuStagger}
         initial="hidden"
@@ -611,7 +610,7 @@ const MenuPage = () => {
           {mobileSidebarOpen && (
             <>
               {/* Backdrop */}
-              <motion.div
+              <m.div
                 className="fixed inset-0 backdrop-blur-sm z-40 lg:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -624,9 +623,9 @@ const MenuPage = () => {
               />
 
               {/* Slide-in Sidebar */}
-              <motion.div
+              <m.div
                 data-overlay-scroll
-                className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-[var(--bg-main)] z-50 lg:hidden shadow-2xl overflow-y-auto"
+                className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-[var(--bg-main)] z-50 lg:hidden shadow-2xl overflow-y-auto hide-scrollbar"
                 initial={{ x: '-100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
@@ -664,13 +663,13 @@ const MenuPage = () => {
                   quickReorderItems={enableQuickReorder ? quickReorderItems : []}
                   onQuickReorder={enableQuickReorder ? handleQuickReorder : null}
                 />
-              </motion.div>
+              </m.div>
             </>
           )}
         </AnimatePresence>
 
         {/* Main Content Area */}
-        <motion.div
+        <m.div
           ref={contentRef}
           className="flex-1 min-w-0 space-y-8"
           variants={fadeSlideUp}
@@ -681,7 +680,7 @@ const MenuPage = () => {
         >
           {/* Chef's Picks Section */}
           {!searchQuery && !selectedCategory && chefsPicks.length > 0 && (
-            <motion.section
+            <m.section
               variants={fadeSlideUp}
               custom={0.38}
               initial="hidden"
@@ -706,13 +705,13 @@ const MenuPage = () => {
                     };
 
                 return (
-                  <motion.div
+                  <m.div
                     key={`chef-batch-${batchIndex}`}
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
                     {...batchMotionProps}
                   >
                     {batch.map((item) => (
-                      <motion.div
+                      <m.div
                         key={item.id}
                         variants={batchFadeSlideUp}
                         layout
@@ -732,16 +731,16 @@ const MenuPage = () => {
                           getImageUrl={getImageUrl}
                           enableCustomization={enableCustomization}
                         />
-                      </motion.div>
+                      </m.div>
                     ))}
-                  </motion.div>
+                  </m.div>
                 );
               })}
-            </motion.section>
+            </m.section>
           )}
 
           {/* Products Grid */}
-          <motion.section
+          <m.section
             className="min-h-[400px] transition-all duration-700 ease-out"
             style={{
               background: selectedCategory
@@ -756,7 +755,7 @@ const MenuPage = () => {
           >
             {filteredItems.length === 0 ? (
               // Empty State
-              <motion.div
+              <m.div
                 className="flex flex-col items-center justify-center py-20"
                 variants={staggerContainer}
                 initial="hidden"
@@ -764,7 +763,7 @@ const MenuPage = () => {
                 exit="exit"
                 custom={0.58}
               >
-                <motion.svg
+                <m.svg
                   className="w-24 h-24 text-muted/30 mb-4"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -777,20 +776,20 @@ const MenuPage = () => {
                     strokeWidth={1}
                     d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
-                </motion.svg>
-                <motion.p
+                </m.svg>
+                <m.p
                   className="text-lg text-muted mb-2"
                   variants={fadeSlideUp}
                 >
                   No dishes found
-                </motion.p>
-                <motion.p
+                </m.p>
+                <m.p
                   className="text-sm text-muted/70 mb-4"
                   variants={fadeSlideUp}
                 >
                   Try adjusting your filters or search
-                </motion.p>
-                <motion.button
+                </m.p>
+                <m.button
                   onClick={() => {
                     handleSearchChange('');
                     setSelectedCategory(null);
@@ -804,8 +803,8 @@ const MenuPage = () => {
                   whileTap={{ scale: 0.98 }}
                 >
                   Clear Filters
-                </motion.button>
-              </motion.div>
+                </m.button>
+              </m.div>
             ) : (
               <>
               {itemBatches.map((batch, batchIndex) => {
@@ -825,13 +824,13 @@ const MenuPage = () => {
                     };
 
                 return (
-                  <motion.div
+                  <m.div
                     key={`items-batch-${batchIndex}`}
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
                     {...batchMotionProps}
                   >
                     {batch.map((item) => (
-                      <motion.div
+                      <m.div
                         key={item.id}
                         variants={batchFadeSlideUp}
                         layout
@@ -851,9 +850,9 @@ const MenuPage = () => {
                           getImageUrl={getImageUrl}
                           enableCustomization={enableCustomization}
                         />
-                      </motion.div>
+                      </m.div>
                     ))}
-                  </motion.div>
+                  </m.div>
                 );
               })}
               </>
@@ -861,9 +860,9 @@ const MenuPage = () => {
             {hasMoreItems && (
               <div ref={loadMoreRef} className="h-6" aria-hidden="true" />
             )}
-          </motion.section>
-        </motion.div>
-      </motion.div>
+          </m.section>
+        </m.div>
+      </m.div>
 
       {enableReservations && (
         <MenuReservationDrawer
@@ -872,7 +871,7 @@ const MenuPage = () => {
           cartCount={cartCount}
         />
       )}
-    </motion.main>
+    </m.main>
     </>
   );
 };

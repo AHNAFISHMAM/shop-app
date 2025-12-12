@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { useStoreSettings } from '../../contexts/StoreSettingsContext';
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger';
@@ -164,7 +164,7 @@ function AdminFeatureFlags() {
   }
 
   return (
-    <motion.main
+    <m.main
       ref={containerRef}
       className="w-full bg-[var(--bg-main)] text-[var(--text-main)]"
       variants={pageFade}
@@ -572,7 +572,7 @@ function AdminFeatureFlags() {
           </div>
         </div>
       </div>
-    </motion.main>
+    </m.main>
   );
 }
 

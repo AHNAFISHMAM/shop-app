@@ -21,8 +21,8 @@ const GalleryCard = memo(function GalleryCard({
   hoverImage,
   effect = 'crossfade',
   alt = 'Gallery image',
-  caption,
-  effectVariants,
+  caption = undefined,
+  effectVariants = undefined,
 }) {
   const baseEffects = useMemo(() => parseEffects(effect), [effect]);
   const variantSequence = useMemo(() => {
@@ -98,13 +98,6 @@ GalleryCard.propTypes = {
     PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.oneOf(SUPPORTED_EFFECT_KEYS))),
     PropTypes.arrayOf(PropTypes.oneOf(SUPPORTED_EFFECT_KEYS)),
   ]),
-};
-
-GalleryCard.defaultProps = {
-  effect: 'crossfade',
-  alt: 'Gallery image',
-  caption: undefined,
-  effectVariants: undefined,
 };
 
 export default GalleryCard;

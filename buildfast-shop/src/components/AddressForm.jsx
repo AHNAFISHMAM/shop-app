@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
+import CustomDropdown from './ui/CustomDropdown'
 
 /**
  * AddressForm Component
@@ -153,19 +154,22 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
         <label htmlFor="label" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
           Address Label <span className="text-red-500">*</span>
         </label>
-        <select
+        <CustomDropdown
           id="label"
           name="label"
+          options={[
+            { value: 'Home', label: 'Home' },
+            { value: 'Work', label: 'Work' },
+            { value: 'Office', label: 'Office' },
+            { value: 'Other', label: 'Other' }
+          ]}
           value={formData.label}
           onChange={handleChange}
+          placeholder="Select label"
           disabled={loading}
-          className="w-full min-h-[44px] px-4 py-3 border border-theme bg-theme-elevated text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-[var(--bg-main)]/30 cursor-pointer"
-        >
-          <option value="Home">Home</option>
-          <option value="Work">Work</option>
-          <option value="Office">Office</option>
-          <option value="Other">Other</option>
-        </select>
+          required
+          maxVisibleItems={5}
+        />
       </div>
 
       {/* Full Name */}
@@ -305,24 +309,26 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           <label htmlFor="country" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
             Country <span className="text-red-500">*</span>
           </label>
-          <select
+          <CustomDropdown
             id="country"
             name="country"
+            options={[
+              { value: 'United States', label: 'United States' },
+              { value: 'Canada', label: 'Canada' },
+              { value: 'United Kingdom', label: 'United Kingdom' },
+              { value: 'Australia', label: 'Australia' },
+              { value: 'Germany', label: 'Germany' },
+              { value: 'France', label: 'France' },
+              { value: 'Other', label: 'Other' }
+            ]}
             value={formData.country}
             onChange={handleChange}
+            placeholder="Select country"
             disabled={loading}
-            className={`w-full min-h-[44px] px-4 py-3 border bg-theme-elevated text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-[var(--bg-main)]/30 cursor-pointer ${
-              errors.country ? 'border-red-500' : 'border-theme'
-            }`}
-          >
-            <option value="United States">United States</option>
-            <option value="Canada">Canada</option>
-            <option value="United Kingdom">United Kingdom</option>
-            <option value="Australia">Australia</option>
-            <option value="Germany">Germany</option>
-            <option value="France">France</option>
-            <option value="Other">Other</option>
-          </select>
+            required
+            className={errors.country ? 'border-red-500' : ''}
+            maxVisibleItems={5}
+          />
           {errors.country && (
             <p className="mt-1 text-sm sm:text-base text-red-600">{errors.country}</p>
           )}

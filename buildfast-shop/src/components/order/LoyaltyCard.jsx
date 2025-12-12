@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 /**
  * Enhanced Loyalty Card Component
@@ -17,7 +17,7 @@ const LoyaltyCard = ({
   const progressPercent = loyalty?.progressPercent ?? 0;
 
   return (
-    <motion.div
+    <m.div
       className="cart-loyalty-card"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -30,7 +30,7 @@ const LoyaltyCard = ({
 
       {/* Progress Bar */}
       <div className="cart-loyalty-progress-container">
-        <motion.div
+        <m.div
           className="cart-loyalty-progress-bar"
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(100, Math.max(progressPercent, 4))}%` }}
@@ -70,7 +70,7 @@ const LoyaltyCard = ({
       {/* Rewards List */}
       <AnimatePresence>
         {showRewards && (
-          <motion.div
+          <m.div
             id="rewards-list"
             role="region"
             aria-label="Available rewards"
@@ -85,7 +85,7 @@ const LoyaltyCard = ({
                 <p className="cart-loyalty-rewards-section-title">Available now</p>
                 <ul className="cart-loyalty-rewards-list">
                   {availableRewards.map((reward) => (
-                    <motion.li
+                    <m.li
                       key={reward.id}
                       className="cart-loyalty-reward-item"
                       initial={{ opacity: 0, x: -10 }}
@@ -105,7 +105,7 @@ const LoyaltyCard = ({
                           </button>
                         )}
                       </div>
-                    </motion.li>
+                    </m.li>
                   ))}
                 </ul>
               </div>
@@ -127,10 +127,10 @@ const LoyaltyCard = ({
                 </ul>
               </div>
             )}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 };
 

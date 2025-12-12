@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
+import { format } from 'date-fns'
+import { Calendar } from '../../components/ui/calendar-rac'
+import { getLocalTimeZone, today } from '@internationalized/date'
 import { supabase } from '../../lib/supabase'
 import UpdateTimestamp from '../../components/UpdateTimestamp'
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger'
@@ -10,6 +13,7 @@ import CustomerHistory from '../../components/admin/CustomerHistory'
 import WaitlistManager from '../../components/admin/WaitlistManager'
 import AdminReservationSettings from './AdminReservationSettings'
 import { logger } from '../../utils/logger'
+import CustomDropdown from '../../components/ui/CustomDropdown'
 
 /**
  * Admin Reservations Management
@@ -57,6 +61,11 @@ function AdminReservations() {
   const [viewMode, setViewMode] = useState('list') // 'list' or 'calendar'
   const [modalTab, setModalTab] = useState('details') // 'details' or 'history'
   const [showSettings, setShowSettings] = useState(false) // Settings modal
+  const [showCalendarModal, setShowCalendarModal] = useState(false) // Calendar modal
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => {
+    const now = today(getLocalTimeZone())
+    return now
+  }) // Selected date in calendar (CalendarDate format)
 
   useEffect(() => {
     fetchReservations()
@@ -236,18 +245,31 @@ function AdminReservations() {
     return true
   })
 
-  // Group reservations by date
-  const groupedReservations = filteredReservations.reduce((groups, reservation) => {
-    const date = reservation.reservation_date
-    if (!groups[date]) {
-      groups[date] = []
+  // Group reservations by date - memoized for performance
+  const groupedReservations = useMemo(() => {
+    return filteredReservations.reduce((groups, reservation) => {
+      const date = reservation.reservation_date
+      if (!groups[date]) {
+        groups[date] = []
+      }
+      groups[date].push(reservation)
+      return groups
+    }, {})
+  }, [filteredReservations])
+
+
+  // Debug viewMode changes - only log when viewMode changes to avoid spam
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      logger.log('ViewMode changed to:', viewMode)
+      logger.log('Filtered reservations count:', filteredReservations.length)
+      logger.log('Grouped reservations keys:', Object.keys(groupedReservations))
     }
-    groups[date].push(reservation)
-    return groups
-  }, {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]) // Only depend on viewMode to avoid excessive logging
 
   return (
-    <motion.main
+    <m.main
       ref={containerRef}
       className="w-full bg-[var(--bg-main)] text-[var(--text-main)]"
       variants={pageFade}
@@ -281,12 +303,14 @@ function AdminReservations() {
               List
             </button>
             <button
-              onClick={() => setViewMode('calendar')}
-              className={`flex items-center gap-2 rounded-xl sm:rounded-2xl min-h-[44px] px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all ${
-                viewMode === 'calendar'
-                  ? 'bg-[var(--accent)] text-black'
-                  : 'border border-theme bg-[rgba(255,255,255,0.05)] text-muted hover:bg-[rgba(255,255,255,0.1)]'
-              }`}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowCalendarModal(true)
+              }}
+              className="flex items-center gap-2 rounded-xl sm:rounded-2xl min-h-[44px] px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all border border-theme bg-[rgba(255,255,255,0.05)] text-muted hover:bg-[rgba(255,255,255,0.1)] hover:text-[var(--text-main)]"
+              aria-label="Open calendar view"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -314,26 +338,28 @@ function AdminReservations() {
 
         {/* Filters */}
         <div
-          className="glow-surface glow-strong mb-6 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-6 md:p-10"
+          className="glow-surface glow-soft mb-6 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-6 md:p-10"
           data-animate="fade-scale"
           data-animate-active="false"
         >
           <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="mb-2 block text-sm sm:text-base font-medium text-muted">Status</label>
-              <select
+              <CustomDropdown
+                options={[
+                  { value: 'all', label: 'All Statuses' },
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'confirmed', label: 'Confirmed' },
+                  { value: 'declined', label: 'Declined' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'no_show', label: 'No Show' }
+                ]}
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="input-themed w-full min-h-[44px] rounded-xl sm:rounded-2xl border px-4 sm:px-6 py-3 focus:border-transparent focus:ring-2 focus:ring-[var(--accent)]/70 text-sm sm:text-base"
-              >
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="declined">Declined</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="completed">Completed</option>
-                <option value="no_show">No Show</option>
-              </select>
+                placeholder="All Statuses"
+                maxVisibleItems={5}
+              />
             </div>
 
             <div>
@@ -586,77 +612,87 @@ function AdminReservations() {
         ) : viewMode === 'calendar' ? (
           /* Calendar View */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Object.keys(groupedReservations).sort().map((date, dateIndex) => (
-              <div
-                key={date}
-                className="glow-surface glow-soft rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-5 transition-all hover:border-theme-medium hover:shadow-lg"
-                data-animate="fade-rise"
-                data-animate-active="false"
-                style={{ transitionDelay: `${dateIndex * 90}ms` }}
-              >
-                <div className="mb-4 flex items-center justify-between border-b border-theme pb-3">
-                  <div>
-                    <h3 className="font-semibold text-[var(--text-main)]">
-                      {new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </h3>
-                    <p className="text-xs text-muted">{groupedReservations[date].length} reservations</p>
+            {Object.keys(groupedReservations).length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                <svg className="h-16 w-16 text-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-lg font-medium text-muted">No reservations in calendar view</p>
+                <p className="mt-2 text-sm text-muted">Reservations will appear here when available</p>
+              </div>
+            ) : (
+              Object.keys(groupedReservations).sort().map((date, dateIndex) => (
+                <div
+                  key={date}
+                  className="glow-surface glow-soft rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-5 transition-all hover:border-theme-medium hover:shadow-lg"
+                  data-animate="fade-rise"
+                  data-animate-active="false"
+                  style={{ transitionDelay: `${dateIndex * 90}ms` }}
+                >
+                  <div className="mb-4 flex items-center justify-between border-b border-theme pb-3">
+                    <div>
+                      <h3 className="font-semibold text-[var(--text-main)]">
+                        {new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </h3>
+                      <p className="text-xs text-muted">{groupedReservations[date].length} reservations</p>
+                    </div>
+                    <div className="rounded-lg bg-[var(--accent)]/20 px-3 py-1.5">
+                      <span className="text-sm font-bold text-[var(--accent)]">{groupedReservations[date].length}</span>
+                    </div>
                   </div>
-                  <div className="rounded-lg bg-[var(--accent)]/20 px-3 py-1.5">
-                    <span className="text-sm font-bold text-[var(--accent)]">{groupedReservations[date].length}</span>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  {groupedReservations[date].slice(0, 5).map((reservation, index) => (
-                    <div
-                      key={reservation.id}
-                      onClick={() => {
-                        setSelectedReservation(reservation)
-                        setAdminNotes(reservation.admin_notes || '')
-                        setTableNumber(reservation.table_number || '')
-                      }}
-                      className="cursor-pointer rounded-lg border border-theme bg-[rgba(255,255,255,0.02)] p-3 transition-all hover:border-theme-medium hover:bg-[rgba(255,255,255,0.05)]"
-                      data-animate="fade-rise"
-                      data-animate-active="false"
-                      style={{ transitionDelay: `${index * 70}ms` }}
-                    >
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-[var(--text-main)]">{reservation.customer_name}</p>
-                          <p className="text-xs text-muted">{reservation.reservation_time}</p>
+                  <div className="space-y-2">
+                    {groupedReservations[date].slice(0, 5).map((reservation, index) => (
+                      <div
+                        key={reservation.id}
+                        onClick={() => {
+                          setSelectedReservation(reservation)
+                          setAdminNotes(reservation.admin_notes || '')
+                          setTableNumber(reservation.table_number || '')
+                        }}
+                        className="cursor-pointer rounded-lg border border-theme bg-[rgba(255,255,255,0.02)] p-3 transition-all hover:border-theme-medium hover:bg-[rgba(255,255,255,0.05)]"
+                        data-animate="fade-rise"
+                        data-animate-active="false"
+                        style={{ transitionDelay: `${index * 70}ms` }}
+                      >
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-[var(--text-main)]">{reservation.customer_name}</p>
+                            <p className="text-xs text-muted">{reservation.reservation_time}</p>
+                          </div>
+                          {getStatusBadge(reservation.status)}
                         </div>
-                        {getStatusBadge(reservation.status)}
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted">
-                        <span className="flex items-center gap-1">
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          {reservation.party_size}
-                        </span>
-                        {reservation.table_number && (
+                        <div className="flex items-center gap-3 text-xs text-muted">
                           <span className="flex items-center gap-1">
                             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            {reservation.table_number}
+                            {reservation.party_size}
                           </span>
-                        )}
+                          {reservation.table_number && (
+                            <span className="flex items-center gap-1">
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                              </svg>
+                              {reservation.table_number}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {groupedReservations[date].length > 5 && (
-                    <button className="w-full rounded-lg border border-theme bg-[rgba(255,255,255,0.02)] py-2 text-xs font-medium text-muted transition-all hover:bg-[rgba(255,255,255,0.05)]">
-                      +{groupedReservations[date].length - 5} more
-                    </button>
-                  )}
+                    ))}
+                    {groupedReservations[date].length > 5 && (
+                      <button className="w-full rounded-lg border border-theme bg-[rgba(255,255,255,0.02)] py-2 text-xs font-medium text-muted transition-all hover:bg-[rgba(255,255,255,0.05)]">
+                        +{groupedReservations[date].length - 5} more
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         ) : (
           /* List View */
@@ -748,7 +784,7 @@ function AdminReservations() {
         >
           <div
             data-overlay-scroll
-            className="glow-surface glow-strong w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-theme bg-[var(--bg-main)]"
+            className="glow-surface glow-soft w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-theme bg-[var(--bg-main)]"
             style={{
               boxShadow: 'var(--modal-shadow)'
             }}
@@ -1047,13 +1083,163 @@ function AdminReservations() {
             </div>
 
             {/* Modal Body */}
-            <div data-overlay-scroll className="p-6 max-h-[calc(100vh-12rem)] overflow-y-auto custom-scrollbar">
+            <div data-overlay-scroll className="p-6 max-h-[calc(100vh-12rem)] overflow-y-auto hide-scrollbar">
               <AdminReservationSettings />
             </div>
           </div>
         </div>
       )}
-    </motion.main>
+
+      {/* Calendar Modal */}
+      <AnimatePresence>
+        {showCalendarModal && (
+          <div
+          className="fixed inset-0 z-[99998] flex items-center justify-center p-2 sm:p-4 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="calendar-modal-title"
+          onClick={() => setShowCalendarModal(false)}
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.8)'
+          }}
+        >
+          <m.div
+            className="relative w-full h-full max-w-[95vw] max-h-[95vh] rounded-2xl border border-theme bg-[var(--bg-main)] shadow-2xl z-[99999] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-theme bg-[rgba(5,5,9,0.95)] p-4 backdrop-blur-sm flex-shrink-0">
+              <div>
+                <h2 id="calendar-modal-title" className="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Calendar View
+                </h2>
+                <p className="text-xs text-muted mt-0.5">Select a date to view reservation details</p>
+              </div>
+              <button
+                onClick={() => setShowCalendarModal(false)}
+                className="rounded-lg p-2 text-muted transition hover:bg-[rgba(255,255,255,0.1)] hover:text-[var(--text-main)]"
+                title="Close"
+                aria-label="Close calendar modal"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body - Split View: Calendar Left, Details Right */}
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+              {/* Left Side - Calendar */}
+              <div className="flex-1 lg:flex-[0_0_50%] p-4 sm:p-6 overflow-y-auto hide-scrollbar border-r-0 lg:border-r border-theme flex items-center justify-center">
+                <Calendar
+                  value={selectedCalendarDate}
+                  onChange={setSelectedCalendarDate}
+                />
+              </div>
+
+              {/* Right Side - Reservation Details */}
+              <div className="flex-1 lg:flex-[0_0_50%] p-4 sm:p-6 overflow-y-auto hide-scrollbar">
+                {(() => {
+                  // Convert CalendarDate to YYYY-MM-DD string
+                  const selectedDateStr = `${selectedCalendarDate.year}-${String(selectedCalendarDate.month).padStart(2, '0')}-${String(selectedCalendarDate.day).padStart(2, '0')}`
+                  const dayReservations = groupedReservations[selectedDateStr] || []
+                  
+                  // Convert CalendarDate to Date for formatting
+                  const selectedDate = new Date(selectedCalendarDate.year, selectedCalendarDate.month - 1, selectedCalendarDate.day)
+                  
+                  return (
+                    <div className="h-full flex flex-col">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-bold text-[var(--text-main)] mb-1">
+                          {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                        </h3>
+                        <p className="text-sm text-muted">
+                          {dayReservations.length === 0 
+                            ? 'No reservations for this date'
+                            : `${dayReservations.length} reservation${dayReservations.length > 1 ? 's' : ''}`
+                          }
+                        </p>
+                      </div>
+
+                      {dayReservations.length > 0 ? (
+                        <div className="space-y-3 flex-1">
+                          {dayReservations.map((reservation) => (
+                            <div
+                              key={reservation.id}
+                              onClick={() => {
+                                setSelectedReservation(reservation)
+                                setAdminNotes(reservation.admin_notes || '')
+                                setTableNumber(reservation.table_number || '')
+                                setShowCalendarModal(false)
+                              }}
+                              className="cursor-pointer rounded-xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 transition-all hover:border-theme-medium hover:bg-[rgba(255,255,255,0.05)] hover:shadow-lg"
+                            >
+                              <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className="flex-1">
+                                  <p className="text-base font-semibold text-[var(--text-main)] mb-1">
+                                    {reservation.customer_name}
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+                                    <span className="flex items-center gap-1.5">
+                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                      {reservation.reservation_time}
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                      </svg>
+                                      Party of {reservation.party_size}
+                                    </span>
+                                    {reservation.table_number && (
+                                      <span className="flex items-center gap-1.5">
+                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                        </svg>
+                                        Table {reservation.table_number}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {getStatusBadge(reservation.status)}
+                              </div>
+                              {reservation.special_requests && (
+                                <div className="mt-3 pt-3 border-t border-theme">
+                                  <p className="text-xs text-muted mb-1">Special Requests:</p>
+                                  <p className="text-sm text-[var(--text-main)]">{reservation.special_requests}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center">
+                          <div className="text-center">
+                            <svg className="h-16 w-16 mx-auto mb-4 text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p className="text-muted text-sm">No reservations scheduled for this date</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+          </m.div>
+        </div>
+        )}
+      </AnimatePresence>
+    </m.main>
   )
 }
 

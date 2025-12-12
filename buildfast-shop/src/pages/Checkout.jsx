@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Elements } from '@stripe/react-stripe-js'
 import { useAuth } from '../contexts/AuthContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
@@ -25,6 +25,7 @@ import { useAddresses } from '../features/addresses/hooks'
 import { edgeFunctionClient } from '../shared/lib'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import CustomDropdown from '../components/ui/CustomDropdown'
 
 const CURRENCY_SYMBOL = '৳'
 const CURRENCY_CODE = 'BDT'
@@ -232,7 +233,7 @@ function Checkout() {
       if (orderSuccess) {
         // Only log in development
         if (import.meta.env.DEV) {
-          console.log('Resetting order success state - new items in cart')
+          logger.log('Resetting order success state - new items in cart')
         }
         setOrderSuccess(false)
         setCreatedOrderId(null)
@@ -535,7 +536,7 @@ function Checkout() {
             filter: `user_id=eq.${user.id}`
           },
           async (payload) => {
-            console.log('Address updated in real-time:', payload)
+            logger.log('Address updated in real-time:', payload)
             logger.log('Address updated in checkout:', payload)
             
             // Refetch addresses to get updated data (debounced)
@@ -598,7 +599,7 @@ function Checkout() {
     // Only prevent redirects during payment success flow
     // Don't auto-redirect anymore - let user manually navigate
     if (isProcessingPaymentSuccess.current || showSuccessModal || orderSuccess || showPayment || placingOrder) {
-      console.log('Payment success flow active - preventing redirects', {
+      logger.log('Payment success flow active - preventing redirects', {
         isProcessingPaymentSuccess: isProcessingPaymentSuccess.current,
         showSuccessModal,
         orderSuccess,
@@ -617,7 +618,7 @@ function Checkout() {
     const paymentIntentClientSecret = urlParams.get('payment_intent_client_secret')
     
     if (orderId || paymentIntent || paymentIntentClientSecret) {
-      console.log('Detected payment redirect return', { orderId, paymentIntent, paymentIntentClientSecret })
+      logger.log('Detected payment redirect return', { orderId, paymentIntent, paymentIntentClientSecret })
       
       // CRITICAL: Set flag immediately to prevent redirects
       isProcessingPaymentSuccess.current = true
@@ -625,7 +626,7 @@ function Checkout() {
       // If we have an order ID from redirect, show success modal
       if (orderId && orderId !== createdOrderId) {
         // Order ID from URL - payment was successful
-        console.log('Showing success modal from Stripe redirect - BEFORE clearing cart', { orderId })
+        logger.log('Showing success modal from Stripe redirect - BEFORE clearing cart', { orderId })
         
         // Show modal FIRST before clearing cart or doing anything else
         setCreatedOrderId(orderId)
@@ -648,11 +649,11 @@ function Checkout() {
               if (deleteError) {
                 logger.error('Error clearing cart:', deleteError)
               } else {
-                console.log('Cart cleared after modal shown (Stripe redirect)')
+                logger.log('Cart cleared after modal shown (Stripe redirect)')
               }
             } else {
               clearGuestCart()
-              console.log('Cart cleared after modal shown (Stripe redirect - guest)')
+              logger.log('Cart cleared after modal shown (Stripe redirect - guest)')
             }
           } catch (err) {
             logger.error('Error clearing cart:', err)
@@ -815,16 +816,29 @@ function Checkout() {
     
     const baseValidation = (
       shippingAddress.fullName?.trim() &&
+      shippingAddress.fullName.trim().length >= 2 &&
       shippingAddress.streetAddress?.trim() &&
+      shippingAddress.streetAddress.trim().length >= 5 &&
       shippingAddress.city?.trim() &&
+      shippingAddress.city.trim().length >= 2 &&
       shippingAddress.stateProvince?.trim() &&
+      shippingAddress.stateProvince.trim().length >= 2 &&
       shippingAddress.postalCode?.trim() &&
+      shippingAddress.postalCode.trim().length >= 3 &&
       shippingAddress.country?.trim()
     )
     
     // Phone is required for manual addresses, optional for saved addresses
     if (requirePhone) {
-      return baseValidation && shippingAddress.phoneNumber?.trim()
+      const phone = shippingAddress.phoneNumber?.trim()
+      if (!phone) return false
+      // Validate phone format: 8-20 digits, allows spaces, dashes, parentheses, plus
+      const phoneRegex = /^[\d\s\-+()]{8,20}$/
+      if (!phoneRegex.test(phone)) return false
+    } else if (shippingAddress.phoneNumber?.trim()) {
+      // If phone is provided (even if optional), validate format
+      const phoneRegex = /^[\d\s\-+()]{8,20}$/
+      if (!phoneRegex.test(shippingAddress.phoneNumber.trim())) return false
     }
     
     return baseValidation
@@ -833,17 +847,54 @@ function Checkout() {
   // Get missing address fields for error display
   const getMissingAddressFields = useCallback(() => {
     const missing = []
-    if (!shippingAddress.fullName?.trim()) missing.push('Full Name')
-    if (!shippingAddress.streetAddress?.trim()) missing.push('Street Address')
-    if (!shippingAddress.city?.trim()) missing.push('City')
-    if (!shippingAddress.stateProvince?.trim()) missing.push('State/Province')
-    if (!shippingAddress.postalCode?.trim()) missing.push('Postal Code')
-    if (!shippingAddress.country?.trim()) missing.push('Country')
-    // Phone is only required for manual addresses
-    if ((useManualAddress || !selectedSavedAddress) && !shippingAddress.phoneNumber?.trim()) {
-      missing.push('Phone Number')
+    const errors = []
+    
+    if (!shippingAddress.fullName?.trim()) {
+      missing.push('Full Name')
+    } else if (shippingAddress.fullName.trim().length < 2) {
+      errors.push('Full Name must be at least 2 characters')
     }
-    return missing
+    
+    if (!shippingAddress.streetAddress?.trim()) {
+      missing.push('Street Address')
+    } else if (shippingAddress.streetAddress.trim().length < 5) {
+      errors.push('Street Address must be at least 5 characters')
+    }
+    
+    if (!shippingAddress.city?.trim()) {
+      missing.push('City')
+    } else if (shippingAddress.city.trim().length < 2) {
+      errors.push('City must be at least 2 characters')
+    }
+    
+    if (!shippingAddress.stateProvince?.trim()) {
+      missing.push('State/Province')
+    } else if (shippingAddress.stateProvince.trim().length < 2) {
+      errors.push('State/Province must be at least 2 characters')
+    }
+    
+    if (!shippingAddress.postalCode?.trim()) {
+      missing.push('Postal Code')
+    } else if (shippingAddress.postalCode.trim().length < 3) {
+      errors.push('Postal Code must be at least 3 characters')
+    }
+    
+    if (!shippingAddress.country?.trim()) {
+      missing.push('Country')
+    }
+    
+    // Phone validation
+    const requirePhone = useManualAddress || !selectedSavedAddress
+    if (requirePhone && !shippingAddress.phoneNumber?.trim()) {
+      missing.push('Phone Number')
+    } else if (shippingAddress.phoneNumber?.trim()) {
+      const phoneRegex = /^[\d\s\-+()]{8,20}$/
+      if (!phoneRegex.test(shippingAddress.phoneNumber.trim())) {
+        errors.push('Phone Number must be 8-20 digits (spaces, dashes, parentheses allowed)')
+      }
+    }
+    
+    return { missing, errors }
   }, [shippingAddress, useManualAddress, selectedSavedAddress])
 
   // Handle order placement and payment intent creation
@@ -853,22 +904,46 @@ function Checkout() {
     // Validate form
     if (!isAddressValid()) {
       if (errorClearRef.current) errorClearRef.current()
-      errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Please fill in all required shipping address fields.', 'error', 5000)
+      const { missing, errors } = getMissingAddressFields()
+      let errorMessage = 'Please fill in all required shipping address fields.'
+      if (errors.length > 0) {
+        errorMessage = errors[0] // Show first validation error
+      } else if (missing.length > 0) {
+        errorMessage = `Missing required fields: ${missing.join(', ')}`
+      }
+      errorClearRef.current = setMessageWithAutoClear(setOrderError, null, errorMessage, 'error', 5000)
       return
     }
 
-    // For guests: validate email
-    if (!user && !guestEmail.trim()) {
-      if (errorClearRef.current) errorClearRef.current()
-      errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Please provide your email address.', 'error', 5000)
-      return
-    }
-
-    // Validate email format for guests
-    if (!user && guestEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
-      if (errorClearRef.current) errorClearRef.current()
-      errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Please provide a valid email address.', 'error', 5000)
-      return
+    // Validate email (for both guests and authenticated users)
+    if (!user) {
+      // Guest users: email is required
+      if (!guestEmail.trim()) {
+        if (errorClearRef.current) errorClearRef.current()
+        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Please provide your email address.', 'error', 5000)
+        return
+      }
+      // Validate email format for guests
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(guestEmail.trim())) {
+        if (errorClearRef.current) errorClearRef.current()
+        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Please provide a valid email address.', 'error', 5000)
+        return
+      }
+    } else {
+      // Authenticated users: verify email exists in account
+      if (!user.email || !user.email.trim()) {
+        if (errorClearRef.current) errorClearRef.current()
+        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Your account email is missing. Please update your profile.', 'error', 5000)
+        return
+      }
+      // Validate email format for authenticated users
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(user.email.trim())) {
+        if (errorClearRef.current) errorClearRef.current()
+        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Your account email is invalid. Please update your profile.', 'error', 5000)
+        return
+      }
     }
 
     // Check if we have any cart items with product data
@@ -1049,7 +1124,7 @@ function Checkout() {
 
   // Handle successful payment
   const handlePaymentSuccess = async () => {
-    console.log('handlePaymentSuccess called', { user: !!user, createdOrderId, grandTotal })
+    logger.log('handlePaymentSuccess called', { user: !!user, createdOrderId, grandTotal })
     
     // CRITICAL: Set flag immediately to prevent any redirects
     isProcessingPaymentSuccess.current = true
@@ -1057,13 +1132,13 @@ function Checkout() {
     try {
       setTrackingStatus('processing')
       const customerEmail = user ? user.email : guestEmail
-      console.log('Processing payment success for:', customerEmail)
+      logger.log('Processing payment success for:', customerEmail)
 
       // FIRST: Hide payment form and show modal BEFORE clearing cart
       // This prevents the redirect useEffect from firing
       if (!user) {
         // Guest checkout - offer account creation
-        console.log('Showing conversion modal for guest')
+        logger.log('Showing conversion modal for guest')
         const sessionId = getGuestSessionId()
         setGuestCheckoutData({
           email: guestEmail,
@@ -1075,7 +1150,7 @@ function Checkout() {
         setOrderSuccess(true)
       } else {
         // Authenticated user - show success modal FIRST
-        console.log('Showing success modal for authenticated user - BEFORE clearing cart', { 
+        logger.log('Showing success modal for authenticated user - BEFORE clearing cart', { 
           showSuccessModal: true, 
           createdOrderId, 
           grandTotal 
@@ -1110,7 +1185,7 @@ function Checkout() {
               if (deleteError) {
                 logger.error('Error clearing cart:', deleteError)
               } else {
-                console.log('Cart cleared successfully for authenticated user')
+                logger.log('Cart cleared successfully for authenticated user')
               }
             })
             .catch((cartError) => {
@@ -1119,7 +1194,7 @@ function Checkout() {
         } else {
           // Clear localStorage cart for guests (synchronous)
           clearGuestCart()
-          console.log('Cart cleared successfully for guest')
+          logger.log('Cart cleared successfully for guest')
         }
       } catch (cartError) {
         logger.error('Error clearing cart:', cartError)
@@ -1159,9 +1234,9 @@ function Checkout() {
         logger.error('Failed to send confirmation email:', emailError)
       }
 
-      console.log('Payment success flow complete - modal should be visible')
+      logger.log('Payment success flow complete - modal should be visible')
     } catch (err) {
-      console.error('Error in handlePaymentSuccess:', err)
+      logger.error('Error in handlePaymentSuccess:', err)
       logger.error('Error after payment:', err)
       // On error, still try to show modal
       setShowPayment(false)
@@ -1172,7 +1247,7 @@ function Checkout() {
 
   // Handle modal close (also redirects)
   const handleModalClose = () => {
-    console.log('Payment success modal closed - redirecting to home')
+    logger.log('Payment success modal closed - redirecting to home')
     
     // Reset all payment success states
     setShowSuccessModal(false)
@@ -1219,12 +1294,38 @@ function Checkout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted">Loading checkout...</p>
+      <m.main
+        className="min-h-screen"
+        variants={pageFade}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
+        <UpdateTimestamp />
+        <div className="app-container py-8 sm:py-12">
+          <div className="space-y-8">
+            {/* Header skeleton */}
+            <div className="space-y-4 animate-pulse">
+              <div className="h-8 bg-[var(--bg-elevated)] rounded w-64"></div>
+              <div className="h-4 bg-[var(--bg-elevated)] rounded w-96"></div>
+            </div>
+            
+            {/* Form skeleton */}
+            <div className="space-y-6 animate-pulse">
+              <div className="h-12 bg-[var(--bg-elevated)] rounded-lg"></div>
+              <div className="h-12 bg-[var(--bg-elevated)] rounded-lg"></div>
+              <div className="h-32 bg-[var(--bg-elevated)] rounded-lg"></div>
+            </div>
+            
+            {/* Cart summary skeleton */}
+            <div className="space-y-4 animate-pulse">
+              <div className="h-6 bg-[var(--bg-elevated)] rounded w-48"></div>
+              <div className="h-10 bg-[var(--bg-elevated)] rounded"></div>
+              <div className="h-10 bg-[var(--bg-elevated)] rounded"></div>
+            </div>
+          </div>
         </div>
-      </div>
+      </m.main>
     )
   }
 
@@ -1262,7 +1363,7 @@ function Checkout() {
 
   // Debug logging for cart state (only in development)
   if (import.meta.env.DEV) {
-    console.log('Checkout cart state:', {
+    logger.log('Checkout cart state:', {
       loadingCart,
       loadingAddresses,
       rawCartItemsCount: rawCartItems?.length || 0,
@@ -1283,7 +1384,7 @@ function Checkout() {
 
   // Log warning if items exist but products aren't resolved (only in development)
   if (hasUnresolvedItems && import.meta.env.DEV) {
-    console.warn('Cart has items but products are not resolved:', {
+    logger.warn('Cart has items but products are not resolved:', {
       rawCartItemsCount: rawCartItems.length,
       cartItemsCount: cartItems.length,
       cartItemsWithProductsCount: cartItemsWithProducts.length,
@@ -1297,7 +1398,7 @@ function Checkout() {
   // - Not in any payment/success flow
   if (shouldShowEmptyCart) {
     return (
-      <motion.main
+      <m.main
         className="min-h-screen flex items-center justify-center"
         variants={pageFade}
         initial="hidden"
@@ -1319,7 +1420,7 @@ function Checkout() {
             <button
               type="button"
               onClick={() => {
-                console.log('Back to Menu clicked - navigating to /order')
+                logger.log('Back to Menu clicked - navigating to /order')
                 navigate('/order')
               }}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--accent)] text-black font-semibold rounded-lg hover:opacity-90 active:opacity-80 transition-opacity min-h-[44px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 min-w-[160px]"
@@ -1332,7 +1433,7 @@ function Checkout() {
             <button
               type="button"
               onClick={() => {
-                console.log('Home clicked - navigating to /')
+                logger.log('Home clicked - navigating to /')
                 navigate('/')
               }}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-theme-elevated border border-theme text-[var(--text-main)] font-semibold rounded-lg hover:opacity-90 active:opacity-80 transition-opacity min-h-[44px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-w-[160px]"
@@ -1344,7 +1445,7 @@ function Checkout() {
             </button>
           </div>
         </div>
-      </motion.main>
+      </m.main>
     )
   }
 
@@ -1352,7 +1453,7 @@ function Checkout() {
   // This happens when products were deleted or foreign keys are broken
   if (hasUnresolvedItems && !loadingCart) {
   return (
-      <motion.main
+      <m.main
         className="min-h-screen flex items-center justify-center"
         variants={pageFade}
         initial="hidden"
@@ -1374,7 +1475,7 @@ function Checkout() {
             <button
               type="button"
               onClick={() => {
-                console.log('Refreshing page to reload cart')
+                logger.log('Refreshing page to reload cart')
                 window.location.reload()
               }}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--accent)] text-black font-semibold rounded-lg hover:opacity-90 active:opacity-80 transition-opacity min-h-[44px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 min-w-[160px]"
@@ -1387,7 +1488,7 @@ function Checkout() {
             <button
               type="button"
               onClick={() => {
-                console.log('Back to Menu clicked - navigating to /order')
+                logger.log('Back to Menu clicked - navigating to /order')
                 navigate('/order')
               }}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-theme-elevated border border-theme text-[var(--text-main)] font-semibold rounded-lg hover:opacity-90 active:opacity-80 transition-opacity min-h-[44px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 min-w-[160px]"
@@ -1399,14 +1500,14 @@ function Checkout() {
             </button>
           </div>
         </div>
-      </motion.main>
+      </m.main>
     )
   }
 
   // Render checkout page (even if cart is empty, if modal is showing)
   return (
     <>
-    <motion.main
+    <m.main
       className="min-h-screen"
       variants={pageFade}
       initial="hidden"
@@ -1415,7 +1516,7 @@ function Checkout() {
     >
       <UpdateTimestamp />
       {/* Header */}
-      <motion.header
+      <m.header
         className="bg-[var(--bg-main)] border-b border-theme"
         variants={fadeSlideUp}
         initial="hidden"
@@ -1437,9 +1538,9 @@ function Checkout() {
             Review your order and complete payment
           </p>
         </div>
-      </motion.header>
+      </m.header>
 
-      <motion.section
+      <m.section
         className="app-container py-8"
         variants={fadeSlideUp}
         initial="hidden"
@@ -1715,18 +1816,15 @@ function Checkout() {
                   <label htmlFor="scheduledSlot" className="block text-sm font-medium text-[var(--text-main)] mb-2">
                     {fulfillmentMode === 'delivery' ? 'Delivery window' : 'Pickup window'}
                   </label>
-                  <select
+                  <CustomDropdown
                     id="scheduledSlot"
+                    name="scheduledSlot"
+                    options={scheduledSlots.map(slot => ({ value: slot.value, label: slot.label }))}
                     value={scheduledSlot}
                     onChange={(event) => setScheduledSlot(event.target.value)}
-                    className="w-full rounded-lg border border-theme bg-theme-elevated px-4 py-2.5 text-sm text-[var(--text-main)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
-                  >
-                    {scheduledSlots.map((slot) => (
-                      <option key={slot.value} value={slot.value} className="bg-[var(--bg-main)] text-[var(--text-main)]">
-                        {slot.label}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Select time window"
+                    maxVisibleItems={5}
+                  />
                 </div>
                 <div className="rounded-xl border border-theme bg-theme-elevated p-4 text-sm text-muted">
                   {fulfillmentMode === 'delivery' ? (
@@ -2509,8 +2607,8 @@ function Checkout() {
           </div>
         </div>
         )}
-      </motion.section>
-      </motion.main>
+      </m.section>
+      </m.main>
 
       {/* Payment Success Modal - Render outside main to ensure it's always visible */}
       <PaymentSuccessModal

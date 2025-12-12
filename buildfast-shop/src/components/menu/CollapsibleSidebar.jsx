@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { sidebarSequence, staggerContainer, fadeSlideUp, batchFadeSlideUp } from '../animations/menuAnimations';
 import { cn } from '../../utils/cn';
@@ -102,7 +102,7 @@ const CollapsibleSidebar = ({
   const containerClasses = `rounded-xl sm:rounded-2xl border border-theme backdrop-blur-sm flex flex-col ${
     isDesktop ? 'max-h-[calc(100vh-5rem)]' : 'h-full'
   }`;
-  const navWrapperClasses = 'flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-6 py-4';
+  const navWrapperClasses = 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden hide-scrollbar px-4 sm:px-6 py-4';
   const groupWrapperClasses = 'space-y-2';
 
   // Theme detection
@@ -263,16 +263,21 @@ const CollapsibleSidebar = ({
 
   return (
     <aside className={asideClasses}>
-      <motion.div
+      <m.div
         className={containerClasses}
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
         exit="exit"
-        style={containerStyle}
+        style={{
+          ...containerStyle,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
       >
         {/* Sidebar Header */}
-        <motion.div
+        <m.div
           className="px-4 sm:px-6 py-4 border-b border-theme space-y-4"
           variants={fadeSlideUp}
           initial="hidden"
@@ -281,7 +286,7 @@ const CollapsibleSidebar = ({
         >
           {/* Row 1: Title and View Toggle */}
           <div className="flex items-center justify-between gap-2">
-            <motion.h2
+            <m.h2
               key={currentView}
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
@@ -289,9 +294,9 @@ const CollapsibleSidebar = ({
               className="text-lg sm:text-xl font-semibold text-[var(--text-main)] tracking-wide"
             >
               {currentView === 'categories' ? 'Categories' : 'Flavor Controls'}
-            </motion.h2>
+            </m.h2>
             {enableFilters && (
-              <motion.button
+              <m.button
                 onClick={() => setCurrentView(currentView === 'categories' ? 'filters' : 'categories')}
                 type="button"
                 className="px-3 py-1.5 rounded-xl border border-theme bg-theme-elevated text-xs sm:text-xs text-[var(--text-main)] hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)] transition-colors whitespace-nowrap flex items-center gap-1.5 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2"
@@ -304,14 +309,14 @@ const CollapsibleSidebar = ({
                   <FolderIcon className="w-4 h-4" />
                 )}
                 <span className="hidden sm:inline">{currentView === 'categories' ? 'Filters' : 'Categories'}</span>
-              </motion.button>
+              </m.button>
             )}
           </div>
 
           {/* Row 2: Action Buttons (only in categories view) */}
           {currentView === 'categories' && (
             <div className="flex items-center gap-2">
-              <motion.button
+              <m.button
                 onClick={expandAll}
                 type="button"
                 aria-label="Expand all categories"
@@ -325,8 +330,8 @@ const CollapsibleSidebar = ({
                 title="Expand all"
               >
                 Expand
-              </motion.button>
-              <motion.button
+              </m.button>
+              <m.button
                 onClick={collapseAll}
                 type="button"
                 aria-label="Collapse all categories"
@@ -340,13 +345,13 @@ const CollapsibleSidebar = ({
                 title="Collapse all"
               >
                 Collapse
-              </motion.button>
+              </m.button>
             </div>
           )}
 
           {/* Row 2: Hide/Show button (only in filters view) */}
           {currentView === 'filters' && (
-            <motion.button
+            <m.button
               type="button"
               onClick={() => setFiltersCollapsed((prev) => !prev)}
               className="w-full rounded-xl border border-theme px-3 sm:px-4 py-2 min-h-[44px] text-xs sm:text-xs text-muted hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-colors bg-theme-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2"
@@ -361,15 +366,56 @@ const CollapsibleSidebar = ({
                 )}
                 <span>{filtersCollapsed ? 'Show Filters' : 'Hide Filters'}</span>
               </div>
-            </motion.button>
+            </m.button>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Scrollable Content Area - Switches between Categories and Filters */}
-        <div data-overlay-scroll className={navWrapperClasses}>
-          <AnimatePresence mode="wait">
+        <div 
+          data-overlay-scroll 
+          className={navWrapperClasses}
+          style={{ 
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch'
+          }}
+          onWheel={(e) => {
+            // Prevent scroll from bubbling to page when scrolling within sidebar
+            const target = e.currentTarget;
+            const { scrollTop, scrollHeight, clientHeight } = target;
+            const isScrollable = scrollHeight > clientHeight;
+            
+            if (isScrollable) {
+              const isAtTop = scrollTop <= 0;
+              const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+              
+              // Stop propagation when scrolling within bounds
+              // Allow propagation only at boundaries when trying to scroll beyond
+              if (!((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0))) {
+                e.stopPropagation();
+              }
+            } else {
+              // If not scrollable, always stop propagation
+              e.stopPropagation();
+            }
+          }}
+          onTouchStart={(e) => {
+            // Prevent touch events from bubbling
+            e.stopPropagation();
+          }}
+          onTouchMove={(e) => {
+            // Prevent touch scroll from bubbling to page
+            const target = e.currentTarget;
+            const { scrollTop, scrollHeight, clientHeight } = target;
+            const isScrollable = scrollHeight > clientHeight;
+            
+            if (isScrollable) {
+              e.stopPropagation();
+            }
+          }}
+        >
+          <AnimatePresence mode="wait" initial={false}>
             {currentView === 'categories' ? (
-              <motion.nav
+              <m.nav
                 key="categories-view"
                 className="space-y-2"
                 variants={staggerContainer}
@@ -379,8 +425,8 @@ const CollapsibleSidebar = ({
                 transition={{ duration: 0.3 }}
               >
                 {/* All Items (Always visible at top) */}
-                <motion.div variants={fadeSlideUp} custom={0.1}>
-                  <motion.button
+                <m.div variants={fadeSlideUp} custom={0.1}>
+                  <m.button
                     onClick={() => onCategorySelect(null)}
                     className={cn(
                       "w-full flex items-center justify-between px-4 sm:px-6 py-4 min-h-[44px] rounded-xl sm:rounded-2xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2",
@@ -399,8 +445,8 @@ const CollapsibleSidebar = ({
                     <span className="text-xs sm:text-xs font-semibold opacity-80">
                       {menuItems.length}
                     </span>
-                  </motion.button>
-                </motion.div>
+                  </m.button>
+                </m.div>
 
                 {/* Category Groups */}
                 {Object.values(groupedCategories).map((group, groupIndex) => {
@@ -409,14 +455,14 @@ const CollapsibleSidebar = ({
                   const isExpanded = expandedGroups[group.id];
 
                   return (
-                    <motion.div
+                    <m.div
                       key={group.id}
                       className={groupWrapperClasses}
                       variants={fadeSlideUp}
                       custom={ANIMATION_DELAYS.GROUP_BASE + groupIndex * ANIMATION_DELAYS.GROUP_INCREMENT}
                     >
                       {/* Group Header */}
-                      <motion.button
+                      <m.button
                         onClick={() => toggleGroup(group.id)}
                         type="button"
                         className="w-full flex items-center justify-between px-4 sm:px-6 py-4 min-h-[44px] rounded-xl sm:rounded-2xl text-base font-semibold text-[var(--text-main)] transition-colors group hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2"
@@ -435,12 +481,12 @@ const CollapsibleSidebar = ({
                           className="w-4 h-4 text-muted transition-transform duration-300"
                           style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
                         />
-                      </motion.button>
+                      </m.button>
 
                       {/* Group Categories (Collapsible) */}
                       <AnimatePresence initial={false}>
                         {isExpanded && (
-                          <motion.div
+                          <m.div
                             className="ml-8 space-y-2"
                             variants={staggerContainer}
                             initial="hidden"
@@ -452,7 +498,7 @@ const CollapsibleSidebar = ({
                               const isSelected = selectedCategory?.id === category.id;
 
                               return (
-                                <motion.button
+                                <m.button
                                   key={category.id}
                                   onClick={() => onCategorySelect(category)}
                                   className={cn(
@@ -468,26 +514,26 @@ const CollapsibleSidebar = ({
                                   layout
                                 >
                                   <span className="text-left">{category.name}</span>
-                                  <motion.span
+                                  <m.span
                                     className="text-xs sm:text-xs font-medium opacity-70"
                                     initial={{ scale: 0.8 }}
                                     animate={{ scale: 1 }}
                                     transition={{ duration: 0.2 }}
                                   >
                                     {itemCount}
-                                  </motion.span>
-                                </motion.button>
+                                  </m.span>
+                                </m.button>
                               );
                             })}
-                          </motion.div>
+                          </m.div>
                         )}
                       </AnimatePresence>
-                    </motion.div>
+                    </m.div>
                   );
                 })}
-              </motion.nav>
+              </m.nav>
             ) : (
-              <motion.div
+              <m.div
                 key="filters-view"
                 className="space-y-4"
                 initial={{ opacity: 0, x: 20 }}
@@ -495,9 +541,10 @@ const CollapsibleSidebar = ({
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <AnimatePresence mode="wait">
-                  {!filtersCollapsed && (
-                    <motion.div
+                <AnimatePresence mode="wait" initial={false}>
+                  {!filtersCollapsed ? (
+                    <m.div
+                      key="filters-visible"
                       variants={staggerContainer}
                       initial="hidden"
                       animate="visible"
@@ -505,18 +552,18 @@ const CollapsibleSidebar = ({
                       className="space-y-4"
                     >
                       {/* Quick Search */}
-                      <motion.div
+                      <m.div
                         className="space-y-4"
                         variants={fadeSlideUp}
                       >
-                        <motion.label
+                        <m.label
                           htmlFor="refine-search"
                           className="text-sm sm:text-base font-medium text-[var(--text-main)]/80"
                           variants={fadeSlideUp}
                         >
                           Quick Search
-                        </motion.label>
-                        <motion.div
+                        </m.label>
+                        <m.div
                           className="relative"
                           variants={fadeSlideUp}
                         >
@@ -540,22 +587,22 @@ const CollapsibleSidebar = ({
                             <circle cx="11" cy="11" r="8" />
                             <line x1="21" y1="21" x2="16.65" y2="16.65" />
                           </svg>
-                        </motion.div>
-                      </motion.div>
+                        </m.div>
+                      </m.div>
 
                       {/* Dietary Focus */}
                       {hasDietaryFilters && (
-                        <motion.section
+                        <m.section
                           className="space-y-4"
                           variants={fadeSlideUp}
                         >
-                          <motion.div
+                          <m.div
                             className="flex items-center justify-between"
                             variants={fadeSlideUp}
                           >
                             <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Dietary Focus</h4>
                             {activeDietaryTags.length > 0 && (
-                              <motion.button
+                              <m.button
                                 type="button"
                                 onClick={() => {
                                   activeDietaryTags.forEach((normalizedTag) => {
@@ -574,10 +621,10 @@ const CollapsibleSidebar = ({
                                 whileTap={{ scale: 0.95 }}
                               >
                                 Clear
-                              </motion.button>
+                              </m.button>
                             )}
-                          </motion.div>
-                          <motion.div
+                          </m.div>
+                          <m.div
                             className="flex flex-wrap gap-4"
                             variants={staggerContainer}
                           >
@@ -586,7 +633,7 @@ const CollapsibleSidebar = ({
                               const isActive = activeDietaryTags.includes(normalized);
 
                               return (
-                                <motion.button
+                                <m.button
                                   key={tag}
                                   type="button"
                                   onClick={() => onDietaryToggle(tag)}
@@ -601,26 +648,26 @@ const CollapsibleSidebar = ({
                                   custom={index * 0.05}
                                 >
                                   {formatLabel(tag)}
-                                </motion.button>
+                                </m.button>
                               );
                             })}
-                          </motion.div>
-                        </motion.section>
+                          </m.div>
+                        </m.section>
                       )}
 
                       {/* Avoid Allergens */}
                       {hasAllergenFilters && (
-                        <motion.section
+                        <m.section
                           className="space-y-4"
                           variants={fadeSlideUp}
                         >
-                          <motion.div
+                          <m.div
                             className="flex items-center justify-between"
                             variants={fadeSlideUp}
                           >
                             <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Avoid Allergens</h4>
                             {activeAllergenTags.length > 0 && (
-                              <motion.button
+                              <m.button
                                 type="button"
                                 onClick={() => {
                                   activeAllergenTags.forEach((normalizedTag) => {
@@ -639,10 +686,10 @@ const CollapsibleSidebar = ({
                                 whileTap={{ scale: 0.95 }}
                               >
                                 Clear
-                              </motion.button>
+                              </m.button>
                             )}
-                          </motion.div>
-                          <motion.div
+                          </m.div>
+                          <m.div
                             className="flex flex-wrap gap-4"
                             variants={staggerContainer}
                           >
@@ -651,7 +698,7 @@ const CollapsibleSidebar = ({
                               const isActive = activeAllergenTags.includes(normalized);
 
                               return (
-                                <motion.button
+                                <m.button
                                   key={tag}
                                   type="button"
                                   onClick={() => onAllergenToggle(tag)}
@@ -666,33 +713,33 @@ const CollapsibleSidebar = ({
                                   custom={index * 0.05}
                                 >
                                   {formatLabel(tag)}
-                                </motion.button>
+                                </m.button>
                               );
                             })}
-                          </motion.div>
-                        </motion.section>
+                          </m.div>
+                        </m.section>
                       )}
 
                       {/* Quick Reorder */}
-                      <motion.section
+                      <m.section
                         className="space-y-4"
                         variants={fadeSlideUp}
                       >
-                        <motion.div
+                        <m.div
                           className="flex items-center justify-between"
                           variants={fadeSlideUp}
                         >
                           <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Quick Reorder</h4>
                           <span className="text-xs sm:text-xs text-muted">{hasQuickReorder ? 'Last enjoyed' : 'No history yet'}</span>
-                        </motion.div>
+                        </m.div>
 
                         {hasQuickReorder ? (
-                          <motion.div
+                          <m.div
                             className="space-y-4"
                             variants={staggerContainer}
                           >
                             {quickReorderCards.map((item, index) => (
-                              <motion.div
+                              <m.div
                                 key={item.id}
                                 className="flex gap-4 rounded-xl sm:rounded-2xl border border-theme px-4 sm:px-6 py-4"
                                 style={{
@@ -724,7 +771,7 @@ const CollapsibleSidebar = ({
                                       .map((tag) => formatLabel(tag))
                                       .join(' • ')}
                                   </p>
-                                  <motion.button
+                                  <m.button
                                     type="button"
                                     onClick={() => {
                                       if (onQuickReorder) {
@@ -748,13 +795,13 @@ const CollapsibleSidebar = ({
                                       <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9" />
                                       <path d="M14 2.5v4h-4" />
                                     </svg>
-                                  </motion.button>
+                                  </m.button>
                                 </div>
-                              </motion.div>
+                              </m.div>
                             ))}
-                          </motion.div>
+                          </m.div>
                         ) : (
-                          <motion.div
+                          <m.div
                             className="rounded-xl sm:rounded-2xl border border-dashed border-theme px-4 sm:px-6 py-4 text-center"
                             style={{
                               backgroundColor: isLightTheme 
@@ -767,17 +814,17 @@ const CollapsibleSidebar = ({
                             <p className="text-xs sm:text-xs text-muted">
                               Your picks will land here after the next order.
                             </p>
-                          </motion.div>
+                          </m.div>
                         )}
-                      </motion.section>
-                    </motion.div>
-                  )}
+                      </m.section>
+                    </m.div>
+                  ) : null}
                 </AnimatePresence>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
-      </motion.div>
+      </m.div>
     </aside>
   );
 };

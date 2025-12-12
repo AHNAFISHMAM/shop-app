@@ -3,11 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { AuthProvider } from './contexts/AuthContext';
 import { StoreSettingsProvider, useStoreSettings } from './contexts/StoreSettingsContext';
 import { Toaster } from 'react-hot-toast';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import MainLayout from './layouts/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageErrorBoundary from './components/PageErrorBoundary';
 import AdminLayout from './components/AdminLayout';
+import AdminFullPageLayout from './components/AdminFullPageLayout';
 import AdminRoute from './components/AdminRoute';
 import ScrollToTop from './components/ScrollToTop';
 import AutoReconnect from './components/AutoReconnect';
@@ -40,11 +41,11 @@ const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminAppearance = lazy(() => import('./pages/admin/AdminAppearance'));
 const AdminHomePageControls = lazy(() => import('./pages/admin/AdminHomePageControls'));
 const AdminFeatureFlags = lazy(() => import('./pages/admin/AdminFeatureFlags'));
+const AdminManageAdmins = lazy(() => import('./pages/admin/AdminManageAdmins'));
 const AdminReservations = lazy(() => import('./pages/admin/AdminReservations'));
 const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'));
 const AdminSpecialSections = lazy(() => import('./pages/admin/AdminSpecialSections'));
 const AdminFavoriteComments = lazy(() => import('./pages/admin/AdminFavoriteComments'));
-const Kitchen = lazy(() => import('./pages/Kitchen'));
 
 // Loading component for all pages
 const PageLoading = () => {
@@ -417,7 +418,42 @@ function AppContent() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[var(--bg-main)]">
+      <div 
+        className="min-h-screen bg-[var(--bg-main)]"
+        onWheel={(e) => {
+          // Prevent scroll bubbling from scrollable children
+          const target = e.target;
+          const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]');
+          if (scrollableParent) {
+            // Check if element is actually scrollable (not just overflow-hidden)
+            const style = window.getComputedStyle(scrollableParent);
+            const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+                                 (style.overflow === 'auto' || 
+                                  style.overflow === 'scroll' || 
+                                  style.overflowY === 'auto' || 
+                                  style.overflowY === 'scroll');
+            if (isScrollable) {
+              e.stopPropagation();
+            }
+          }
+        }}
+        onTouchMove={(e) => {
+          const target = e.target;
+          const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]');
+          if (scrollableParent) {
+            // Check if element is actually scrollable (not just overflow-hidden)
+            const style = window.getComputedStyle(scrollableParent);
+            const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+                                 (style.overflow === 'auto' || 
+                                  style.overflow === 'scroll' || 
+                                  style.overflowY === 'auto' || 
+                                  style.overflowY === 'scroll');
+            if (isScrollable) {
+              e.stopPropagation();
+            }
+          }
+        }}
+      >
         <ScrollToTop />
         <AutoReconnect />
         <Toaster
@@ -516,8 +552,24 @@ function AppContent() {
           <Route path="appearance" element={<Suspense fallback={<PageLoading />}><AdminAppearance /></Suspense>} />
           <Route path="home-page-controls" element={<Suspense fallback={<PageLoading />}><AdminHomePageControls /></Suspense>} />
           <Route path="feature-flags" element={<Suspense fallback={<PageLoading />}><AdminFeatureFlags /></Suspense>} />
-          <Route path="kitchen" element={<Suspense fallback={<PageLoading />}><Kitchen /></Suspense>} />
+          <Route path="manage-admins" element={<Suspense fallback={<PageLoading />}><AdminManageAdmins /></Suspense>} />
         </Route>
+
+        {/* Full-Page Admin Routes - No sidebar/navbar, minimal header with back button */}
+        <Route
+          path="/admin/orders/full"
+          element={
+            <ErrorBoundary>
+              <AdminRoute>
+                <Suspense fallback={<PageLoading />}>
+                  <AdminFullPageLayout title="Order Management" backPath="/admin/orders">
+                    <AdminOrders fullPage={true} />
+                  </AdminFullPageLayout>
+                </Suspense>
+              </AdminRoute>
+            </ErrorBoundary>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </AnimatePresence>
@@ -528,13 +580,15 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <StoreSettingsProvider>
-          <AppContent />
-        </StoreSettingsProvider>
-      </AuthProvider>
-    </Router>
+    <LazyMotion features={domAnimation} strict>
+      <Router>
+        <AuthProvider>
+          <StoreSettingsProvider>
+            <AppContent />
+          </StoreSettingsProvider>
+        </AuthProvider>
+      </Router>
+    </LazyMotion>
   );
 }
 

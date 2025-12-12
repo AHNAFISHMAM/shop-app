@@ -5,6 +5,7 @@ import { uploadMultipleImages, autoMatchImages, compressImage } from '../../lib/
 import { searchFoodPhotos, buildMenuImageUrl } from '../../lib/pexelsService';
 import { extractPhotoId } from '../../lib/pexelsUtils';
 import { logger } from '../../utils/logger';
+import CustomDropdown from '../ui/CustomDropdown';
 
 const TABS = [
   { id: 'auto', label: 'Auto Generate' },
@@ -942,18 +943,16 @@ export default function BulkImageAssignment({
                     <p>Results: {pexelsTotal}</p>
                     <p>
                       Assign target:{' '}
-                      <select
+                      <CustomDropdown
+                        options={[
+                          { value: '', label: 'Select item...' },
+                          ...selectionPool.map(item => ({ value: item.id, label: item.name }))
+                        ]}
                         value={searchTargetId}
-                        onChange={e => setSearchTargetId(e.target.value)}
-                        className="bg-dark-bg-secondary border border-theme rounded px-2 py-1 text-text-main text-xs"
-                      >
-                        <option value="">Select item...</option>
-                        {selectionPool.map(item => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(e) => setSearchTargetId(e.target.value)}
+                        placeholder="Select item..."
+                        maxVisibleItems={5}
+                      />
                       <span className="ml-2 text-text-muted">(If you have items selected, those will be used first.)</span>
                     </p>
                   </div>
@@ -1126,18 +1125,16 @@ export default function BulkImageAssignment({
                                   <img src={file.url} alt={file.fileName} className="w-12 h-12 object-cover rounded" />
                           <p className="text-sm text-text-muted">{file.fileName}</p>
                       </div>
-                      <select
+                      <CustomDropdown
+                        options={[
+                          { value: '', label: 'Select a menu item...' },
+                          ...menuItems.map(item => ({ value: item.id, label: item.name }))
+                        ]}
                         value={manualAssignments[index] || ''}
-                                  onChange={e => handleManualAssignment(index, e.target.value)}
-                        className="w-full px-3 py-2 bg-dark-bg-secondary border border-gray-700 rounded-lg text-text-main focus:outline-none focus:border-gold text-sm"
-                      >
-                        <option value="">Select a menu item...</option>
-                        {menuItems.map(item => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(e) => handleManualAssignment(index, e.target.value)}
+                        placeholder="Select a menu item..."
+                        maxVisibleItems={5}
+                      />
                     </div>
                   ))}
                 </div>

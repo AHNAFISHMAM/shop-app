@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import StarRating from './StarRating'
 import { fetchProductReviews } from '../lib/reviewsApi'
 import { logger } from '../utils/logger'
+import CustomDropdown from './ui/CustomDropdown'
 
 /**
  * ReviewsList Component
@@ -178,19 +179,22 @@ function ReviewsList({ productId, itemType = 'product', refreshTrigger = 0 }) {
         </h3>
         <div className="flex items-center gap-2">
           <label htmlFor="sortBy" className="text-sm text-[var(--text-muted)]">Sort by:</label>
-          <select
+          <CustomDropdown
             id="sortBy"
+            name="sortBy"
+            options={[
+              { value: 'recent', label: 'Most Recent' },
+              { value: 'highest', label: 'Highest Rating' },
+              { value: 'lowest', label: 'Lowest Rating' }
+            ]}
             value={sortBy}
             onChange={(e) => {
               setSortBy(e.target.value)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 border border-theme bg-theme-elevated text-[var(--text-main)] rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
-          >
-            <option value="recent">Most Recent</option>
-            <option value="highest">Highest Rating</option>
-            <option value="lowest">Lowest Rating</option>
-          </select>
+            placeholder="Most Recent"
+            maxVisibleItems={5}
+          />
         </div>
       </div>
 

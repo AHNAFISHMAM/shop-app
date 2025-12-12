@@ -90,7 +90,7 @@ function QuickActions() {
           <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{
-              background: `linear-gradient(135deg, ${action.color}26, transparent)`
+              background: `linear-gradient(135deg, ${action.color}15, transparent)`
             }}
           />
 
@@ -98,7 +98,7 @@ function QuickActions() {
           <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 rounded-xl pointer-events-none transition-opacity duration-300"
             style={{
-              borderColor: `${action.color}50`,
+              borderColor: `${action.color}30`,
               borderWidth: '1px',
               borderStyle: 'solid'
             }}

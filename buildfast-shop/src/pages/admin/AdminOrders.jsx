@@ -1,21 +1,29 @@
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { m } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { parsePrice } from '../../lib/priceUtils'
 import { getAllOrders, updateOrderStatus as updateOrderStatusService, getOrderById } from '../../lib/orderService'
 import toast from 'react-hot-toast'
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger'
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock'
 import { pageFade } from '../../components/animations/menuAnimations'
 import { logger } from '../../utils/logger'
 import { TableSkeleton } from '../../components/skeletons/TableSkeleton'
+import CustomDropdown from '../../components/ui/CustomDropdown'
+import ConfirmationModal from '../../components/ui/ConfirmationModal'
 
 /**
  * Admin Orders Page
  *
  * View and manage all customer orders (including guest orders).
+ * 
+ * @param {boolean} fullPage - If true, renders in full-page mode without admin layout
  */
-function AdminOrders() {
+function AdminOrders({ fullPage = false }) {
+  const navigate = useNavigate()
   const containerRef = useViewportAnimationTrigger()
+  const datePickerRef = useRef(null)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, guest, user
@@ -23,7 +31,37 @@ function AdminOrders() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [orderToCancel, setOrderToCancel] = useState(null)
   const [error, setError] = useState('')
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [dateFilter, setDateFilter] = useState('all') // all, today, 7days, 30days, custom
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+
+  // Lock body scroll when modal is open
+  useBodyScrollLock(showDetailsModal)
+
+  // Close date picker when clicking outside
+  useEffect(() => {
+    if (!showDatePicker) return
+
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false)
+      }
+    }
+
+    // Use setTimeout to ensure this runs after the button's onClick
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside)
+    }, 0)
+
+    return () => {
+      clearTimeout(timeoutId)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showDatePicker])
 
   // IMPORTANT: Define fetch functions BEFORE useEffect hooks
   const fetchOrders = useCallback(async () => {
@@ -35,6 +73,26 @@ function AdminOrders() {
       const filters = {}
       if (statusFilter !== 'all') {
         filters.status = statusFilter
+      }
+      
+      // Date filters
+      if (dateFilter === 'today') {
+        const today = new Date().toISOString().split('T')[0]
+        filters.startDate = today
+        filters.endDate = today
+      } else if (dateFilter === '7days') {
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        filters.startDate = sevenDaysAgo.toISOString().split('T')[0]
+      } else if (dateFilter === '30days') {
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        filters.startDate = thirtyDaysAgo.toISOString().split('T')[0]
+      } else if (dateFilter === 'custom' && startDate) {
+        filters.startDate = startDate
+        if (endDate) {
+          filters.endDate = endDate
+        }
       }
 
       // Use service layer for fetching orders
@@ -67,7 +125,7 @@ function AdminOrders() {
     } finally {
       setLoading(false)
     }
-  }, [filter, statusFilter])
+  }, [filter, statusFilter, dateFilter, startDate, endDate])
 
   // NOW add useEffect hooks AFTER function declarations
   useEffect(() => {
@@ -139,14 +197,17 @@ function AdminOrders() {
     return order.order_items?.reduce((sum, item) => sum + item.quantity, 0) || 0
   }
 
-  const cancelOrder = async (orderId) => {
-    if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
-      return
-    }
+  const openCancelConfirm = (orderId) => {
+    setOrderToCancel(orderId)
+    setShowCancelConfirm(true)
+  }
+
+  const cancelOrder = async () => {
+    if (!orderToCancel) return
 
     try {
       // Use service layer for cancellation (just a status update)
-      const result = await updateOrderStatusService(orderId, 'cancelled')
+      const result = await updateOrderStatusService(orderToCancel, 'cancelled')
 
       if (!result.success) {
         toast.error(result.error || 'Failed to cancel order')
@@ -155,6 +216,8 @@ function AdminOrders() {
 
       // Refresh orders
       fetchOrders()
+      setShowCancelConfirm(false)
+      setOrderToCancel(null)
       toast.success('Order cancelled successfully')
     } catch (err) {
       logger.error('Error cancelling order:', err)
@@ -212,18 +275,18 @@ function AdminOrders() {
   })
 
   return (
-    <motion.main
+    <m.main
       ref={containerRef}
-      className="w-full bg-[var(--bg-main)] text-[var(--text-main)] py-12"
+      className={`w-full bg-[var(--bg-main)] text-[var(--text-main)] ${fullPage ? 'py-4 sm:py-6' : 'py-8 sm:py-12 md:py-16'}`}
       variants={pageFade}
       initial="hidden"
       animate="visible"
       exit="exit"
     >
-      <div className="mx-auto max-w-[1700px] px-4 sm:px-6 md:px-10">
+      <div className={`mx-auto ${fullPage ? 'max-w-[1920px] px-4 sm:px-6 lg:px-8' : 'max-w-[1700px] px-4 sm:px-6 md:px-10'}`}>
         {/* Header Section */}
-        <div className="flex flex-col gap-3 sm:gap-4 md:gap-6 md:flex-row md:items-end md:justify-between" data-animate="fade-rise" data-animate-active="false">
-          <div>
+        <div className="mb-8 sm:mb-10 md:mb-12 flex flex-col gap-4 sm:gap-5 md:gap-6 md:flex-row md:items-end md:justify-between" data-animate="fade-rise" data-animate-active="false">
+          <div className="flex-1">
             <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-muted">Operations</p>
             <h1 className="mt-2 text-lg sm:text-xl md:text-2xl font-semibold">Order Management</h1>
             <p className="mt-2 max-w-xl text-sm sm:text-base leading-relaxed text-muted">
@@ -259,24 +322,25 @@ function AdminOrders() {
           </div>
         </div>
 
-        {/* Search Bar and Status Filters */}
+        {/* Search and Filters Container */}
         <div
-          className="mb-6 flex flex-col gap-3 sm:gap-4 md:flex-row"
+          className="mb-8 sm:mb-10 md:mb-12 glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-5 md:p-6"
           data-animate="fade-rise"
           data-animate-active="false"
+          style={{ position: 'relative', overflow: 'visible' }}
         >
-          {/* Search Bar */}
-          <div className="flex-1">
+          <div className="flex flex-col gap-4 sm:gap-5">
+            {/* Search Bar */}
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by order ID, customer, email, phone, product, address, status..."
-                className="input-themed w-full rounded-xl sm:rounded-2xl border px-4 py-3 pl-11 text-sm sm:text-base min-h-[44px] focus:border-transparent focus:ring-2 focus:ring-[var(--accent)]/70 placeholder:text-muted"
+                className="input-themed w-full rounded-lg sm:rounded-xl border border-theme bg-[var(--bg-main)] px-4 py-3 pl-11 text-sm sm:text-base min-h-[44px] focus:border-[var(--accent)]/50 focus:ring-2 focus:ring-[var(--accent)]/30 placeholder:text-muted transition"
               />
               <svg
-                className="absolute left-3 top-3.5 h-5 w-5 text-muted"
+                className="absolute left-3 top-3.5 h-5 w-5 text-muted pointer-events-none"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -291,7 +355,8 @@ function AdminOrders() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3.5 text-muted transition hover:text-[var(--text-main)]/80"
+                  className="absolute right-3 top-3.5 text-muted transition hover:text-[var(--text-main)] min-h-[32px] min-w-[32px] flex items-center justify-center rounded"
+                  aria-label="Clear search"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -299,39 +364,176 @@ function AdminOrders() {
                 </button>
               )}
             </div>
-          </div>
 
-          {/* Status Filter Buttons */}
-          <div className="flex flex-wrap gap-3 sm:gap-4">
-            {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-lg border px-3 py-3 min-h-[44px] text-[10px] sm:text-xs font-medium uppercase tracking-wide transition ${
-                  statusFilter === status
-                    ? 'border-[var(--accent)]/80 bg-[var(--accent)]/15 text-[var(--accent)] shadow-[0_12px_30px_-18px_rgba(197,157,95,0.6)]'
-                    : 'border-theme bg-[rgba(255,255,255,0.02)] text-muted hover:border-theme-strong hover:text-[var(--text-main)]'
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
+            {/* Status Filter Buttons and Date Filter */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3" style={{ position: 'relative', zIndex: 1 }}>
+              {/* Date Filter Button */}
+              <div className="relative date-picker-container" ref={datePickerRef}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    logger.log('Calendar button clicked, showDatePicker:', showDatePicker)
+                    setShowDatePicker(prev => {
+                      logger.log('Toggling from', prev, 'to', !prev)
+                      return !prev
+                    })
+                  }}
+                  className={`flex items-center gap-2 rounded-xl sm:rounded-2xl min-h-[44px] px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all border border-theme ${
+                    dateFilter !== 'all' || showDatePicker
+                      ? 'bg-[var(--accent)] text-black'
+                      : 'bg-[rgba(255,255,255,0.05)] text-muted hover:bg-[rgba(255,255,255,0.1)]'
+                  }`}
+                  aria-label="Open date filter"
+                  aria-expanded={showDatePicker}
+                >
+                  <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Calendar</span>
+                </button>
+
+                {/* Date Picker Dropdown */}
+                {showDatePicker && (
+                  <div 
+                    className="absolute top-full left-0 mt-2 z-[100] w-64 sm:w-72 rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)] shadow-2xl p-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-[var(--text-main)]">Filter by Date</h3>
+                        <button
+                          onClick={() => setShowDatePicker(false)}
+                          className="text-muted hover:text-[var(--text-main)] transition"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Quick Date Filters */}
+                      <div className="space-y-2">
+                        {[
+                          { key: 'all', label: 'All Dates' },
+                          { key: 'today', label: 'Today' },
+                          { key: '7days', label: 'Last 7 Days' },
+                          { key: '30days', label: 'Last 30 Days' },
+                          { key: 'custom', label: 'Custom Range' }
+                        ].map(({ key, label }) => (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              if (key === 'custom') {
+                                setDateFilter('custom')
+                              } else {
+                                setDateFilter(key)
+                                setStartDate('')
+                                setEndDate('')
+                                setShowDatePicker(false)
+                              }
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs sm:text-sm transition ${
+                              dateFilter === key
+                                ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
+                                : 'text-muted hover:bg-[rgba(255,255,255,0.05)] hover:text-[var(--text-main)]'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Custom Date Range */}
+                      {dateFilter === 'custom' && (
+                        <div className="space-y-3 pt-3 border-t border-theme">
+                          <div>
+                            <label className="block text-xs text-muted mb-1.5">Start Date</label>
+                            <input
+                              type="date"
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
+                              className="w-full rounded-lg border border-theme bg-[var(--bg-main)] px-3 py-2 text-xs sm:text-sm min-h-[36px] focus:border-[var(--accent)]/50 focus:ring-2 focus:ring-[var(--accent)]/30"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-muted mb-1.5">End Date</label>
+                            <input
+                              type="date"
+                              value={endDate}
+                              onChange={(e) => setEndDate(e.target.value)}
+                              min={startDate}
+                              className="w-full rounded-lg border border-theme bg-[var(--bg-main)] px-3 py-2 text-xs sm:text-sm min-h-[36px] focus:border-[var(--accent)]/50 focus:ring-2 focus:ring-[var(--accent)]/30"
+                            />
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (startDate) {
+                                setShowDatePicker(false)
+                              }
+                            }}
+                            className="w-full rounded-lg bg-[var(--accent)] text-black px-3 py-2 text-xs sm:text-sm font-medium hover:opacity-90 transition min-h-[36px]"
+                          >
+                            Apply Filter
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Clear Date Filter */}
+                      {dateFilter !== 'all' && (
+                        <button
+                          onClick={() => {
+                            setDateFilter('all')
+                            setStartDate('')
+                            setEndDate('')
+                            setShowDatePicker(false)
+                          }}
+                          className="w-full text-center px-3 py-2 rounded-lg text-xs sm:text-sm text-muted hover:text-[var(--text-main)] hover:bg-[rgba(255,255,255,0.05)] transition"
+                        >
+                          Clear Date Filter
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Status Filter Buttons */}
+              {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`rounded-lg border px-3 sm:px-4 py-2.5 sm:py-3 min-h-[40px] sm:min-h-[44px] text-[10px] sm:text-xs font-medium uppercase tracking-wide transition ${
+                    statusFilter === status
+                      ? 'border-[var(--accent)]/80 bg-[var(--accent)]/15 text-[var(--accent)] shadow-[0_12px_30px_-18px_rgba(197,157,95,0.6)]'
+                      : 'border-theme bg-[rgba(255,255,255,0.02)] text-muted hover:border-theme-strong hover:text-[var(--text-main)] hover:bg-[rgba(255,255,255,0.04)]'
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Results Counter */}
-        {!loading && (searchQuery || statusFilter !== 'all' || filter !== 'all') && (
-          <div className="mb-4 flex items-center justify-between" data-animate="fade-rise" data-animate-active="false">
+        {!loading && (searchQuery || statusFilter !== 'all' || filter !== 'all' || dateFilter !== 'all') && (
+          <div className="mb-6 sm:mb-8 flex items-center justify-between" data-animate="fade-rise" data-animate-active="false">
             <p className="text-sm sm:text-base text-muted">
               Showing <span className="font-semibold text-[var(--text-main)]">{filteredOrders.length}</span> of{' '}
               <span className="font-semibold text-[var(--text-main)]">{orders.length}</span> order{orders.length !== 1 ? 's' : ''}
             </p>
-            {(searchQuery || statusFilter !== 'all' || filter !== 'all') && (
+            {(searchQuery || statusFilter !== 'all' || filter !== 'all' || dateFilter !== 'all') && (
               <button
                 onClick={() => {
                   setSearchQuery('')
                   setStatusFilter('all')
                   setFilter('all')
+                  setDateFilter('all')
+                  setStartDate('')
+                  setEndDate('')
+                  setShowDatePicker(false)
                 }}
                 className="text-sm sm:text-base font-medium text-[var(--accent)] transition hover:opacity-80 min-h-[44px] py-3"
               >
@@ -343,15 +545,15 @@ function AdminOrders() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 rounded-xl sm:rounded-2xl border border-red-500/30 bg-red-500/10 px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 shadow-[0_18px_45px_-30px_rgba(248,113,113,0.6)]" data-animate="fade-scale" data-animate-active="false">
+          <div className="mb-8 sm:mb-10 rounded-xl sm:rounded-2xl border border-red-500/30 bg-red-500/10 px-4 sm:px-6 md:px-10 py-4 sm:py-5 md:py-6 shadow-[0_18px_45px_-30px_rgba(248,113,113,0.6)]" data-animate="fade-scale" data-animate-active="false">
             <p className="text-sm sm:text-base font-medium text-red-200">{error}</p>
           </div>
         )}
 
         {/* Loading State */}
         {loading ? (
-          <div className="space-y-4">
-            <div className="text-center py-3 sm:py-4 md:py-5">
+          <div className="space-y-6 sm:space-y-8">
+            <div className="text-center py-6 sm:py-8 md:py-10">
               <div className="inline-flex h-10 w-10 animate-spin rounded-full border-4 border-[var(--accent)]/70 border-t-transparent"></div>
               <p className="mt-4 text-sm sm:text-base text-muted">Loading orders...</p>
             </div>
@@ -360,11 +562,11 @@ function AdminOrders() {
         ) : filteredOrders.length === 0 ? (
           /* Empty State */
           <div
-            className="glow-surface glow-strong rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-12 text-center"
+            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-12 sm:p-16 md:p-20 text-center"
             data-animate="fade-scale"
             data-animate-active="false"
           >
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-theme bg-[rgba(255,255,255,0.03)]">
+            <div className="mx-auto mb-6 sm:mb-8 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full border border-theme bg-[rgba(255,255,255,0.03)]">
               <svg
                 className="h-8 w-8 text-muted"
                 fill="none"
@@ -379,7 +581,7 @@ function AdminOrders() {
                 />
               </svg>
             </div>
-            <p className="text-sm sm:text-base text-muted">
+            <p className="text-sm sm:text-base md:text-lg text-muted mb-2">
               {searchQuery ? `No orders found matching "${searchQuery}"` :
                filter === 'user' ? 'No user orders found' :
                filter === 'guest' ? 'No guest orders found' :
@@ -388,49 +590,61 @@ function AdminOrders() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="mt-4 text-sm sm:text-base font-medium text-[var(--accent)] transition hover:opacity-80 min-h-[44px] py-3"
+                className="mt-6 sm:mt-8 text-sm sm:text-base font-medium text-[var(--accent)] transition hover:opacity-80 min-h-[44px] px-6 py-3"
               >
                 Clear search
               </button>
             )}
           </div>
         ) : (
-          /* Orders Table */
-          <div
-            className="glow-surface glow-strong overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] shadow-[0_35px_80px_-60px_rgba(5,5,9,0.85)]"
-            data-animate="fade-scale"
-            data-animate-active="false"
-          >
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-white/10 text-sm sm:text-base">
-                <thead className="bg-[rgba(255,255,255,0.03)]">
-                  <tr>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Order ID
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Customer
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Type
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Items
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Total
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Status
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Date
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
+          <>
+            {/* Orders Table */}
+            <div
+              className={`glow-surface glow-soft overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] shadow-[0_35px_80px_-60px_rgba(5,5,9,0.85)] ${fullPage ? 'w-full' : ''}`}
+              data-animate="fade-scale"
+              data-animate-active="false"
+            >
+            <div className="w-full overflow-hidden">
+              <div className="w-full">
+                <table className="w-full table-fixed divide-y divide-white/10 text-xs sm:text-sm" style={{ tableLayout: 'fixed' }}>
+                  <colgroup>
+                    <col className="w-[10%]" />
+                    <col className="w-[20%] sm:w-[18%]" />
+                    <col className="hidden sm:table-column w-[10%]" />
+                    <col className="w-[8%] sm:w-[7%]" />
+                    <col className="w-[10%] sm:w-[9%]" />
+                    <col className="w-[15%] sm:w-[14%]" />
+                    <col className="hidden md:table-column w-[10%]" />
+                    <col className="w-[17%] sm:w-[12%] md:w-[12%]" />
+                  </colgroup>
+                  <thead className="bg-[rgba(255,255,255,0.03)]">
+                    <tr>
+                      <th className="px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Order ID
+                      </th>
+                      <th className="px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Customer
+                      </th>
+                      <th className="hidden sm:table-cell px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Type
+                      </th>
+                      <th className="px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Items
+                      </th>
+                      <th className="px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Total
+                      </th>
+                      <th className="px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Status
+                      </th>
+                      <th className="hidden md:table-cell px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Date
+                      </th>
+                      <th className="px-2 sm:px-3 py-2.5 sm:py-3 text-left text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
                 <tbody className="divide-y divide-white/10 bg-[rgba(255,255,255,0.01)]">
                   {filteredOrders.map((order, index) => (
                     <tr
@@ -440,22 +654,34 @@ function AdminOrders() {
                       data-animate-active="false"
                       style={{ transitionDelay: `${index * 60}ms` }}
                     >
-                      <td className="px-4 sm:px-6 py-3 sm:py-4">
-                        <span className="font-mono text-sm sm:text-base text-[var(--accent)]">
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3">
+                        <span className="font-mono text-[10px] sm:text-xs text-[var(--accent)]">
                           {order.id.slice(0, 8)}...
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4">
-                        <div className="text-sm sm:text-base font-medium text-[var(--text-main)]">
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3">
+                        <div className="text-[10px] sm:text-xs font-medium text-[var(--text-main)] truncate max-w-[120px] sm:max-w-none">
                           {order.customer_name || 'N/A'}
                         </div>
-                        <div className="text-[10px] sm:text-xs text-muted">
+                        <div className="mt-0.5 text-[9px] sm:text-[10px] text-muted truncate max-w-[120px] sm:max-w-none">
                           {order.customer_email}
                         </div>
+                        {/* Show type on mobile when hidden */}
+                        <div className="mt-1 sm:hidden">
+                          <span
+                            className={`inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                              order.is_guest
+                                ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
+                                : 'bg-emerald-500/15 text-emerald-200'
+                            }`}
+                          >
+                            {order.is_guest ? 'Guest' : 'Reg'}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4">
+                      <td className="hidden sm:table-cell px-2 sm:px-3 py-2.5 sm:py-3">
                         <span
-                          className={`inline-flex rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold ${
+                          className={`inline-flex rounded-full px-2 py-1 text-[10px] sm:text-xs font-semibold ${
                             order.is_guest
                               ? 'bg-[var(--accent)]/15 text-[var(--accent)] ring-1 ring-[var(--accent)]/40'
                               : 'bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-400/30'
@@ -464,45 +690,48 @@ function AdminOrders() {
                           {order.is_guest ? 'Guest' : 'Registered'}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-[var(--text-main)]">
-                        {getTotalItemsCount(order)} items
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3 text-[10px] sm:text-xs text-[var(--text-main)]">
+                        {getTotalItemsCount(order)}
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold text-amber-200">
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3 text-[10px] sm:text-xs font-semibold text-amber-200">
                         ${parsePrice(order.order_total).toFixed(2)}
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4">
-                        <select
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3">
+                        <CustomDropdown
+                          options={[
+                            { value: 'pending', label: 'Pending' },
+                            { value: 'processing', label: 'Processing' },
+                            { value: 'shipped', label: 'Shipped' },
+                            { value: 'delivered', label: 'Delivered' },
+                            { value: 'cancelled', label: 'Cancelled' }
+                          ]}
                           value={order.status}
                           onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                          className={`inline-flex rounded-full px-3 py-3 min-h-[44px] text-[10px] sm:text-xs font-semibold capitalize leading-none transition focus:outline-none focus:ring-2 focus:ring-offset-0 ${getStatusColor(
+                          placeholder="Select status"
+                          className={`inline-flex rounded-full px-2 py-1.5 min-h-[32px] sm:min-h-[36px] text-[9px] sm:text-[10px] font-semibold capitalize leading-none transition focus:outline-none focus:ring-2 focus:ring-offset-0 ${getStatusColor(
                             order.status
                           )}`}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                          maxVisibleItems={5}
+                        />
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-slate-400">
+                      <td className="hidden md:table-cell px-2 sm:px-3 py-2.5 sm:py-3 text-[10px] sm:text-xs text-slate-400">
                         {new Date(order.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base">
-                        <div className="flex gap-3 sm:gap-4">
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3 text-[10px] sm:text-xs">
+                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                           <button
                             onClick={() => {
                               setSelectedOrder(order)
                               setShowDetailsModal(true)
                             }}
-                            className="font-medium text-[var(--accent)] transition hover:opacity-80 min-h-[44px] py-3"
+                            className="font-medium text-[var(--accent)] transition hover:opacity-80 min-h-[32px] sm:min-h-[36px] px-2 py-1 text-left sm:text-center"
                           >
                             View
                           </button>
                           {order.status !== 'cancelled' && order.status !== 'delivered' && (
                             <button
-                              onClick={() => cancelOrder(order.id)}
-                              className="font-medium text-red-300 transition hover:text-red-200 min-h-[44px] py-3"
+                              onClick={() => openCancelConfirm(order.id)}
+                              className="font-medium text-red-300 transition hover:text-red-200 min-h-[32px] sm:min-h-[36px] px-2 py-1 text-left sm:text-center"
                             >
                               Cancel
                             </button>
@@ -513,18 +742,20 @@ function AdminOrders() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
+          </>
         )}
 
         {/* Order Details Modal */}
         {showDetailsModal && selectedOrder && (
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md p-4"
             style={{
               backgroundColor: typeof window !== 'undefined' && document.documentElement.classList.contains('theme-light') 
-                ? 'rgba(0, 0, 0, 0.45)' 
-                : 'rgba(0, 0, 0, 0.5)'
+                ? 'rgba(0, 0, 0, 0.75)' 
+                : 'rgba(0, 0, 0, 0.8)'
             }}
             onClick={() => {
               setShowDetailsModal(false)
@@ -532,9 +763,11 @@ function AdminOrders() {
             }}
           >
             <div
-              data-overlay-scroll
-              className="glow-surface glow-strong w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)]"
+              className="glow-surface glow-soft w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl sm:rounded-2xl border border-theme overflow-hidden"
               style={{
+                backgroundColor: typeof window !== 'undefined' && document.documentElement.classList.contains('theme-light') 
+                  ? '#ffffff' 
+                  : '#0a0a0f',
                 boxShadow: typeof window !== 'undefined' && document.documentElement.classList.contains('theme-light') 
                   ? '0 40px 90px -65px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)' 
                   : '0 40px 90px -65px rgba(5, 5, 9, 0.9)'
@@ -544,7 +777,14 @@ function AdminOrders() {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="sticky top-0 flex items-center justify-between border-b border-theme bg-[rgba(5,5,9,0.98)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
+              <div 
+                className="sticky top-0 z-10 flex items-center justify-between border-b border-theme px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5"
+                style={{
+                  backgroundColor: typeof window !== 'undefined' && document.documentElement.classList.contains('theme-light') 
+                    ? '#ffffff' 
+                    : '#0a0a0f'
+                }}
+              >
                 <div>
                   <h2 className="text-lg sm:text-xl md:text-2xl font-semibold">Order Details</h2>
                   <p className="mt-1 font-mono text-[10px] sm:text-xs text-muted">
@@ -564,10 +804,10 @@ function AdminOrders() {
                 </button>
               </div>
 
-              {/* Modal Body */}
-              <div className="space-y-6 px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
+              {/* Modal Body - Scrollable */}
+              <div className="flex-1 overflow-y-auto space-y-8 sm:space-y-10 md:space-y-12 px-4 sm:px-6 md:px-10 py-6 sm:py-8 md:py-10">
                 {/* Order Status & Date */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
                   <div>
                     <h3 className="mb-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-muted">Order Status</h3>
                     <span className={`inline-flex rounded-full px-4 py-3 min-h-[44px] text-sm sm:text-base font-semibold ${getStatusColor(selectedOrder.status)}`}>
@@ -589,9 +829,9 @@ function AdminOrders() {
                 </div>
 
                 {/* Customer Information */}
-                <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-5">
-                  <h3 className="mb-3 text-lg sm:text-xl font-semibold text-[var(--text-main)]">Customer Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-5 sm:p-6 md:p-8">
+                  <h3 className="mb-4 sm:mb-5 md:mb-6 text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">Customer Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
                     <div>
                       <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted">Name</p>
                       <p className="mt-1 font-medium text-sm sm:text-base text-[var(--text-main)]">{selectedOrder.customer_name || 'N/A'}</p>
@@ -614,10 +854,10 @@ function AdminOrders() {
                 </div>
 
                 {/* Shipping Address */}
-                <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-5">
-                  <h3 className="mb-3 text-lg sm:text-xl font-semibold text-[var(--text-main)]">Shipping Address</h3>
+                <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-5 sm:p-6 md:p-8">
+                  <h3 className="mb-4 sm:mb-5 md:mb-6 text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">Shipping Address</h3>
                   {selectedOrder.shipping_address && (
-                    <div className="space-y-1 text-[var(--text-main)]">
+                    <div className="space-y-2 sm:space-y-3 text-[var(--text-main)]">
                       <p className="font-medium text-sm sm:text-base">{selectedOrder.shipping_address.fullName}</p>
                       <p className="text-sm sm:text-base text-muted">{selectedOrder.shipping_address.streetAddress}</p>
                       {selectedOrder.shipping_address.apartment && (
@@ -637,10 +877,10 @@ function AdminOrders() {
 
                 {/* Order Items */}
                 <div>
-                  <h3 className="mb-3 text-lg sm:text-xl font-semibold text-[var(--text-main)]">Order Items</h3>
+                  <h3 className="mb-4 sm:mb-5 md:mb-6 text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">Order Items</h3>
                   <div className="divide-y divide-white/10 overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] text-[var(--text-main)]">
                     {selectedOrder.order_items?.map((item, index) => (
-                      <div key={index} className="flex items-center gap-3 sm:gap-4 md:gap-6 p-4 sm:p-5">
+                      <div key={index} className="flex items-center gap-4 sm:gap-5 md:gap-6 p-5 sm:p-6 md:p-8">
                         {/* Product Image */}
                         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-theme bg-[rgba(255,255,255,0.03)]">
                           {item.products?.images?.[0] ? (
@@ -686,14 +926,14 @@ function AdminOrders() {
                   </div>
 
                   {/* Order Total */}
-                  <div className="mt-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">Order Total</span>
-                      <span className="text-lg sm:text-xl md:text-2xl font-bold text-[var(--accent)]">
+                  <div className="mt-6 sm:mt-8 md:mt-10 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-5 sm:p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <span className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">Order Total</span>
+                      <span className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--accent)]">
                         ${parsePrice(selectedOrder.order_total).toFixed(2)}
                       </span>
                     </div>
-                    <p className="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted">
+                    <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted">
                       Total includes {getTotalItemsCount(selectedOrder)} item(s)
                     </p>
                   </div>
@@ -701,11 +941,11 @@ function AdminOrders() {
               </div>
 
               {/* Modal Footer */}
-              <div className="sticky bottom-0 flex justify-end gap-3 sm:gap-4 border-t border-theme bg-[rgba(5,5,9,0.98)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
+              <div className="sticky bottom-0 flex justify-end gap-4 sm:gap-5 md:gap-6 border-t border-theme bg-[rgba(5,5,9,0.98)] px-4 sm:px-6 md:px-10 py-4 sm:py-5 md:py-6">
                 {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
                   <button
                     onClick={() => {
-                      cancelOrder(selectedOrder.id)
+                      openCancelConfirm(selectedOrder.id)
                       setShowDetailsModal(false)
                       setSelectedOrder(null)
                     }}
@@ -727,8 +967,23 @@ function AdminOrders() {
             </div>
           </div>
         )}
+
+        {/* Cancel Order Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showCancelConfirm}
+          onClose={() => {
+            setShowCancelConfirm(false)
+            setOrderToCancel(null)
+          }}
+          onConfirm={cancelOrder}
+          title="Cancel Order"
+          message={`Are you sure you want to cancel this order? This action cannot be undone.`}
+          confirmText="Cancel Order"
+          cancelText="Keep Order"
+          variant="danger"
+        />
       </div>
-    </motion.main>
+    </m.main>
   )
 }
 

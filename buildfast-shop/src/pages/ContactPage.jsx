@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import ConciergeBookingModal from '../components/ConciergeBookingModal';
 import ContactInfo from '../components/ContactInfo';
 import SectionTitle from '../components/SectionTitle';
@@ -48,7 +48,7 @@ const ContactPage = () => {
   };
 
   return (
-    <motion.main
+    <m.main
       className="app-container space-y-16"
       data-animate="fade-scale"
       data-animate-active="false"
@@ -106,7 +106,7 @@ const ContactPage = () => {
 
       <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">
         <div
-          className="card-soft glow-strong flex h-full flex-col justify-between rounded-xl sm:rounded-2xl border border-theme-subtle bg-theme-elevated px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5"
+          className="card-soft glow-soft flex h-full flex-col justify-between rounded-xl sm:rounded-2xl border border-theme-subtle bg-theme-elevated px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5"
           data-animate="drift-left"
           data-animate-active="false"
         >
@@ -139,7 +139,7 @@ const ContactPage = () => {
         </div>
 
         <div
-          className="card-soft glow-strong relative overflow-hidden rounded-xl sm:rounded-2xl border border-theme-subtle bg-theme-elevated px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5"
+          className="card-soft glow-soft relative overflow-hidden rounded-xl sm:rounded-2xl border border-theme-subtle bg-theme-elevated px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5"
           data-animate="drift-right"
           data-animate-active="false"
         >
@@ -223,7 +223,7 @@ const ContactPage = () => {
       {enableReservations && (
         <ConciergeBookingModal open={isBookingOpen} onClose={() => setIsBookingOpen(false)} />
       )}
-    </motion.main>
+    </m.main>
   );
 };
 

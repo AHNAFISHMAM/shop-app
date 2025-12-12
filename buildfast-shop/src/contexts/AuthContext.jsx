@@ -81,8 +81,9 @@ export const AuthProvider = ({ children }) => {
 
     try {
       // Increased timeout for admin status check (critical for access control)
+      // Using 10 seconds to handle slow connections and database latency
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Admin status fetch timeout')), 5000)
+        setTimeout(() => reject(new Error('Admin status fetch timeout after 10 seconds')), 10000)
       )
 
       const fetchPromise = supabase
@@ -91,7 +92,8 @@ export const AuthProvider = ({ children }) => {
         .eq('id', userId)
         .maybeSingle()
 
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise])
+      const result = await Promise.race([fetchPromise, timeoutPromise])
+      const { data, error } = result || { data: null, error: null }
 
       if (error) {
         logger.error('Admin status query error:', {
@@ -137,7 +139,12 @@ export const AuthProvider = ({ children }) => {
       setPersistedAdminStatus(userId, adminStatus)
     } catch (error) {
       // Handle timeout or other errors
-      logger.error('Admin status check exception:', error.message)
+      // Only log error if it's not a timeout (timeouts are expected in some cases)
+      if (!error.message?.includes('timeout')) {
+        logger.error('Admin status check exception:', error.message)
+      } else if (import.meta.env.DEV) {
+        logger.warn('Admin status check timeout (this is normal if database is slow)')
+      }
       
       // Only trust persisted TRUE status on exception (don't trust false - might be stale)
       const persistedStatus = getPersistedAdminStatus(userId)

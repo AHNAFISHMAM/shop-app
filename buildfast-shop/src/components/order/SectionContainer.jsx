@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import PropTypes from 'prop-types';
 import SectionCarousel from './SectionCarousel';
 import { gridReveal, batchFadeSlideUp } from '../animations/menuAnimations';
@@ -108,7 +108,7 @@ const SectionContainer = ({
   }
 
   return (
-    <motion.div
+    <m.div
       className="space-y-6"
       variants={gridReveal}
       initial="hidden"
@@ -117,7 +117,7 @@ const SectionContainer = ({
     >
       {/* All Sections - Clean & Professional */}
       {sectionData.map((section) => (
-        <motion.div
+        <m.div
           key={section.key}
           variants={batchFadeSlideUp}
           initial="hidden"
@@ -135,9 +135,9 @@ const SectionContainer = ({
             defaultExpanded={true}
             onToggle={() => {}}
           />
-        </motion.div>
+        </m.div>
       ))}
-    </motion.div>
+    </m.div>
   );
 };
 

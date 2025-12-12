@@ -3,13 +3,13 @@ import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import GalleryCard from '../../components/GalleryCard';
 import toast from 'react-hot-toast';
-import { Link } from 'react-router-dom';
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger';
 import GalleryCardDetailModal from '../../components/admin/GalleryCardDetailModal';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { pageFade } from '../../components/animations/menuAnimations';
 import { EFFECT_OPTIONS, parseEffects, parseEffectVariants } from '../../utils/effects';
 import { logger } from '../../utils/logger';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 const AdminGallery = () => {
   const containerRef = useViewportAnimationTrigger();
@@ -21,6 +21,8 @@ const AdminGallery = () => {
   const [error, setError] = useState('');
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState(null);
 
   // Check admin status
   const checkAdminStatus = async () => {
@@ -233,19 +235,27 @@ const AdminGallery = () => {
     }
   };
 
+  // Open delete confirmation
+  const openDeleteConfirm = (cardId) => {
+    setCardToDelete(cardId);
+    setShowDeleteConfirm(true);
+  };
+
   // Delete card
-  const deleteCard = async (cardId) => {
-    if (!confirm('Are you sure you want to delete this gallery card?')) return;
+  const deleteCard = async () => {
+    if (!cardToDelete) return;
 
     const { error } = await supabase
       .from('gallery_cards')
       .delete()
-      .eq('id', cardId);
+      .eq('id', cardToDelete);
 
     if (error) {
       toast.error('Failed to delete card');
     } else {
       toast.success('Card deleted');
+      setShowDeleteConfirm(false);
+      setCardToDelete(null);
     }
   };
 
@@ -369,7 +379,7 @@ const AdminGallery = () => {
   }
 
   return (
-    <motion.main
+    <m.main
       ref={containerRef}
       className="w-full bg-[var(--bg-main)] text-[var(--text-main)] py-12"
       variants={pageFade}
@@ -401,30 +411,6 @@ const AdminGallery = () => {
                 </span>
               </button>
             </div>
-          </div>
-
-          {/* Background Management Info */}
-          <div className="bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded-xl p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[var(--accent)]/20">
-                <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[var(--text-main)]">Gallery Background Settings</p>
-                <p className="text-xs text-muted">Customize the background for the gallery section on the About page</p>
-              </div>
-            </div>
-            <Link
-              to="/admin/appearance"
-              className="px-4 py-2 rounded-lg bg-[var(--accent)] text-white font-semibold text-sm whitespace-nowrap transition-all duration-200 hover:scale-105 flex items-center gap-2"
-            >
-              Open Appearance
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
           </div>
         </header>
 
@@ -530,7 +516,7 @@ const AdminGallery = () => {
           updateEffect={updateEffect}
           toggleActive={toggleActive}
           moveCard={moveCard}
-          deleteCard={deleteCard}
+          deleteCard={openDeleteConfirm}
           index={selectedCardIndex}
           totalCards={galleryCards.length}
         />
@@ -570,7 +556,22 @@ const AdminGallery = () => {
           </div>
         )}
       </div>
-    </motion.main>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setCardToDelete(null);
+        }}
+        onConfirm={deleteCard}
+        title="Delete Gallery Card"
+        message="Are you sure you want to delete this gallery card?\n\nThis action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+    </m.main>
   );
 };
 

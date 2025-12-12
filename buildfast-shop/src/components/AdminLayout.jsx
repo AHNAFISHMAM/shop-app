@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Navbar from './Navbar'
 import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
@@ -16,6 +16,44 @@ function AdminLayout() {
   const { signOut, user } = useAuth()
   const navigate = useNavigate()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const scrollContainerRef = useRef(null)
+
+  // Prevent body scroll when admin layout is active
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow
+    const originalOverflowY = document.documentElement.style.overflow
+    
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.documentElement.style.overflow = originalOverflowY
+    }
+  }, [])
+
+  // Prevent scroll event from bubbling to window only at boundaries
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current
+    if (!scrollContainer) return
+
+    const handleWheel = (e) => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer
+      const isAtTop = scrollTop === 0
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+      
+      // Only prevent bubbling if we're at boundaries and trying to scroll further
+      if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
+        e.stopPropagation()
+      }
+    }
+
+    scrollContainer.addEventListener('wheel', handleWheel, { passive: false })
+    
+    return () => {
+      scrollContainer.removeEventListener('wheel', handleWheel)
+    }
+  }, [])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -101,30 +139,12 @@ function AdminLayout() {
       )
     },
     {
-      name: 'Gallery',
-      path: '/admin/gallery',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
       name: 'Favorite Comments',
       path: '/admin/favorite-comments',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v7a2 2 0 01-2 2h-6l-4 4v-4H7a2 2 0 01-2-2v-1" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 3H5a2 2 0 00-2 2v10a2 2 0 002 2h2l4 4v-4h4a2 2 0 002-2V5a2 2 0 00-2-2z" />
-        </svg>
-      )
-    },
-    {
-      name: 'Kitchen Display',
-      path: '/admin/kitchen',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
         </svg>
       )
     },
@@ -146,7 +166,7 @@ function AdminLayout() {
       <Navbar />
 
       {/* Admin Layout with Sidebar - Below Navbar */}
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex h-[calc(100vh-4rem)] overflow-hidden min-h-0">
         {/* Sidebar */}
         <aside
           data-overlay-scroll
@@ -247,9 +267,33 @@ function AdminLayout() {
         </aside>
 
         {/* Main Content - Rendered from child routes */}
-        <main data-overlay-scroll className="flex-1 overflow-y-auto h-full min-w-0" style={{ backgroundColor: 'var(--bg-main)', maxWidth: 'calc(100vw - 224px)' }}>
-          <div className="p-8">
-            <Outlet />
+        <main 
+          data-overlay-scroll 
+          className="flex-1 min-h-0 min-w-0 flex flex-col" 
+          style={{ backgroundColor: 'var(--bg-main)', maxWidth: 'calc(100vw - 224px)', overflow: 'hidden' }}
+        >
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 min-h-0 overflow-y-auto hide-scrollbar"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'smooth'
+            }}
+            onWheel={(e) => {
+              const target = e.currentTarget
+              const { scrollTop, scrollHeight, clientHeight } = target
+              const isAtTop = scrollTop === 0
+              const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+              
+              // Only stop propagation if we're at boundaries and trying to scroll further
+              if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
+                e.stopPropagation()
+              }
+            }}
+          >
+            <div className="p-8">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

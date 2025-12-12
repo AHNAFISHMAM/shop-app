@@ -59,7 +59,6 @@ function PaymentSuccessModal({ isOpen, orderId, orderTotal, currencySymbol = 'à§
   // Reset countdown when modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log('PaymentSuccessModal opened - resetting countdown to 10 seconds');
       setCountdown(10); // Reset to 10 seconds when modal opens
     } else {
       // Reset countdown when modal closes
@@ -81,7 +80,6 @@ function PaymentSuccessModal({ isOpen, orderId, orderTotal, currencySymbol = 'à§
       return () => clearTimeout(timer);
     } else if (countdown === 0) {
       // Countdown reached 0 - trigger close after a brief delay
-      console.log('PaymentSuccessModal countdown reached 0 - closing modal');
       const closeTimer = setTimeout(() => {
         onClose();
       }, 500); // Small delay to ensure smooth transition

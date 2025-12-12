@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { parsePrice } from '../../lib/priceUtils';
 import { getCartItemNote } from '../../lib/cartItemMetadata';
 import QuantityStepper from './QuantityStepper';
@@ -89,7 +89,7 @@ const CartItemCard = memo(({
   }
 
   return (
-    <motion.li
+    <m.li
       layout
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -180,7 +180,7 @@ const CartItemCard = memo(({
           </div>
         </div>
       </div>
-    </motion.li>
+    </m.li>
   );
 });
 

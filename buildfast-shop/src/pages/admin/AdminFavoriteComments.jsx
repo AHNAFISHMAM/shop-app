@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchAdminFavoriteReviews } from '../../lib/reviewsApi'
 import { supabase } from '../../lib/supabase'
 import { logger } from '../../utils/logger'
+import CustomDropdown from '../../components/ui/CustomDropdown'
 
 function formatDate(value) {
   if (!value) return ''
@@ -136,22 +137,24 @@ function AdminFavoriteComments() {
 
   return (
     <div className="admin-page space-y-8 text-[var(--text-main)]">
-      <header className="glow-surface glow-strong flex flex-col gap-4 rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-6 py-6 shadow-[0_35px_65px_-55px_rgba(197,157,95,0.65)] md:flex-row md:items-end md:justify-between">
+      <header className="glow-surface glow-soft flex flex-col gap-4 rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-6 py-6 shadow-[0_35px_65px_-55px_rgba(197,157,95,0.65)] md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-muted">Community Signal</p>
           <h1 className="text-3xl font-semibold">Favorite Comments</h1>
           <p className="text-sm text-muted">Monitor monthly feedback on starred dishes, review imagery, and keep engagement professional.</p>
         </div>
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <select
+          <CustomDropdown
+            options={[
+              { value: 'current', label: 'Current month' },
+              { value: 'last-90', label: 'Last 90 days' },
+              { value: 'all', label: 'All time' }
+            ]}
             value={timeframe}
             onChange={(event) => setTimeframe(event.target.value)}
-            className="rounded-xl border border-theme bg-[rgba(255,255,255,0.02)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
-          >
-            <option value="current">Current month</option>
-            <option value="last-90">Last 90 days</option>
-            <option value="all">All time</option>
-          </select>
+            placeholder="Current month"
+            maxVisibleItems={5}
+          />
           <button
             onClick={loadComments}
             disabled={loading}
@@ -183,7 +186,7 @@ function AdminFavoriteComments() {
         </article>
       </section>
 
-      <section className="glow-surface glow-strong rounded-2xl border border-theme bg-[rgba(5,5,9,0.92)] p-6 shadow-[0_30px_70px_-55px_rgba(5,5,9,0.8)]">
+      <section className="glow-surface glow-soft rounded-2xl border border-theme bg-[rgba(5,5,9,0.92)] p-6 shadow-[0_30px_70px_-55px_rgba(5,5,9,0.8)]">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <input
             type="text"

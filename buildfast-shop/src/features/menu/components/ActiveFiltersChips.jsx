@@ -4,7 +4,7 @@
  * Displays active filter chips with remove functionality.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { fadeSlideDown } from '../../../components/animations/menuAnimations';
 import PropTypes from 'prop-types';
 
@@ -40,7 +40,7 @@ export function ActiveFiltersChips({
   }
 
   return (
-    <motion.div
+    <m.div
       variants={fadeSlideDown}
       initial="hidden"
       animate="visible"
@@ -91,7 +91,7 @@ export function ActiveFiltersChips({
       >
         Clear All
       </button>
-    </motion.div>
+    </m.div>
   );
 }
 

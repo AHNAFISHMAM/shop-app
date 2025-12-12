@@ -99,9 +99,5 @@ GlowPanel.propTypes = {
   children: PropTypes.node
 }
 
-GlowPanel.defaultProps = {
-  glow: 'medium'
-}
-
 export default GlowPanel
 

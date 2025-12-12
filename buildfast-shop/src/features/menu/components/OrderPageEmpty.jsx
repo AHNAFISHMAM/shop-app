@@ -4,7 +4,7 @@
  * Empty state component for OrderPage when no items are found.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { fadeSlideUp } from '../../../components/animations/menuAnimations';
 import PropTypes from 'prop-types';
 
@@ -16,7 +16,7 @@ import PropTypes from 'prop-types';
  */
 export function OrderPageEmpty({ onClearFilters }) {
   return (
-    <motion.div
+    <m.div
       variants={fadeSlideUp}
       initial="hidden"
       animate="visible"
@@ -50,7 +50,7 @@ export function OrderPageEmpty({ onClearFilters }) {
           Clear Filters
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

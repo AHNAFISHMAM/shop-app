@@ -7,7 +7,7 @@ const Footer = () => {
   
   return (
     <footer className="border-t bg-elevated relative overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),transparent_65%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_65%)]" />
       <div className="relative z-10 app-container py-6 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center justify-between text-xs text-muted">
         <div className="space-y-1">
           <div className="text-sm font-semibold text-accent">

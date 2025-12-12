@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { m, useMotionValue, useTransform } from 'framer-motion';
 import CartItemCard from './CartItemCard';
 
 /**
@@ -56,7 +56,7 @@ const SwipeableCartItem = ({
       {/* Swipe Actions Background */}
       <div className="cart-item-swipe-actions">
         {onSaveForLater && (
-          <motion.button
+          <m.button
             className="cart-swipe-action-btn cart-swipe-action-save"
             onClick={() => onSaveForLater(item.id)}
             aria-label={`Save ${productName} for later`}
@@ -77,10 +77,10 @@ const SwipeableCartItem = ({
                 d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
               />
             </svg>
-          </motion.button>
+          </m.button>
         )}
         {onRemoveItem && (
-          <motion.button
+          <m.button
             className="cart-swipe-action-btn cart-swipe-action-remove"
             onClick={() => onRemoveItem(item.id)}
             aria-label={`Remove ${productName}`}
@@ -101,12 +101,12 @@ const SwipeableCartItem = ({
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
               />
             </svg>
-          </motion.button>
+          </m.button>
         )}
       </div>
 
       {/* Swipeable Content */}
-      <motion.div
+      <m.div
         className="cart-item-swipe-content"
         drag="x"
         dragConstraints={{ left: -swipeThreshold, right: swipeThreshold }}
@@ -127,7 +127,7 @@ const SwipeableCartItem = ({
           getImageUrl={getImageUrl}
           isUpdating={isUpdating}
         />
-      </motion.div>
+      </m.div>
     </div>
   );
 };

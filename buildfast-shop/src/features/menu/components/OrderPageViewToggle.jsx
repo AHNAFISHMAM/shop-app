@@ -4,7 +4,7 @@
  * View mode toggle component for switching between sections and grid views.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { batchFadeSlideUp } from '../../../components/animations/menuAnimations';
 import PropTypes from 'prop-types';
 
@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
  */
 export function OrderPageViewToggle({ viewMode, onViewModeChange }) {
   return (
-    <motion.div
+    <m.div
       variants={batchFadeSlideUp}
       className="flex items-center gap-2 p-2 rounded-lg border border-theme-subtle bg-[var(--bg-main)]/78 backdrop-blur-sm"
     >
@@ -49,7 +49,7 @@ export function OrderPageViewToggle({ viewMode, onViewModeChange }) {
         </svg>
         Grid
       </button>
-    </motion.div>
+    </m.div>
   );
 }
 

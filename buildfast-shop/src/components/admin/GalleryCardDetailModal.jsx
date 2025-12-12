@@ -10,6 +10,7 @@ import {
   parseEffectVariants,
   MAX_EFFECTS_PER_ROUND,
 } from '../../utils/effects';
+import CustomDropdown from '../ui/CustomDropdown';
 
 const GalleryCardDetailModal = ({
   card,
@@ -116,6 +117,7 @@ const GalleryCardDetailModal = ({
 
   const baseEffects = useMemo(() => parseEffects(card?.effect), [card?.effect]);
   const [effectRounds, setEffectRounds] = useState(() => parseEffectVariants(card?.effect_variants, baseEffects));
+  const [dropdownValues, setDropdownValues] = useState({});
 
   useEffect(() => {
     setEffectRounds(parseEffectVariants(card?.effect_variants, baseEffects));
@@ -422,21 +424,25 @@ const GalleryCardDetailModal = ({
                       </div>
                       {round.length < MAX_EFFECTS_PER_ROUND && (
                         <div className="mt-3 flex items-center gap-3">
-                          <select
-                            defaultValue=""
+                          <CustomDropdown
+                            key={`dropdown-${roundIndex}-${dropdownValues[roundIndex] || ''}`}
+                            options={[
+                              { value: '', label: 'Add animation to this round…' },
+                              ...hoverEffectOptions.map((effectOption) => ({
+                                value: effectOption.value,
+                                label: effectOption.label
+                              }))
+                            ]}
+                            value={dropdownValues[roundIndex] || ''}
                             onChange={(event) => {
-                              handleAddEffectToRound(roundIndex, event.target.value);
-                              event.target.value = '';
+                              if (event.target.value) {
+                                handleAddEffectToRound(roundIndex, event.target.value);
+                                setDropdownValues(prev => ({ ...prev, [roundIndex]: '' }));
+                              }
                             }}
-                            className="w-full rounded-xl border border-theme bg-[rgba(5,5,9,0.9)] px-4 py-3 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[#C59D5F]/55"
-                          >
-                            <option value="">Add animation to this round…</option>
-                            {hoverEffectOptions.map((effectOption) => (
-                              <option key={`${roundIndex}-${effectOption.value}`} value={effectOption.value}>
-                                {effectOption.label}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="Add animation to this round…"
+                            maxVisibleItems={5}
+                          />
                         </div>
                       )}
                       <p className="mt-2 text-[0.68rem] uppercase tracking-[0.26em] text-[var(--text-muted)]/80">

@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { logger } from '../../utils/logger';
 import { saveItemForLater, saveCartItemNote, saveSelectedReward } from '../../lib/cartItemMetadata';
@@ -43,7 +43,7 @@ const CartSidebar = ({
       logger.warn('Attempted to checkout with empty cart');
       return;
     }
-    console.log('Navigating to checkout', { cartItemsCount: cartItems.length });
+    logger.log('Navigating to checkout', { cartItemsCount: cartItems.length });
     navigate('/checkout');
   }, [navigate, cartItems.length]);
 
@@ -127,7 +127,7 @@ const CartSidebar = ({
   }, [handleCheckout]);
 
   return (
-    <motion.aside
+    <m.aside
       className="cart-sidebar"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -162,7 +162,7 @@ const CartSidebar = ({
 
         {/* Error Display */}
         {error && (
-          <motion.div
+          <m.div
             role="alert"
             className="cart-error"
             initial={{ opacity: 0, y: -10 }}
@@ -178,7 +178,7 @@ const CartSidebar = ({
             >
               Retry
             </button>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Cart Items */}
@@ -255,7 +255,7 @@ const CartSidebar = ({
           </>
         )}
       </div>
-    </motion.aside>
+    </m.aside>
   );
 };
 

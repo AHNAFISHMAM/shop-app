@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import toast from 'react-hot-toast'
 import AddressCard from '../components/AddressCard'
 import AddressModal from '../components/AddressModal'
@@ -34,6 +34,8 @@ function AddressBook() {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [addressToDelete, setAddressToDelete] = useState(null)
   const { settings, loading: settingsLoading } = useStoreSettings()
   
   // Feature flags - default to false during loading
@@ -125,17 +127,22 @@ function AddressBook() {
     }
   }
 
-  const handleDelete = async (address) => {
-    if (!confirm(`Are you sure you want to delete this address?\n\n${address.fullName}\n${address.addressLine1}`)) {
-      return
-    }
+  const openDeleteConfirm = (address) => {
+    setAddressToDelete(address)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDelete = async () => {
+    if (!addressToDelete) return
 
     try {
-      const result = await deleteAddress(address.id)
+      const result = await deleteAddress(addressToDelete.id)
 
       if (result.success) {
         setSuccess('Address deleted successfully!')
         setTimeout(() => setSuccess(''), 3000)
+        setShowDeleteConfirm(false)
+        setAddressToDelete(null)
         await loadAddresses()
       } else {
         logger.error('Error deleting address:', result.error)
@@ -213,7 +220,7 @@ function AddressBook() {
   }
 
   return (
-    <motion.main
+    <m.main
       className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
       data-animate="fade-scale"
       data-animate-active="false"
@@ -262,7 +269,7 @@ function AddressBook() {
       {/* Main Content */}
       <div className="app-container px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
         {enableLoyalty && loyalty && (
-          <div className="glow-surface glow-strong mb-8 overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
+          <div className="glow-surface glow-soft mb-8 overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(197,157,95,0.25),transparent_60%)]" />
             <div className="relative z-10 flex flex-col gap-3 sm:gap-4 md:gap-6 md:flex-row md:items-center md:justify-between">
               <div className="space-y-2 max-w-xl">
@@ -377,7 +384,7 @@ function AddressBook() {
         ) : addresses.length === 0 ? (
           /* Empty State */
           <div
-            className="card-soft border-dashed border-theme-strong px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
+            className="card-soft glow-soft border-dashed border-theme-strong px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
             data-animate="fade-scale"
             data-animate-active="false"
           >
@@ -409,7 +416,7 @@ function AddressBook() {
                 key={address.id}
                 address={address}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={openDeleteConfirm}
                 onSetDefault={handleSetDefault}
                 data-animate="fade-rise"
                 data-animate-active="false"
@@ -428,7 +435,22 @@ function AddressBook() {
         onSave={handleSave}
         loading={saving}
       />
-    </motion.main>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setAddressToDelete(null);
+        }}
+        onConfirm={handleDelete}
+        title="Delete Address"
+        message={`Are you sure you want to delete this address?\n\n${addressToDelete?.fullName || ''}\n${addressToDelete?.addressLine1 || ''}\n\nThis action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+    </m.main>
   )
 }
 

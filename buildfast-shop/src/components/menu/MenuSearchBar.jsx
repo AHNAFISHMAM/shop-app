@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { searchBarSequence, staggerContainer, fadeSlideUp } from '../animations/menuAnimations';
 
@@ -17,7 +17,7 @@ const MenuSearchBar = ({ searchQuery, onSearchChange }) => {
   );
 
   return (
-    <motion.section
+    <m.section
       className="app-container py-3 sm:py-4"
       variants={searchBarSequence}
       initial="hidden"
@@ -25,22 +25,22 @@ const MenuSearchBar = ({ searchQuery, onSearchChange }) => {
       exit="exit"
     >
       {/* Hero Section */}
-      <motion.div className="text-center mb-8" variants={staggerContainer}>
-        <motion.p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--accent)] mb-2" variants={fadeSlideUp}>
+      <m.div className="text-center mb-8" variants={staggerContainer}>
+        <m.p className="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--accent)] mb-2" variants={fadeSlideUp}>
           Discover Our Menu
-        </motion.p>
-        <motion.h1 className="text-lg sm:text-xl md:text-5xl font-bold text-[var(--text-main)] mb-4" variants={fadeSlideUp}>
+        </m.p>
+        <m.h1 className="text-lg sm:text-xl md:text-5xl font-bold text-[var(--text-main)] mb-4" variants={fadeSlideUp}>
           Taste That Shines
-        </motion.h1>
-        <motion.p className="text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto" variants={fadeSlideUp}>
+        </m.h1>
+        <m.p className="text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto" variants={fadeSlideUp}>
           Explore our exquisite selection of dishes crafted with passion and
           premium ingredients
-        </motion.p>
-      </motion.div>
+        </m.p>
+      </m.div>
 
       {/* Search Bar - Glass Morphism */}
-      <motion.div className="max-w-2xl mx-auto" variants={staggerContainer}>
-        <motion.div className="relative group" variants={fadeSlideUp}>
+      <m.div className="max-w-2xl mx-auto" variants={staggerContainer}>
+        <m.div className="relative group" variants={fadeSlideUp}>
           {/* Search Icon */}
           <div className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors">
             <svg
@@ -70,7 +70,7 @@ const MenuSearchBar = ({ searchQuery, onSearchChange }) => {
 
           {/* Clear Button */}
           {searchQuery && (
-            <motion.button
+            <m.button
               onClick={() => onSearchChange('')}
               className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors min-h-[44px] py-3"
               aria-label="Clear search"
@@ -94,18 +94,18 @@ const MenuSearchBar = ({ searchQuery, onSearchChange }) => {
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </motion.button>
+            </m.button>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Search Results Count */}
         {searchQuery && (
-          <motion.p className="text-[10px] sm:text-xs text-[var(--text-muted)] mt-2 text-center" variants={fadeSlideUp}>
+          <m.p className="text-[10px] sm:text-xs text-[var(--text-muted)] mt-2 text-center" variants={fadeSlideUp}>
             Searching for &quot;{searchQuery}&quot;
-          </motion.p>
+          </m.p>
         )}
-      </motion.div>
-    </motion.section>
+      </m.div>
+    </m.section>
   );
 };
 

@@ -11,6 +11,7 @@ import {
 } from '../lib/reservationSettingsService';
 import PropTypes from 'prop-types';
 import { logger } from '../utils/logger';
+import CustomDropdown from './ui/CustomDropdown';
 
 const ReservationForm = ({ onSubmit, disabled = false, className = '' }) => {
   const { user } = useAuth();
@@ -294,18 +295,18 @@ const ReservationForm = ({ onSubmit, disabled = false, className = '' }) => {
         {/* Time Selection - Dropdown */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-[var(--text-main)]">⏰ Time *</label>
-          <select
+          <CustomDropdown
+            options={[
+              { value: '', label: 'Select time' },
+              ...timeSlots.map(slot => ({ value: slot, label: slot }))
+            ]}
             value={formData.time}
             onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-            required
+            placeholder="Select time"
             disabled={disabled || !formData.date}
-            className="input-base"
-          >
-            <option value="">Select time</option>
-            {timeSlots.map(slot => (
-              <option key={slot} value={slot}>{slot}</option>
-            ))}
-          </select>
+            required
+            maxVisibleItems={5}
+          />
         </div>
 
         {/* Party Size */}
@@ -435,33 +436,33 @@ const ReservationForm = ({ onSubmit, disabled = false, className = '' }) => {
         {/* Occasion - Dropdown */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-[var(--text-main)]">Occasion (Optional)</label>
-          <select
+          <CustomDropdown
+            options={[
+              { value: '', label: 'None' },
+              ...occasions.map(occ => ({ value: occ.value, label: `${occ.icon} ${occ.label}` }))
+            ]}
             value={formData.occasion}
             onChange={(e) => setFormData({ ...formData, occasion: e.target.value })}
+            placeholder="None"
             disabled={disabled}
-            className="input-base"
-          >
-            <option value="">None</option>
-            {occasions.map(occ => (
-              <option key={occ.value} value={occ.value}>{occ.icon} {occ.label}</option>
-            ))}
-          </select>
+            maxVisibleItems={5}
+          />
         </div>
 
         {/* Table Preference - Dropdown */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-[var(--text-main)]">Table Preference (Optional)</label>
-          <select
+          <CustomDropdown
+            options={[
+              { value: '', label: 'No preference' },
+              ...preferences.map(pref => ({ value: pref.value, label: `${pref.icon} ${pref.label}` }))
+            ]}
             value={formData.preference}
             onChange={(e) => setFormData({ ...formData, preference: e.target.value })}
+            placeholder="No preference"
             disabled={disabled}
-            className="input-base"
-          >
-            <option value="">No preference</option>
-            {preferences.map(pref => (
-              <option key={pref.value} value={pref.value}>{pref.icon} {pref.label}</option>
-            ))}
-          </select>
+            maxVisibleItems={5}
+          />
         </div>
       </div>
 

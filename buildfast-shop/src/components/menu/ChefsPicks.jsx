@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { staggerContainer, fadeSlideUp, batchFadeSlideUp } from '../animations/menuAnimations';
@@ -59,40 +59,40 @@ const ChefsPicks = ({ products, onAddToCart, getImageUrl }) => {
   }
 
   return (
-    <motion.section
+    <m.section
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
       exit="exit"
     >
       {/* Section Header */}
-      <motion.h3
+      <m.h3
         className="text-2xl font-bold text-[var(--accent)] mb-6 text-center flex items-center justify-center gap-2"
         variants={fadeSlideUp}
         custom={0.1}
       >
-        <motion.span
+        <m.span
           animate={{ rotate: [0, 10, -10, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
         >
           ⭐
-        </motion.span>
+        </m.span>
         Chef&apos;s Picks
-        <motion.span
+        <m.span
           animate={{ rotate: [0, -10, 10, -10, 0] }}
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
         >
           ⭐
-        </motion.span>
-      </motion.h3>
+        </m.span>
+      </m.h3>
 
       {/* Products Grid - Responsive: 2 cols mobile, 4 cols desktop */}
-      <motion.div
+      <m.div
         className="grid grid-cols-2 md:grid-cols-4 gap-4"
         variants={staggerContainer}
       >
         {products.map((item, index) => (
-          <motion.div
+          <m.div
             key={item.id}
             className="border border-theme rounded-xl overflow-hidden group cursor-pointer hover:border-[var(--accent)]/50 transition-all duration-300"
             style={{
@@ -120,7 +120,7 @@ const ChefsPicks = ({ products, onAddToCart, getImageUrl }) => {
               />
 
               {/* Chef's Pick Badge */}
-              <motion.div
+              <m.div
                 className="absolute top-2 right-2 bg-[var(--accent)]/90 backdrop-blur text-black px-2 py-1 rounded-full text-[10px] font-bold z-10"
                 initial={{ opacity: 0, scale: 0.8, x: 10 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -128,33 +128,33 @@ const ChefsPicks = ({ products, onAddToCart, getImageUrl }) => {
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
                 ⭐ Chef&apos;s Pick
-              </motion.div>
+              </m.div>
             </div>
 
             {/* Product Info */}
             <div className="px-3 pb-3">
               {/* Product Name */}
-              <motion.h4
+              <m.h4
                 className="text-sm font-semibold mb-1 text-[var(--text-main)] line-clamp-1"
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
               >
                 {item.name}
-              </motion.h4>
+              </m.h4>
 
               {/* Product Description */}
-              <motion.p
+              <m.p
                 className="text-xs text-[var(--text-muted)] mb-2 line-clamp-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.15 }}
               >
                 {item.description}
-              </motion.p>
+              </m.p>
 
               {/* Price and Add Button */}
-              <motion.div
+              <m.div
                 className="flex justify-between items-center"
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -163,7 +163,7 @@ const ChefsPicks = ({ products, onAddToCart, getImageUrl }) => {
                 <p className="text-sm font-bold text-[var(--accent)]">
                   ৳{typeof item.price === 'number' ? item.price.toFixed(2) : parseFloat(item.price || 0).toFixed(2)}
                 </p>
-                <motion.button
+                <m.button
                   onClick={(e) => handleAddClick(e, item)}
                   disabled={item.stock_quantity === 0}
                   className={`text-xs px-3 py-1.5 rounded-full font-semibold transition ${
@@ -176,13 +176,13 @@ const ChefsPicks = ({ products, onAddToCart, getImageUrl }) => {
                   whileTap={item.stock_quantity !== 0 ? { scale: 0.95 } : {}}
                 >
                   {item.stock_quantity === 0 ? 'Out' : 'Add'}
-                </motion.button>
-              </motion.div>
+                </m.button>
+              </m.div>
             </div>
-          </motion.div>
+          </m.div>
         ))}
-      </motion.div>
-    </motion.section>
+      </m.div>
+    </m.section>
   );
 };
 

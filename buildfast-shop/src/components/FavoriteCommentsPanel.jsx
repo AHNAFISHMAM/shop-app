@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import { createReview, uploadReviewImage, fetchUserFavoriteReviews } from '../lib/reviewsApi'
+import CustomDropdown from './ui/CustomDropdown'
 
 const FAVORITE_COMMENT_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
 const FAVORITE_COMMENT_MAX_IMAGES = 3
@@ -285,7 +286,7 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }) {
 
   return (
     <section
-      className="glow-surface glow-strong rounded-2xl border border-theme px-6 py-6 space-y-6"
+      className="glow-surface glow-soft rounded-2xl border border-theme px-6 py-6 space-y-6"
       style={{
         backgroundColor: isLightTheme 
           ? 'rgba(0, 0, 0, 0.02)' 
@@ -358,23 +359,13 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }) {
         <div className="grid gap-4 md:grid-cols-[2fr,3fr] md:gap-6">
           <label className="flex flex-col gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">Dish / Category</span>
-            <select
+            <CustomDropdown
+              options={favoriteOptions.map(option => ({ value: option.value, label: option.label }))}
               value={selectedTarget}
               onChange={(event) => setSelectedTarget(event.target.value)}
-              className="rounded-xl border border-theme px-3 py-2 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
-              style={{
-                backgroundColor: isLightTheme 
-                  ? 'rgba(0, 0, 0, 0.02)' 
-                  : 'rgba(255, 255, 255, 0.02)',
-                borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
-              }}
-            >
-              {favoriteOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              placeholder="Select dish/category"
+              maxVisibleItems={5}
+            />
           </label>
 
           <label className="flex flex-col gap-2">

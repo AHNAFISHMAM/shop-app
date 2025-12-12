@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Hero from '../components/Hero';
 import Testimonials from '../components/Testimonials';
@@ -148,7 +148,7 @@ const HomePage = () => {
   }, [user]);
 
   return (
-    <motion.main
+    <m.main
       initial="hidden"
       animate="visible"
       variants={pageFade}
@@ -407,7 +407,7 @@ const HomePage = () => {
           id="cta"
           data-animate="fade-scale"
           data-animate-active="false"
-          className="glow-surface glow-strong relative overflow-hidden rounded-2xl sm:rounded-3xl border border-theme bg-[var(--bg-main)] px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12 shadow-xl shadow-black/20"
+          className="glow-surface glow-soft relative overflow-hidden rounded-2xl sm:rounded-3xl border border-theme bg-[var(--bg-main)] px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12 shadow-xl shadow-black/20"
         >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(var(--text-main-rgb),0.1),_transparent_55%)] opacity-70" />
         <div className="pointer-events-none absolute -bottom-20 -right-24 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
@@ -425,7 +425,7 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="glow-surface glow-strong flex flex-col items-start gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border border-theme bg-theme-elevated px-5 py-5 sm:px-6 sm:py-6 backdrop-blur-sm lg:items-end lg:px-8 lg:py-7">
+          <div className="glow-surface glow-soft flex flex-col items-start gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border border-theme bg-theme-elevated px-5 py-5 sm:px-6 sm:py-6 backdrop-blur-sm lg:items-end lg:px-8 lg:py-7">
             <p className="text-sm text-[var(--text-main)]/70 text-left lg:text-right leading-relaxed">
               One-click reservations with instant confirmation to your inbox.
             </p>
@@ -438,7 +438,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-    </motion.main>
+    </m.main>
   );
 };
 

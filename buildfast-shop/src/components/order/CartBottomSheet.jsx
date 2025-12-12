@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { logger } from '../../utils/logger';
 import { saveItemForLater, saveCartItemNote, saveSelectedReward } from '../../lib/cartItemMetadata';
@@ -70,7 +70,7 @@ const CartBottomSheet = ({
       logger.warn('Attempted to checkout with empty cart');
       return;
     }
-    console.log('Navigating to checkout', { cartItemsCount: cartItems.length });
+    logger.log('Navigating to checkout', { cartItemsCount: cartItems.length });
     onClose();
     navigate('/checkout');
   }, [onClose, navigate, cartItems.length]);
@@ -156,7 +156,7 @@ const CartBottomSheet = ({
   return (
     <div className="cart-bottom-sheet">
       {/* Backdrop */}
-      <motion.div
+      <m.div
         className="cart-bottom-sheet-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -169,7 +169,7 @@ const CartBottomSheet = ({
       />
 
       {/* Sheet */}
-      <motion.div
+      <m.div
         className="cart-bottom-sheet-content"
         variants={fadeSlideUp}
         initial="hidden"
@@ -234,7 +234,7 @@ const CartBottomSheet = ({
 
         {/* Error Display */}
         {error && (
-          <motion.div
+          <m.div
             role="alert"
             className="cart-error"
             style={{ margin: '16px var(--cart-spacing-lg)' }}
@@ -251,7 +251,7 @@ const CartBottomSheet = ({
             >
               Retry
             </button>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Cart Items */}
@@ -329,7 +329,7 @@ const CartBottomSheet = ({
             </button>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };

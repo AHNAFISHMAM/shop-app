@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import UpdateTimestamp from '../components/UpdateTimestamp'
 import AuthShell from '../components/auth-shell/auth-shell'
@@ -76,7 +76,7 @@ function Signup() {
 
   if (success) {
     return (
-      <motion.main
+      <m.main
         variants={pageFade}
         initial="hidden"
         animate="visible"
@@ -85,7 +85,7 @@ function Signup() {
       >
         <UpdateTimestamp />
         <AuthShell.Root>
-          <motion.div
+          <m.div
             variants={fadeSlideUp}
             initial="hidden"
             animate="visible"
@@ -131,14 +131,14 @@ function Signup() {
                 </div>
               </div>
             </AuthShell.Card>
-          </motion.div>
+          </m.div>
         </AuthShell.Root>
-      </motion.main>
+      </m.main>
     )
   }
 
   return (
-    <motion.main
+    <m.main
       variants={pageFade}
       initial="hidden"
       animate="visible"
@@ -147,7 +147,7 @@ function Signup() {
     >
       <UpdateTimestamp />
       <AuthShell.Root>
-        <motion.div
+        <m.div
           variants={fadeSlideUp}
           initial="hidden"
           animate="visible"
@@ -258,9 +258,9 @@ function Signup() {
               </button>
             </form>
           </AuthShell.Card>
-        </motion.div>
+        </m.div>
       </AuthShell.Root>
-    </motion.main>
+    </m.main>
   )
 }
 

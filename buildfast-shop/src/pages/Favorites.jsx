@@ -8,7 +8,7 @@ import { handleAuthError } from '../lib/authUtils'
 import { getCurrencySymbol, formatPrice } from '../lib/priceUtils'
 import UpdateTimestamp from '../components/UpdateTimestamp'
 import FavoriteCommentsPanel from '../components/FavoriteCommentsPanel'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { pageFade } from '../components/animations/menuAnimations'
 import { logger } from '../utils/logger'
 
@@ -243,7 +243,7 @@ function Favorites() {
   }
 
   return (
-    <motion.main
+    <m.main
       className="min-h-screen bg-[var(--bg-main)] px-4 sm:px-6 pb-16 pt-10 sm:pt-12 text-[var(--text-main)]"
       data-animate="fade-scale"
       data-animate-active="false"
@@ -260,7 +260,7 @@ function Favorites() {
         data-animate-active="false"
       >
         <div
-          className="glow-surface glow-strong flex flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 py-4 sm:py-6 shadow-[0_35px_65px_-55px_rgba(197,157,95,0.65)] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between"
+          className="glow-surface glow-soft flex flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 py-4 sm:py-6 shadow-[0_35px_65px_-55px_rgba(197,157,95,0.65)] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between"
           data-animate="fade-scale"
           data-animate-active="false"
         >
@@ -293,7 +293,7 @@ function Favorites() {
 
         {favoriteItems.length === 0 ? (
           <div
-            className="glow-surface glow-strong rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-8 sm:p-10 md:p-12 text-center shadow-[0_30px_70px_-60px_rgba(197,157,95,0.6)]"
+            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-8 sm:p-10 md:p-12 text-center shadow-[0_30px_70px_-60px_rgba(197,157,95,0.6)]"
             data-animate="fade-scale"
             data-animate-active="false"
           >
@@ -454,7 +454,7 @@ function Favorites() {
           </div>
         )}
       </section>
-    </motion.main>
+    </m.main>
   )
 }
 

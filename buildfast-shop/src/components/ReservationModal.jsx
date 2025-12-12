@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import ReservationForm from './ReservationForm';
 import PropTypes from 'prop-types';
@@ -161,7 +161,7 @@ const ReservationModal = ({
   const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <m.div
           className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 backdrop-blur overflow-y-auto"
           role="dialog"
           aria-modal="true"
@@ -180,7 +180,7 @@ const ReservationModal = ({
             backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.5)'
           }}
         >
-          <motion.div
+          <m.div
             className="relative flex w-full max-w-5xl flex-col rounded-3xl border border-theme overflow-hidden my-auto"
             style={{ 
               backgroundColor: isLightTheme 
@@ -251,8 +251,8 @@ const ReservationModal = ({
                 </div>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

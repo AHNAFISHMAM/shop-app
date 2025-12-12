@@ -4,7 +4,7 @@
  * Filter bar component for OrderPage with search, category, and sort filters.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import CustomDropdown from '../../../components/order/CustomDropdown';
 import { fadeSlideUp, batchFadeSlideUp, gridReveal } from '../../../components/animations/menuAnimations';
 import { useTheme } from '../../../shared/hooks';
@@ -39,7 +39,7 @@ export function OrderPageFilters({
 }) {
   const isLightTheme = useTheme();
   return (
-    <motion.div
+    <m.div
       variants={fadeSlideUp}
       custom={0.22}
       initial="hidden"
@@ -48,7 +48,7 @@ export function OrderPageFilters({
       className="glow-surface glow-subtle rounded-2xl border border-theme-subtle bg-[var(--bg-main)]/78 backdrop-blur-sm shadow-[0_24px_55px_-50px_rgba(5,5,9,0.6)] overflow-hidden"
     >
       {/* Main Filter Row */}
-      <motion.div
+      <m.div
         className="flex flex-col lg:flex-row gap-3 p-4"
         variants={gridReveal}
         initial="hidden"
@@ -56,7 +56,7 @@ export function OrderPageFilters({
         exit="exit"
       >
         {/* Search - Takes most space */}
-        <motion.div className="relative flex-1" variants={batchFadeSlideUp}>
+        <m.div className="relative flex-1" variants={batchFadeSlideUp}>
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <svg className="h-5 w-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -80,10 +80,10 @@ export function OrderPageFilters({
               </svg>
             </button>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Category Dropdown */}
-        <motion.div variants={batchFadeSlideUp}>
+        <m.div variants={batchFadeSlideUp}>
           <CustomDropdown
             value={selectedCategory}
             onChange={onCategoryChange}
@@ -102,10 +102,10 @@ export function OrderPageFilters({
             }
             className="min-w-[160px]"
           />
-        </motion.div>
+        </m.div>
 
         {/* Sort Dropdown */}
-        <motion.div variants={batchFadeSlideUp}>
+        <m.div variants={batchFadeSlideUp}>
           <CustomDropdown
             value={sortBy}
             onChange={onSortChange}
@@ -123,11 +123,11 @@ export function OrderPageFilters({
             }
             className="min-w-[140px]"
           />
-        </motion.div>
+        </m.div>
 
         {/* More Filters Button */}
-        <motion.div variants={batchFadeSlideUp}>
-          <motion.button
+        <m.div variants={batchFadeSlideUp}>
+          <m.button
             variants={batchFadeSlideUp}
             onClick={onMoreFilters}
             className="relative flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-lg border border-theme text-sm sm:text-base font-medium text-[var(--text-main)] hover:border-[var(--accent)]/30 transition-all whitespace-nowrap"
@@ -157,10 +157,10 @@ export function OrderPageFilters({
                 {(minPrice ? 1 : 0) + (maxPrice ? 1 : 0)}
               </span>
             )}
-          </motion.button>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+          </m.button>
+        </m.div>
+      </m.div>
+    </m.div>
   );
 }
 

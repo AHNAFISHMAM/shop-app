@@ -80,13 +80,14 @@ export function verifyThemeContrast() {
   return results;
 }
 
-// Log results in development
-if (import.meta.env.DEV) {
+// Log results in development (only once per session)
+if (import.meta.env.DEV && !sessionStorage.getItem('theme_contrast_verified')) {
   const verification = verifyThemeContrast();
   logger.log('Theme Contrast Verification:', verification);
   
   if (!verification.allPass) {
     logger.warn('⚠️ Some color combinations do not meet WCAG AA standards');
   }
+  sessionStorage.setItem('theme_contrast_verified', 'true');
 }
 

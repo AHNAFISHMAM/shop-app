@@ -169,7 +169,7 @@ function WaitlistManager() {
   }
 
   return (
-    <GlowPanel glow="strong" padding="p-6" background="bg-[rgba(255,255,255,0.02)]">
+    <GlowPanel glow="soft" padding="p-6" background="bg-[rgba(255,255,255,0.02)]">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h3 className="text-xl font-semibold text-[var(--text-main)]">Waitlist</h3>

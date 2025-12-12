@@ -181,7 +181,7 @@ const ProfileDropdown = () => {
       try {
         const { data, error } = await supabase
           .from('customers')
-          .select('id, name, avatar_url')
+          .select('id, full_name')
           .eq('id', user.id)
           .maybeSingle()
 
@@ -226,7 +226,7 @@ const ProfileDropdown = () => {
 
   const displayName = useMemo(() => {
     if (!user) return ''
-    const profileName = profile?.name?.trim()
+    const profileName = profile?.full_name?.trim()
     if (profileName) return profileName
 
     const metadataName = user.user_metadata?.full_name?.trim()
@@ -243,7 +243,7 @@ const ProfileDropdown = () => {
   const initials = useMemo(() => {
     if (!user) return 'GU'
 
-    const profileName = profile?.name?.trim()
+    const profileName = profile?.full_name?.trim()
     if (profileName) {
       const parts = profileName.split(/\s+/).filter(Boolean)
       if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
@@ -367,7 +367,8 @@ const ProfileDropdown = () => {
     const persistedAdminStatus = getPersistedAdminStatus()
     const shouldShowAdmin = isAdmin || persistedAdminStatus
 
-    if (user?.id && import.meta.env.DEV) {
+    // Only log admin check in development and only once per session
+    if (user?.id && import.meta.env.DEV && !sessionStorage.getItem('admin_check_logged')) {
       logger.log('ProfileDropdown Admin Check:', {
         userId: user.id,
         isAdminFromContext: isAdmin,
@@ -375,6 +376,7 @@ const ProfileDropdown = () => {
         shouldShowAdmin,
         sessionStorageKey: `admin_status_${user.id}`
       })
+      sessionStorage.setItem('admin_check_logged', 'true')
     }
 
     if (shouldShowAdmin) {
@@ -575,7 +577,7 @@ const ProfileDropdown = () => {
               tabIndex={0}
               ref={assignMenuItemRef(menuItems.length)}
               onClick={handleLogout}
-              className="mx-2 flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-red-400 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+              className="mx-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-red-400 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
               style={{
                 color: isLightTheme ? '#dc2626' : '#f87171'
               }}

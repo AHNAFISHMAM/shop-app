@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import UpdateTimestamp from '../components/UpdateTimestamp'
 import AuthShell from '../components/auth-shell/auth-shell'
@@ -77,7 +77,7 @@ function Login() {
   }
 
   return (
-    <motion.main
+    <m.main
       variants={pageFade}
       initial="hidden"
       animate="visible"
@@ -86,7 +86,7 @@ function Login() {
     >
       <UpdateTimestamp />
       <AuthShell.Root>
-        <motion.div
+        <m.div
           variants={fadeSlideUp}
           initial="hidden"
           animate="visible"
@@ -181,9 +181,9 @@ function Login() {
               </button>
             </form>
           </AuthShell.Card>
-        </motion.div>
+        </m.div>
       </AuthShell.Root>
-    </motion.main>
+    </m.main>
   )
 }
 

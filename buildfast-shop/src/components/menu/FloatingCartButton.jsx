@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { getGuestCart } from '../../lib/guestSessionUtils';
@@ -128,7 +128,7 @@ const FloatingCartButton = () => {
   return (
     <>
       {/* Desktop Version - Top Right (Sticky on Scroll) */}
-      <motion.div
+      <m.div
         className="hidden md:flex fixed top-6 right-6 z-[9999] pointer-events-auto"
         style={{ position: 'fixed' }}
         initial={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -155,7 +155,7 @@ const FloatingCartButton = () => {
           aria-label={isEmpty ? 'View cart (empty)' : `View cart with ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
         >
           {/* Cart Icon */}
-          <motion.svg
+          <m.svg
             className="w-6 h-6 flex-shrink-0"
             fill="none"
             viewBox="0 0 24 24"
@@ -169,7 +169,7 @@ const FloatingCartButton = () => {
               strokeLinejoin="round"
               d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
             />
-          </motion.svg>
+          </m.svg>
 
           <div className="flex flex-col items-start">
             <span className="text-xs font-medium opacity-80 leading-tight">Cart</span>
@@ -180,7 +180,7 @@ const FloatingCartButton = () => {
 
           {/* Cart Count Badge - Only show when not empty */}
           {!isEmpty && (
-            <motion.span
+            <m.span
               className="absolute -top-2 -right-2 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white"
               aria-label={`${cartCount} items in cart`}
               initial={{ scale: 0 }}
@@ -189,19 +189,19 @@ const FloatingCartButton = () => {
               whileHover={{ scale: 1.15 }}
             >
               {cartCount > 99 ? '99+' : cartCount}
-            </motion.span>
+            </m.span>
           )}
 
           {/* Hover Glow Effect */}
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-2xl bg-accent opacity-0 group-hover:opacity-20 blur-xl -z-10"
             transition={{ duration: 0.3 }}
           />
         </Link>
-      </motion.div>
+      </m.div>
 
       {/* Mobile Version - Bottom Center */}
-      <motion.div
+      <m.div
         className="md:hidden fixed bottom-4 left-4 right-4 z-[9999] pointer-events-auto"
         style={{ position: 'fixed' }}
         initial={{ opacity: 0, y: 100 }}
@@ -228,7 +228,7 @@ const FloatingCartButton = () => {
           aria-label={isEmpty ? 'View cart (empty)' : `View cart with ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
         >
           {/* Cart Icon */}
-          <motion.svg
+          <m.svg
             className="w-6 h-6 flex-shrink-0"
             fill="none"
             viewBox="0 0 24 24"
@@ -241,13 +241,13 @@ const FloatingCartButton = () => {
               strokeLinejoin="round"
               d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
             />
-          </motion.svg>
+          </m.svg>
 
           <span className="text-base">{isEmpty ? 'View Cart' : `View Cart (${cartCount})`}</span>
 
           {/* Cart Count Badge - Only show when not empty */}
           {!isEmpty && (
-            <motion.span
+            <m.span
               className="absolute -top-2 -right-2 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white"
               aria-label={`${cartCount} items in cart`}
               initial={{ scale: 0 }}
@@ -256,16 +256,16 @@ const FloatingCartButton = () => {
               whileTap={{ scale: 1.1 }}
             >
               {cartCount > 99 ? '99+' : cartCount}
-            </motion.span>
+            </m.span>
           )}
 
           {/* Hover Glow Effect */}
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-2xl bg-accent opacity-0 group-active:opacity-20 blur-xl -z-10"
             transition={{ duration: 0.2 }}
           />
         </Link>
-      </motion.div>
+      </m.div>
     </>
   );
 };

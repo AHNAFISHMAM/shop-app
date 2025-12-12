@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import PropTypes from 'prop-types';
+import CustomDropdown from '../ui/CustomDropdown';
 
 /**
  * Product Filters Panel Component
@@ -72,18 +73,16 @@ const ProductFilters = ({
         {/* Category */}
         <div>
           <label className="block text-sm sm:text-base text-[var(--text-muted)] mb-2">Category</label>
-          <select
+          <CustomDropdown
+            options={[
+              { value: '', label: 'All Categories' },
+              ...categories.map(cat => ({ value: cat.id, label: cat.name }))
+            ]}
             value={selectedCategory?.id || ''}
             onChange={handleCategoryChange}
-            className="w-full min-h-[44px] px-4 sm:px-6 py-3 bg-elevated border border-theme rounded-xl sm:rounded-2xl text-sm sm:text-base text-[var(--text-main)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
-          >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+            placeholder="All Categories"
+            maxVisibleItems={5}
+          />
         </div>
 
         {/* Subcategory */}
@@ -91,19 +90,17 @@ const ProductFilters = ({
           <label className="block text-sm sm:text-base text-[var(--text-muted)] mb-2">
             Subcategory
           </label>
-          <select
+          <CustomDropdown
+            options={[
+              { value: '', label: 'All Subcategories' },
+              ...filteredSubcategories.map(sub => ({ value: sub.id, label: sub.name }))
+            ]}
             value={selectedSubcategory?.id || ''}
             onChange={handleSubcategoryChange}
-            className="w-full min-h-[44px] px-4 sm:px-6 py-3 bg-elevated border border-theme rounded-xl sm:rounded-2xl text-sm sm:text-base text-[var(--text-main)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            placeholder="All Subcategories"
             disabled={!selectedCategory}
-          >
-            <option value="">All Subcategories</option>
-            {filteredSubcategories.map((sub) => (
-              <option key={sub.id} value={sub.id}>
-                {sub.name}
-              </option>
-            ))}
-          </select>
+            maxVisibleItems={5}
+          />
         </div>
 
         {/* Spice Level */}
@@ -111,17 +108,19 @@ const ProductFilters = ({
           <label className="block text-sm sm:text-base text-[var(--text-muted)] mb-2">
             Spice Level
           </label>
-          <select
-            value={spiceLevel !== null ? spiceLevel : ''}
+          <CustomDropdown
+            options={[
+              { value: '', label: 'Any' },
+              { value: '0', label: 'Mild' },
+              { value: '1', label: 'Medium 🌶️' },
+              { value: '2', label: 'Hot 🌶️🌶️' },
+              { value: '3', label: 'Extra Hot 🌶️🌶️🌶️' }
+            ]}
+            value={spiceLevel !== null ? String(spiceLevel) : ''}
             onChange={handleSpiceLevelChange}
-            className="w-full min-h-[44px] px-4 sm:px-6 py-3 bg-elevated border border-theme rounded-xl sm:rounded-2xl text-sm sm:text-base text-[var(--text-main)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
-          >
-            <option value="">Any</option>
-            <option value="0">Mild</option>
-            <option value="1">Medium 🌶️</option>
-            <option value="2">Hot 🌶️🌶️</option>
-            <option value="3">Extra Hot 🌶️🌶️🌶️</option>
-          </select>
+            placeholder="Any"
+            maxVisibleItems={5}
+          />
         </div>
       </div>
 

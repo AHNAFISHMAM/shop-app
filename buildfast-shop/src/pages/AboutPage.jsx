@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import SectionTitle from '../components/SectionTitle';
 import GalleryCard from '../components/GalleryCard';
 import { parseEffects, parseEffectVariants } from '../utils/effects';
@@ -114,7 +114,7 @@ const AboutPage = () => {
   }, []);
 
   return (
-    <motion.main
+    <m.main
       className="space-y-20"
       variants={pageFade}
       initial="hidden"
@@ -125,7 +125,7 @@ const AboutPage = () => {
       <section
         data-animate="fade-scale"
         data-animate-active="false"
-        className="glow-surface glow-strong relative overflow-hidden rounded-2xl sm:rounded-3xl border border-theme bg-gradient-to-br from-accent/10 via-background to-accent/5 py-12 sm:py-14 md:py-16 shadow-lg"
+        className="glow-surface glow-soft relative overflow-hidden rounded-2xl sm:rounded-3xl border border-theme bg-gradient-to-br from-accent/10 via-background to-accent/5 py-12 sm:py-14 md:py-16 shadow-lg"
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_55%)]" />
         <div className="hero-container relative text-center space-y-4 sm:space-y-6 px-4">
@@ -163,7 +163,7 @@ const AboutPage = () => {
         <div
           data-animate="drift-left"
           data-animate-active="false"
-          className="glow-surface glow-strong relative mt-8 overflow-hidden rounded-2xl sm:rounded-[32px] border border-theme bg-gradient-to-br from-accent/10 via-background to-accent/5 p-6 sm:p-8 md:p-10 shadow-xl"
+          className="glow-surface glow-soft relative mt-8 overflow-hidden rounded-2xl sm:rounded-[32px] border border-theme bg-gradient-to-br from-accent/10 via-background to-accent/5 p-6 sm:p-8 md:p-10 shadow-xl"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_55%)]" />
           <div className="relative space-y-8">
@@ -207,7 +207,7 @@ const AboutPage = () => {
       <section
         data-animate="drift-right"
         data-animate-active="false"
-        className="glow-surface glow-strong relative overflow-hidden py-10 sm:py-12 px-4 -mx-4 rounded-2xl sm:rounded-3xl border border-theme bg-gradient-to-br from-accent/10 via-background to-accent/5 shadow-inner"
+        className="glow-surface glow-soft relative overflow-hidden py-10 sm:py-12 px-4 -mx-4 rounded-2xl sm:rounded-3xl border border-theme bg-gradient-to-br from-accent/10 via-background to-accent/5 shadow-inner"
         style={settings ? getBackgroundStyle(settings, 'gallery_section') : {}}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_60%)]" />
@@ -267,7 +267,7 @@ const AboutPage = () => {
         <div
           data-animate="fade-scale"
           data-animate-active="false"
-          className="glow-surface glow-strong mt-8 sm:mt-12 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-accent/15 via-background to-background/60 p-6 sm:p-8 text-center shadow-lg backdrop-blur"
+          className="glow-surface glow-soft mt-8 sm:mt-12 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-accent/15 via-background to-background/60 p-6 sm:p-8 text-center shadow-lg backdrop-blur"
         >
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
             <a
@@ -285,7 +285,7 @@ const AboutPage = () => {
           </div>
         </div>
       </section>
-    </motion.main>
+    </m.main>
   );
 };
 

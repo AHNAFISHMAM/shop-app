@@ -1,5 +1,590 @@
 @import "tailwindcss";
 
+/* React Day Picker Custom Styling - Matches App Theme */
+/* Force grid layout - must override default flexbox from react-day-picker */
+.rdp {
+  --rdp-cell-size: 44px;
+  --rdp-accent-color: var(--accent, #C59D5F);
+  --rdp-background-color: transparent;
+  --rdp-accent-color-dark: var(--accent, #C59D5F);
+  --rdp-outline: 2px solid var(--accent, #C59D5F);
+  --rdp-outline-selected: 2px solid var(--accent, #C59D5F);
+  margin: 0;
+  font-family: inherit;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Force grid layout for equal columns - override default flexbox */
+.rdp * {
+  box-sizing: border-box;
+}
+
+/* Override any flexbox from default react-day-picker styles */
+.rdp-head_row,
+.rdp-row,
+.rdp-month_view__weekdays,
+.rdp-month_view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+  gap: 0 !important;
+}
+
+.rdp-head_cell,
+.rdp-cell,
+.rdp-month_view__weekdays__weekday,
+.rdp-month_view__days__day {
+  width: 100% !important;
+  flex: none !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Responsive cell size - scales with viewport */
+@media (min-width: 1024px) {
+  .rdp {
+    --rdp-cell-size: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  .rdp {
+    --rdp-cell-size: 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .rdp {
+    --rdp-cell-size: 36px;
+  }
+}
+
+.rdp-months {
+  display: flex;
+  width: 100%;
+}
+
+.rdp-month {
+  margin: 0;
+  width: 100%;
+}
+
+.rdp-table {
+  width: 100% !important;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.rdp-month_view {
+  width: 100%;
+}
+
+.rdp-month_view__weekdays {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+  gap: 0 !important;
+}
+
+.rdp-month_view__weekdays__weekday {
+  width: 100% !important;
+  text-align: center;
+  padding: 0.5rem 0;
+  box-sizing: border-box;
+  flex: none !important;
+}
+
+.rdp-month_view__weekdays__weekday abbr {
+  text-decoration: none;
+  display: block;
+  width: 100%;
+}
+
+.rdp-month_view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+  gap: 0 !important;
+}
+
+.rdp-month_view__days__day {
+  width: 100% !important;
+  box-sizing: border-box;
+  flex: none !important;
+}
+
+/* Ensure all table cells have equal width for perfect alignment */
+.rdp-table td,
+.rdp-table th {
+  width: calc(100% / 7) !important;
+  box-sizing: border-box;
+  padding: 0;
+  text-align: center;
+}
+
+.rdp-table thead th,
+.rdp-table tbody td {
+  width: calc(100% / 7) !important;
+}
+
+.rdp-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  text-align: center;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.rdp-caption_label {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main, #F9FAFB);
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .rdp-caption_label {
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rdp-caption_label {
+    font-size: 24px;
+  }
+}
+
+.rdp-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.rdp-button_previous,
+.rdp-button_next {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-main, #F9FAFB);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.rdp-button_previous {
+  left: 0;
+}
+
+.rdp-button_next {
+  right: 0;
+}
+
+.rdp-button_previous:hover,
+.rdp-button_next:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent, #C59D5F);
+  color: var(--accent, #C59D5F);
+}
+
+.rdp-button_previous:focus-visible,
+.rdp-button_next:focus-visible {
+  outline: 2px solid var(--accent, #C59D5F);
+  outline-offset: 2px;
+}
+
+.rdp-head_cell {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #9CA3AF);
+  padding: 0.5rem 0;
+  text-align: center;
+  width: 100% !important;
+  box-sizing: border-box;
+  flex: none !important;
+}
+
+.rdp-head_row {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+  margin-bottom: 0.5rem;
+  gap: 0 !important;
+}
+
+.rdp-row {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+  margin-top: 0.25rem;
+  gap: 0 !important;
+}
+
+.rdp-cell {
+  width: 100% !important;
+  text-align: center;
+  font-size: 14px;
+  position: relative;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex: none !important;
+}
+
+@media (min-width: 1024px) {
+  .rdp-cell {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .rdp-cell {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 640px) {
+  .rdp-cell {
+    font-size: 12px;
+  }
+}
+
+.rdp-button {
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-main, #F9FAFB);
+  font-weight: 600;
+  font-size: inherit;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .rdp-button {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rdp-button {
+    min-height: 48px;
+  }
+}
+
+.rdp-button:hover:not([disabled]) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent, #C59D5F);
+  transform: scale(1.05);
+}
+
+.rdp-button:focus-visible:not([disabled]) {
+  outline: 2px solid var(--accent, #C59D5F);
+  outline-offset: 2px;
+}
+
+.rdp-day_today:not(.rdp-day_selected) {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.15);
+  border: 2px solid var(--accent, #C59D5F);
+  color: var(--accent, #C59D5F);
+  font-weight: 700;
+}
+
+.rdp-day_selected {
+  background: var(--accent, #C59D5F) !important;
+  color: #000 !important;
+  font-weight: 700;
+  border: 2px solid var(--accent, #C59D5F) !important;
+}
+
+.rdp-day_selected:hover {
+  background: var(--accent, #C59D5F) !important;
+  opacity: 0.9;
+}
+
+.rdp-day_outside {
+  color: var(--text-tertiary, #6B7280);
+  opacity: 0.5;
+}
+
+.rdp-day_disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  color: var(--text-tertiary, #6B7280);
+}
+
+.rdp-day_hidden {
+  visibility: hidden;
+}
+
+/* Reservation indicators */
+.rdp-day.has-reservations-day:not(.rdp-day_selected):not(.rdp-day_today) {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.1);
+  border: 1px solid rgba(var(--accent-rgb, 197, 157, 95), 0.3);
+}
+
+.rdp-day.has-reservations-day::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent, #C59D5F);
+  box-shadow: 0 0 4px rgba(var(--accent-rgb, 197, 157, 95), 0.6);
+}
+
+.rdp-day_today.has-reservations-day {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.2) !important;
+  border: 2px solid var(--accent, #C59D5F) !important;
+}
+
+.rdp-day_selected.has-reservations-day::after {
+  background: #000;
+}
+
+/* Light theme adjustments */
+.theme-light .rdp-button:hover:not([disabled]) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-light .rdp-day.has-reservations-day:not(.rdp-day_selected):not(.rdp-day_today) {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.12);
+}
+
+/* Legacy react-calendar styles - can be removed after migration */
+.react-calendar {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  color: var(--text-main, #F9FAFB);
+}
+
+.react-calendar__navigation {
+  display: flex;
+  height: 44px;
+  margin-bottom: 1.5em;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.react-calendar__navigation__label {
+  color: var(--text-main, #F9FAFB) !important;
+  font-size: 16px;
+  font-weight: 600;
+  pointer-events: none !important;
+  flex-grow: 0 !important;
+  padding: 0 1em;
+  cursor: default;
+}
+
+.react-calendar__navigation__label:hover {
+  background: transparent !important;
+}
+
+.react-calendar__navigation__arrow {
+  min-width: 44px;
+  height: 44px;
+  background: transparent;
+  color: var(--text-secondary, #9CA3AF) !important;
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+/* Hide double arrows (year/decade navigation) - only show month navigation */
+.react-calendar__navigation__prev2-button,
+.react-calendar__navigation__next2-button {
+  display: none !important;
+}
+
+.react-calendar__navigation__arrow:enabled:hover,
+.react-calendar__navigation__arrow:enabled:focus {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-main, #F9FAFB) !important;
+  border-color: var(--accent, #C59D5F);
+}
+
+.react-calendar__navigation__arrow[disabled] {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #9CA3AF) !important;
+  margin-bottom: 0.75em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--border-default, rgba(255, 255, 255, 0.1));
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.5em;
+  color: var(--text-secondary, #9CA3AF) !important;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+  border-bottom: none;
+}
+
+.react-calendar__month-view__days {
+  gap: 4px;
+}
+
+.react-calendar__month-view__days__day {
+  color: var(--text-main, #F9FAFB) !important;
+  border-radius: 8px;
+  margin: 2px;
+  height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* Ensure better contrast for dates */
+.react-calendar__tile abbr {
+  color: inherit;
+  font-weight: inherit;
+}
+
+.react-calendar__month-view__days__day:enabled:hover,
+.react-calendar__month-view__days__day:enabled:focus {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--accent, #C59D5F);
+  color: var(--text-main, #F9FAFB) !important;
+  transform: scale(1.05);
+}
+
+.react-calendar__tile {
+  position: relative;
+  padding: 0.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.react-calendar__tile--now {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.15) !important;
+  border: 2px solid var(--accent, #C59D5F) !important;
+  color: var(--accent, #C59D5F) !important;
+  font-weight: 700;
+}
+
+.react-calendar__tile--now:enabled:hover,
+.react-calendar__tile--now:enabled:focus {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.25) !important;
+  border-color: var(--accent, #C59D5F) !important;
+}
+
+.react-calendar__tile--active {
+  background: var(--accent, #C59D5F) !important;
+  color: #000 !important;
+  font-weight: 700;
+  border: 2px solid var(--accent, #C59D5F) !important;
+}
+
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background: var(--accent, #C59D5F) !important;
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.react-calendar__tile--neighboringMonth {
+  color: var(--text-tertiary, #6B7280) !important;
+  opacity: 0.5;
+}
+
+/* Today styling - more distinct */
+.react-calendar__tile.is-today:not(.react-calendar__tile--active) {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.15) !important;
+  border: 2px solid var(--accent, #C59D5F) !important;
+  color: var(--accent, #C59D5F) !important;
+  font-weight: 700;
+}
+
+.react-calendar__tile:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  color: var(--text-tertiary, #6B7280) !important;
+}
+
+/* Calendar wrapper */
+.calendar-wrapper {
+  padding: 0.5rem;
+}
+
+/* Days with reservations - more visible */
+.react-calendar__tile.has-reservations:not(.react-calendar__tile--active):not(.is-today) {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.1) !important;
+  border: 1px solid rgba(var(--accent-rgb, 197, 157, 95), 0.3) !important;
+}
+
+.react-calendar__tile.has-reservations:enabled:hover,
+.react-calendar__tile.has-reservations:enabled:focus {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.2) !important;
+  border-color: var(--accent, #C59D5F) !important;
+  transform: scale(1.05);
+}
+
+/* Today with reservations */
+.react-calendar__tile.is-today.has-reservations {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.2) !important;
+  border: 2px solid var(--accent, #C59D5F) !important;
+}
+
+/* Light theme adjustments */
+.theme-light .react-calendar__navigation__arrow:enabled:hover,
+.theme-light .react-calendar__navigation__arrow:enabled:focus {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: var(--accent, #C59D5F);
+}
+
+.theme-light .react-calendar__month-view__days__day:enabled:hover,
+.theme-light .react-calendar__month-view__days__day:enabled:focus {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-light .react-calendar__tile.has-reservations {
+  background: rgba(var(--accent-rgb, 197, 157, 95), 0.1) !important;
+  border: 1px solid rgba(var(--accent-rgb, 197, 157, 95), 0.3) !important;
+}
+
 /* ============================================
    UNIVERSAL BOX-SIZING FIX & OVERFLOW PREVENTION
    ============================================ */
@@ -299,108 +884,126 @@
 }
 
 /* ============================================
-   SCROLL-TRIGGERED ANIMATION SYSTEM
+   OPTIMIZED SCROLL-TRIGGERED ANIMATION SYSTEM
+   GPU Accelerated with Conditional will-change
    ============================================ */
 
 [data-animate] {
   opacity: 1;
-  transform: none;
-  filter: none;
-  transition-property: opacity, transform, filter, background-position, background-size;
-  transition-duration: 900ms;
-  transition-timing-function: var(--ease-spring-out);
-  will-change: opacity, transform, filter;
+  transform: translate3d(0, 0, 0); /* Force GPU acceleration */
+  transition-property: opacity, transform;
+  transition-duration: 400ms; /* Reduced from 900ms for snappier feel */
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1); /* Optimized easing */
+  /* will-change removed - will be added dynamically via JS when needed */
 }
 
+/* Only add will-change when animation is about to start */
 [data-animate][data-animate-active="false"] {
   opacity: 0;
+  will-change: opacity, transform; /* Only when inactive */
 }
 
+/* Remove will-change after animation completes */
+[data-animate][data-animate-active="true"] {
+  will-change: auto; /* Remove after animation */
+}
+
+/* Fade-scale animation - optimized */
 [data-animate="fade-scale"][data-animate-active="false"] {
-  transform: translateY(28px) scale(0.95);
+  transform: translate3d(0, 28px, 0) scale(0.95);
 }
 
 [data-animate="fade-scale"][data-animate-active="true"] {
-  transform: translateY(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
+/* Slide-up - optimized */
 [data-animate="slide-up"][data-animate-active="false"] {
-  transform: translateY(36px);
+  transform: translate3d(0, 36px, 0);
 }
 
 [data-animate="slide-up"][data-animate-active="true"] {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
 }
 
+/* Drift-left - optimized */
 [data-animate="drift-left"][data-animate-active="false"] {
-  transform: translateX(60px) scale(0.97);
+  transform: translate3d(60px, 0, 0) scale(0.97);
 }
 
 [data-animate="drift-left"][data-animate-active="true"] {
-  transform: translateX(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
+/* Drift-right - optimized */
 [data-animate="drift-right"][data-animate-active="false"] {
-  transform: translateX(-60px) scale(0.97);
+  transform: translate3d(-60px, 0, 0) scale(0.97);
 }
 
 [data-animate="drift-right"][data-animate-active="true"] {
-  transform: translateX(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
+/* Glide-horizontal - optimized */
 [data-animate="glide-horizontal"][data-animate-active="false"] {
-  transform: translateX(22%) scale(0.98);
+  transform: translate3d(22%, 0, 0) scale(0.98);
   opacity: 0;
 }
 
 [data-animate="glide-horizontal"][data-animate-active="true"] {
-  transform: translateX(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
   opacity: 1;
 }
 
+/* Glide-stack - optimized */
 [data-animate="glide-stack"][data-animate-active="false"] {
-  transform: translateX(-18%) rotate(-4deg);
+  transform: translate3d(-18%, 0, 0) rotate(-4deg);
   opacity: 0;
 }
 
 [data-animate="glide-stack"][data-animate-active="true"] {
-  transform: translateX(0) rotate(0);
+  transform: translate3d(0, 0, 0) rotate(0);
   opacity: 1;
 }
 
 [data-animate="glide-stack"][data-animate-active="true"] img {
-  transform: translateY(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
+/* Fade-rise - optimized */
 [data-animate="fade-rise"][data-animate-active="false"] {
-  transform: translateY(40px);
+  transform: translate3d(0, 40px, 0);
   opacity: 0;
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
 }
 
 [data-animate="fade-rise"][data-animate-active="true"] {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
   opacity: 1;
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
 }
 
+/* Blur-rise - optimized (blur reduced for performance) */
 [data-animate="blur-rise"][data-animate-active="false"] {
-  filter: blur(8px);
-  transform: translateY(28px) rotate(-2deg);
+  filter: blur(4px); /* Reduced from 8px for better performance */
+  transform: translate3d(0, 28px, 0) rotate(-2deg);
   opacity: 0;
 }
 
 [data-animate="blur-rise"][data-animate-active="true"] {
   filter: blur(0);
-  transform: translateY(0) rotate(0);
+  transform: translate3d(0, 0, 0) rotate(0);
   opacity: 1;
 }
 
+/* Rise - optimized */
 [data-animate="rise"][data-animate-active="false"] {
-  transform: translateY(32px);
+  transform: translate3d(0, 32px, 0);
   opacity: 0;
 }
 
 [data-animate="rise"][data-animate-active="true"] {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
   opacity: 1;
 }
 
@@ -434,6 +1037,8 @@ html {
   max-width: 100% !important;
   width: 100% !important;
   box-sizing: border-box;
+  /* Prevent scroll chaining - only allow scrolling when explicitly needed */
+  overscroll-behavior: none;
 }
 
 body {
@@ -445,6 +1050,8 @@ body {
   width: 100% !important;
   box-sizing: border-box;
   position: relative;
+  /* Prevent scroll chaining - only allow scrolling when explicitly needed */
+  overscroll-behavior: none;
 }
 
 body.modal-open {
@@ -473,6 +1080,8 @@ body.modal-open {
   overflow-x: hidden !important;
   max-width: 100%;
   box-sizing: border-box;
+  /* Prevent scroll chaining - contain scroll within this element */
+  overscroll-behavior: contain;
 }
 
 /* Admin sidebar should not be forced to 100% width */
@@ -529,6 +1138,52 @@ body::-webkit-scrollbar-thumb,
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(197, 157, 95, 0.5) !important;
+}
+
+/* Hide scrollbar completely while maintaining scroll functionality */
+.hide-scrollbar {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE and Edge */
+  -ms-overflow-style: none;
+  /* Prevent layout shift */
+  scrollbar-gutter: stable;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+/* Enhanced scrollbar for dropdown menus */
+.dropdown-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(197, 157, 95, 0.5) rgba(197, 157, 95, 0.1);
+}
+
+.dropdown-scrollbar::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-track {
+  background: rgba(197, 157, 95, 0.1);
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(197, 157, 95, 0.5) !important;
+  border-radius: 4px;
+  border: 1px solid rgba(197, 157, 95, 0.2);
+  transition: background 0.2s ease;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(197, 157, 95, 0.7) !important;
 }
 
 /* Cart Sidebar Scrollable - Force Visible Scrollbar */
@@ -760,40 +1415,40 @@ button[aria-expanded]:focus-visible {
 @keyframes cartItemFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translate3d(0, -10px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @keyframes cartItemSlideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @keyframes cartItemScaleIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translate3d(0, 0, 0) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 @keyframes cartItemRemove {
   to {
     opacity: 0;
-    transform: translateX(-100%);
+    transform: translate3d(-100%, 0, 0);
     height: 0;
     margin: 0;
     padding: 0;
@@ -811,34 +1466,34 @@ button[aria-expanded]:focus-visible {
 
 @keyframes cartShake {
   0%, 100% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-5px);
+    transform: translate3d(-5px, 0, 0);
   }
   20%, 40%, 60%, 80% {
-    transform: translateX(5px);
+    transform: translate3d(5px, 0, 0);
   }
 }
 
 @keyframes cartSlideInRight {
   from {
-    transform: translateX(100%);
+    transform: translate3d(100%, 0, 0);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
     opacity: 1;
   }
 }
 
 @keyframes cartSlideOutRight {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
     opacity: 1;
   }
   to {
-    transform: translateX(100%);
+    transform: translate3d(100%, 0, 0);
     opacity: 0;
   }
 }
@@ -854,7 +1509,10 @@ button[aria-expanded]:focus-visible {
 
 @keyframes cartProgress {
   from {
-    width: 0%;
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -1286,8 +1944,11 @@ button[aria-expanded]:focus-visible {
 }
 
 @keyframes spin {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
   to {
-    transform: rotate(360deg);
+    transform: translate3d(0, 0, 0) rotate(360deg);
   }
 }
 
@@ -2254,41 +2915,43 @@ textarea.input-base {
    ADMIN DASHBOARD ANIMATIONS
    ============================================ */
 
-/* Fade in and slide up entrance animation */
+/* Fade in and slide up entrance animation - Optimized */
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-in-up 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
   animation-fill-mode: forwards;
+  transform: translate3d(0, 0, 0); /* GPU acceleration */
 }
 
-/* Slide in from right for cart sidebar */
+/* Slide in from right for cart sidebar - Optimized */
 @keyframes slide-in-right {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translate3d(30px, 0, 0);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .animate-slide-in-right {
-  animation: slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slide-in-right 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) both;
   animation-fill-mode: forwards;
+  transform: translate3d(0, 0, 0);
 }
 
-/* Simple fade in for cart items */
+/* Simple fade in for cart items - Optimized */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -2299,21 +2962,21 @@ textarea.input-base {
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease both;
+  animation: fade-in 0.25s ease both;
   animation-fill-mode: forwards;
 }
 
-/* Slide down animation for expandable sections - Improved */
+/* Slide down animation for expandable sections - FIXED: Removed max-height */
 @keyframes slide-down {
   from {
     opacity: 0;
-    max-height: 0;
-    transform: translateY(-8px);
+    transform: translate3d(0, -8px, 0) scaleY(0);
+    transform-origin: top;
   }
   to {
     opacity: 1;
-    max-height: 3000px;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0) scaleY(1);
+    transform-origin: top;
   }
 }
 
@@ -2321,23 +2984,25 @@ textarea.input-base {
   animation: slide-down 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
   animation-fill-mode: forwards;
   overflow: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
-/* Shimmer loading effect for skeletons */
+/* Shimmer loading effect for skeletons - Optimized */
 @keyframes shimmer {
   0% {
-    transform: translateX(-100%);
+    transform: translate3d(-100%, 0, 0);
   }
   100% {
-    transform: translateX(100%);
+    transform: translate3d(100%, 0, 0);
   }
 }
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
+  transform: translate3d(0, 0, 0);
 }
 
-/* Pulse animation for status indicators */
+/* Pulse animation for status indicators - Optimized */
 @keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
@@ -2353,21 +3018,22 @@ textarea.input-base {
   animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Scale in animation for icons */
+/* Scale in animation for icons - Optimized */
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.8);
+    transform: translate3d(0, 0, 0) scale(0.8);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 .animate-scale-in {
-  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: scale-in 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) both;
   animation-fill-mode: forwards;
+  transform: translate3d(0, 0, 0);
 }
 
 /* Enhanced card hover with better shadows */
@@ -4271,4 +4937,48 @@ input[type="file"]::file-selector-button:hover {
   flex-shrink: 0;
 }
 
+/* React Aria Components Calendar - Equal Column Widths and Centered */
+[data-react-aria-components-calendar] {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+[data-react-aria-components-calendar] table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0 auto;
+}
+
+[data-react-aria-components-calendar] th,
+[data-react-aria-components-calendar] td {
+  width: calc(100% / 7) !important;
+  text-align: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+[data-react-aria-components-calendar] th {
+  padding: 0.5rem 0;
+}
+
+[data-react-aria-components-calendar] td {
+  padding: 0.25rem 0;
+}
+
+/* Center the calendar grid container */
+[data-react-aria-components-calendar] > div:last-child {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+[data-react-aria-components-calendar] > div:last-child > table {
+  width: 100%;
+  max-width: 100%;
+}
 

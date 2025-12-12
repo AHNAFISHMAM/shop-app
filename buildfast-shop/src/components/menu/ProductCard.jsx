@@ -1,5 +1,5 @@
 import { memo, useMemo, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { getCurrencySymbol, formatPrice } from '../../lib/priceUtils';
 
@@ -92,7 +92,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
 
   return (
     <div 
-      className={`group border border-theme bg-theme-elevated backdrop-blur-sm overflow-hidden transition-transform transition-shadow duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-rotate-1 hover:border-[var(--accent)]/60 min-w-0 h-full will-change-transform ${
+      className={`group border border-theme bg-theme-elevated backdrop-blur-sm overflow-hidden transition-transform transition-shadow duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-rotate-1 hover:border-[var(--accent)]/60 min-w-0 h-full flex flex-col will-change-transform ${
         compact 
           ? 'rounded-lg sm:rounded-xl hover:-translate-y-1' 
           : 'rounded-xl sm:rounded-2xl hover:-translate-y-2'
@@ -131,7 +131,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
 
         <AnimatePresence mode="wait">
           {isFeatured && (
-            <motion.div
+            <m.div
               key="featured"
               className={`absolute bg-[var(--accent)] text-black rounded-md text-[10px] font-bold flex items-center gap-1 z-10 ${
                 compact 
@@ -146,11 +146,11 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
             >
               <span>⭐</span>
               <span>Chef&apos;s Pick</span>
-            </motion.div>
+            </m.div>
           )}
 
           {isOutOfStock && (
-            <motion.div
+            <m.div
               key="out-of-stock"
               className={`absolute bg-red-600 text-black rounded-md text-[10px] font-bold z-10 ${
                 compact 
@@ -163,11 +163,11 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
               transition={{ duration: 0.3, delay: 0.2 }}
             >
               Unavailable
-            </motion.div>
+            </m.div>
           )}
 
           {product.spice_level > 0 && !isOutOfStock && (
-            <motion.div
+            <m.div
               key="spice-level"
               className={`absolute bg-red-900/90 text-red-100 rounded-md text-[10px] font-bold backdrop-blur-sm z-10 ${
                 compact 
@@ -180,12 +180,12 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
               transition={{ duration: 0.3, delay: 0.2 }}
             >
               {'🌶️'.repeat(product.spice_level)}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className={compact ? 'px-2 sm:px-3 py-1.5 sm:py-2' : 'px-4 sm:px-6 py-3 sm:py-4'}>
+      <div className={`flex flex-col flex-1 ${compact ? 'px-2 sm:px-3 py-1.5 sm:py-2' : 'px-4 sm:px-6 py-3 sm:py-4'}`}>
         <h3 className={`font-bold text-[var(--text-main)] line-clamp-2 ${
           compact 
             ? 'text-sm sm:text-base mb-1 min-h-[1.75rem]' 
@@ -202,7 +202,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
           {product.description || 'Delicious dish prepared with quality ingredients and served fresh.'}
         </p>
 
-        <motion.div
+        <m.div
           className={`flex flex-wrap mb-3 ${
             compact 
               ? 'gap-1.5 sm:gap-2 min-h-[0.75rem]' 
@@ -215,7 +215,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
           {product.dietary_tags && product.dietary_tags.length > 0 && (
             <>
               {product.dietary_tags.slice(0, 3).map((tag, index) => (
-                <motion.span
+                <m.span
                   key={tag}
                   className={`py-0.5 text-[10px] bg-green-500/20 text-green-300 border border-green-500/30 rounded-full capitalize ${
                     compact ? 'px-1' : 'px-2 sm:text-xs'
@@ -226,10 +226,10 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                   whileHover={{ scale: 1.05, y: -2 }}
                 >
                   {tag.replace('-', ' ')}
-                </motion.span>
+                </m.span>
               ))}
               {product.dietary_tags.length > 3 && (
-                <motion.span
+                <m.span
                   className={`py-0.5 text-[10px] bg-theme-elevated text-[var(--text-muted)] border border-theme rounded-full ${
                     compact ? 'px-1' : 'px-2 sm:text-xs'
                   }`}
@@ -239,13 +239,13 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                   whileHover={{ scale: 1.05, y: -2 }}
                 >
                   +{product.dietary_tags.length - 3} more
-                </motion.span>
+                </m.span>
               )}
             </>
           )}
 
           {product.prep_time && (
-            <motion.span
+            <m.span
               className={`py-0.5 text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full flex items-center gap-1 ${
                 compact ? 'px-1' : 'px-2 sm:text-xs'
               }`}
@@ -256,54 +256,24 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
             >
               <span>⏱️</span>
               <span>{product.prep_time}m</span>
-            </motion.span>
+            </m.span>
           )}
-        </motion.div>
+        </m.div>
 
-        <div className="flex items-center justify-between">
-          <div className={`font-bold text-[var(--accent)] ${
-            compact 
-              ? 'text-base sm:text-lg md:text-xl' 
-              : 'text-lg sm:text-xl md:text-2xl'
-          }`}>
-            {getCurrencySymbol(product.currency || 'BDT')}{formatPrice(product.price, 0)}
-          </div>
-
-          <motion.button
-            onClick={() => onAddToCart(product)}
-            disabled={isOutOfStock}
-            className={`rounded-lg font-medium transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              compact 
-                ? 'min-h-[36px] px-2 sm:px-3 py-1.5 text-xs sm:text-sm' 
-                : 'min-h-[44px] px-4 sm:px-6 py-3'
-            } ${
-              isOutOfStock
-                ? 'bg-gray-600 text-[var(--text-muted)] cursor-not-allowed'
-                : 'bg-[var(--accent)] text-black hover:bg-[#D4B078] hover:shadow-[0_20px_35px_-20px_rgba(197,157,95,0.7)]'
-            }`}
-            whileHover={!isOutOfStock ? { scale: 1.06, y: -2 } : {}}
-            whileTap={!isOutOfStock ? { scale: 0.95 } : {}}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
-          </motion.button>
-        </div>
-
+        {/* Allergen badges, stock info, review snippet, and customization - Before price/button */}
         {allergenBadges.length > 0 && (
-          <motion.div
+          <m.div
             className={`flex flex-wrap ${
               compact 
-                ? 'mt-1.5 gap-1.5 sm:gap-2' 
-                : 'mt-3 gap-3 sm:gap-4'
+                ? 'mb-1.5 gap-1.5 sm:gap-2' 
+                : 'mb-3 gap-3 sm:gap-4'
             }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.25 }}
           >
             {allergenBadges.slice(0, 4).map((tag, index) => (
-                <motion.span
+                <m.span
                   key={tag}
                   className={`py-0.5 text-[10px] uppercase tracking-wide bg-amber-400/15 text-amber-100 border border-amber-400/30 rounded-full ${
                     compact ? 'px-1' : 'px-2 sm:text-xs'
@@ -314,10 +284,10 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                 whileHover={{ scale: 1.05, y: -2 }}
               >
                 {tag}
-              </motion.span>
+              </m.span>
             ))}
             {allergenBadges.length > 4 && (
-                <motion.span
+                <m.span
                   className={`py-0.5 text-[10px] uppercase tracking-wide text-muted border border-theme rounded-full ${
                     compact ? 'px-1' : 'px-2 sm:text-xs'
                   }`}
@@ -332,14 +302,14 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                   whileHover={{ scale: 1.05, y: -2 }}
                 >
                   +{allergenBadges.length - 4}
-                </motion.span>
+                </m.span>
             )}
-          </motion.div>
+          </m.div>
         )}
 
         {!isOutOfStock && product.stock_quantity !== undefined && product.stock_quantity <= (product.low_stock_threshold || 10) && (
           <p className={`text-[10px] text-orange-400 ${
-            compact ? 'mt-1' : 'mt-2 sm:text-xs'
+            compact ? 'mb-1' : 'mb-2 sm:text-xs'
           }`}>
             Only {product.stock_quantity} left in stock!
           </p>
@@ -347,14 +317,14 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
 
         {reviewSnippet && (
           <p className={`text-[10px] italic text-[var(--text-main)]/70 line-clamp-2 ${
-            compact ? 'mt-1.5' : 'mt-3 sm:text-xs'
+            compact ? 'mb-1.5' : 'mb-3 sm:text-xs'
           }`}>
             &ldquo;{reviewSnippet}&rdquo;
           </p>
         )}
 
         {enableCustomization && (
-          <motion.div
+          <m.div
             className={`border-t border-theme ${
               compact ? 'mt-2 pt-2' : 'mt-4 pt-4'
             }`}
@@ -362,7 +332,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            <motion.button
+            <m.button
               type="button"
               onClick={() => setCustomizerOpen((prev) => !prev)}
               className={`flex w-full items-center justify-between rounded-lg border border-theme bg-theme-elevated font-medium text-[var(--text-main)] transition-colors hover:border-[var(--accent)]/40 hover:text-[var(--accent)] ${
@@ -382,7 +352,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
               }}
             >
               <span>Customize</span>
-              <motion.svg
+              <m.svg
                 className="h-4 w-4"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -394,12 +364,12 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                 transition={{ duration: 0.3 }}
               >
                 <path d="M6 9l6 6 6-6" />
-              </motion.svg>
-            </motion.button>
+              </m.svg>
+            </m.button>
 
             <AnimatePresence>
               {customizerOpen && (
-                <motion.div
+                <m.div
                   className={`${
                     compact ? 'mt-1.5 space-y-2' : 'mt-3 space-y-4'
                   }`}
@@ -408,7 +378,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <motion.div
+                  <m.div
                     className="space-y-2"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -421,7 +391,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                       {extrasOptions.map((extra, index) => {
                         const isActive = selectedExtras.includes(extra.id);
                         return (
-                          <motion.button
+                          <m.button
                             key={extra.id}
                             type="button"
                             onClick={() => toggleExtra(extra.id)}
@@ -458,13 +428,13 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                                 {formatExtraPrice(extra.price, product.currency)}
                               </span>
                             ) : null}
-                          </motion.button>
+                          </m.button>
                         );
                       })}
                     </div>
-                  </motion.div>
+                  </m.div>
 
-                  <motion.div
+                  <m.div
                     className="space-y-2"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -491,21 +461,55 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
                         {preferredSpiceLevel === 3 && 'Fiery'}
                       </span>
                     </div>
-                  </motion.div>
+                  </m.div>
 
-                  <motion.p
+                  <m.p
                     className="text-[10px] sm:text-xs text-muted"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3, delay: 0.3 }}
                   >
                     {selectedExtrasSummary}
-                  </motion.p>
-                </motion.div>
+                  </m.p>
+                </m.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </m.div>
         )}
+
+        {/* Price and Add to Cart - Always at bottom */}
+        <div className={`flex items-center justify-between mt-auto ${
+          compact ? 'gap-2' : 'gap-3 sm:gap-4'
+        }`}>
+          <div className={`font-bold text-[var(--accent)] ${
+            compact 
+              ? 'text-base sm:text-lg md:text-xl' 
+              : 'text-base sm:text-lg md:text-xl'
+          }`}>
+            {getCurrencySymbol(product.currency || 'BDT')}{formatPrice(product.price, 0)}
+          </div>
+
+          <m.button
+            onClick={() => onAddToCart(product)}
+            disabled={isOutOfStock}
+            className={`rounded-lg font-medium transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              compact 
+                ? 'min-h-[36px] px-2 sm:px-3 py-1.5 text-xs sm:text-sm' 
+                : 'min-h-[36px] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm'
+            } ${
+              isOutOfStock
+                ? 'bg-gray-600 text-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-[var(--accent)] text-black hover:bg-[#D4B078] hover:shadow-[0_20px_35px_-20px_rgba(197,157,95,0.7)]'
+            }`}
+            whileHover={!isOutOfStock ? { scale: 1.06, y: -2 } : {}}
+            whileTap={!isOutOfStock ? { scale: 0.95 } : {}}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
+          </m.button>
+        </div>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@
  * Main content area for OrderPage with sections or grid view.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { staggerContainer, fadeSlideUp } from '../../../components/animations/menuAnimations';
 import SectionContainer from '../../../components/order/SectionContainer';
 import ProductCard from '../../../components/menu/ProductCard';
@@ -40,7 +40,7 @@ export function OrderPageContent({
 }) {
   if (loading) {
     return (
-      <motion.div
+      <m.div
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
@@ -53,22 +53,22 @@ export function OrderPageContent({
           borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
         }}
       >
-        <motion.div
+        <m.div
           className="space-y-3 text-center"
           variants={staggerContainer}
         >
-          <motion.div
+          <m.div
             className="inline-flex h-12 w-12 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent"
             variants={fadeSlideUp}
           />
-          <motion.p
+          <m.p
             className="text-sm text-muted"
             variants={fadeSlideUp}
           >
             Loading meals...
-          </motion.p>
-        </motion.div>
-      </motion.div>
+          </m.p>
+        </m.div>
+      </m.div>
     );
   }
 
@@ -77,10 +77,9 @@ export function OrderPageContent({
   }
 
   return (
-    <AnimatePresence mode="wait">
-      {/* Sections View */}
-      {viewMode === 'sections' && (
-        <motion.div
+    <AnimatePresence mode="wait" initial={false}>
+      {viewMode === 'sections' ? (
+        <m.div
           key="sections-view"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,12 +92,9 @@ export function OrderPageContent({
             onAddToCart={onAddToCart}
             getImageUrl={getImageUrl}
           />
-        </motion.div>
-      )}
-
-      {/* Grid View */}
-      {viewMode === 'grid' && (
-        <motion.div
+        </m.div>
+      ) : (
+        <m.div
           key="grid-view"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -115,7 +111,7 @@ export function OrderPageContent({
               enableCustomization={enableCustomization}
             />
           ))}
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

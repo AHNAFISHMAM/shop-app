@@ -46,16 +46,13 @@ function StripeCheckoutForm({ orderId, amount, currencySymbol = '৳', onSuccess
         // Check payment intent status
         if (paymentIntent.status === 'succeeded') {
           // Payment successful - call onSuccess
-          console.log('Payment succeeded:', paymentIntent.id);
           onSuccess();
         } else if (paymentIntent.status === 'requires_action') {
           // 3D Secure or other action required - Stripe will handle redirect
-          console.log('Payment requires action:', paymentIntent.status);
           // Don't set processing to false here - let Stripe handle the redirect
           return;
         } else {
           // Payment is processing or in another state
-          console.log('Payment status:', paymentIntent.status);
           // For processing status, wait a bit and check again, or show success
           if (paymentIntent.status === 'processing') {
             // Payment is processing - show success as it will complete shortly
@@ -67,12 +64,12 @@ function StripeCheckoutForm({ orderId, amount, currencySymbol = '৳', onSuccess
         }
       } else {
         // No error but no paymentIntent - this shouldn't happen but handle it
-        console.warn('Payment confirmation returned no error and no paymentIntent');
+        // Payment confirmation returned no error and no paymentIntent - assume success
         // Assume success if no error
         onSuccess();
       }
     } catch (err) {
-      console.error('Payment error:', err);
+      // Payment error logged by parent component
       onError(err.message || 'Payment processing error');
       setProcessing(false);
     }

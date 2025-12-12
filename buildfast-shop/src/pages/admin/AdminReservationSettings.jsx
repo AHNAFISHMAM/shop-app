@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { getReservationSettings, updateReservationSettings } from '../../lib/reservationSettingsService';
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger';
+import CustomDropdown from '../../components/ui/CustomDropdown';
 
 const AdminReservationSettings = () => {
   const containerRef = useViewportAnimationTrigger();
@@ -249,17 +250,19 @@ const AdminReservationSettings = () => {
             <label className="block text-sm font-medium text-[var(--text-main)] mb-2">
               Time Slot Interval
             </label>
-            <select
-              value={formData.time_slot_interval}
+            <CustomDropdown
+              options={[
+                { value: '15', label: '15 minutes' },
+                { value: '30', label: '30 minutes' },
+                { value: '60', label: '60 minutes' }
+              ]}
+              value={String(formData.time_slot_interval)}
               onChange={(e) =>
                 setFormData({ ...formData, time_slot_interval: parseInt(e.target.value) })
               }
-              className="w-full rounded-lg border border-theme bg-[rgba(255,255,255,0.05)] px-4 py-2.5 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none"
-            >
-              <option value={15}>15 minutes</option>
-              <option value={30}>30 minutes</option>
-              <option value={60}>60 minutes</option>
-            </select>
+              placeholder="Select interval"
+              maxVisibleItems={5}
+            />
           </div>
         </div>
 

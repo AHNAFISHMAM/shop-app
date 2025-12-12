@@ -19,6 +19,7 @@ import GlowPanel from '../ui/GlowPanel'
  * @param {string} props.title - Card title (e.g., "Total Dishes")
  * @param {number} props.value - Stat value to display
  * @param {string} props.subtitle - Optional subtitle (e.g., "Today: 12")
+ * @param {string} props.subtitleColor - Optional subtitle color (default: green)
  * @param {React.ReactNode} props.icon - SVG icon element
  * @param {string} props.iconColor - Icon color class (e.g., "text-[#C59D5F]")
  * @param {string} props.iconBg - Icon background class (e.g., "bg-[#C59D5F]/20")
@@ -31,6 +32,7 @@ function StatCard({
   title,
   value,
   subtitle,
+  subtitleColor,
   icon,
   iconColor = 'text-[var(--accent)]',
   iconBg = 'bg-[var(--accent)]/20',
@@ -64,13 +66,15 @@ function StatCard({
     return () => observer.disconnect();
   }, []);
 
-  // Animated count-up effect
-  const animatedValue = useCountUp(loading ? 0 : value, 1500, animationDelay)
+  // Animated count-up effect (only for numbers)
+  const isNumeric = typeof value === 'number'
+  const animatedValue = isNumeric ? useCountUp(loading ? 0 : value, 1500, animationDelay) : value
 
   // Skeleton loading state
   if (loading) {
     return (
       <GlowPanel
+        glow="soft"
         padding="p-6"
         className="group relative overflow-hidden backdrop-blur-xl"
         data-animate="fade-rise"
@@ -122,6 +126,7 @@ function StatCard({
   // Main stat card
   const CardContent = (
     <GlowPanel
+      glow="soft"
       padding="p-6"
       background={isLightTheme ? 'bg-white/95' : 'bg-[rgba(255,255,255,0.05)]'}
       className="group relative overflow-hidden backdrop-blur-xl transition-all duration-300 ease-out hover:scale-[1.02] h-[180px] flex flex-col justify-between"
@@ -169,12 +174,12 @@ function StatCard({
             className="text-5xl font-bold tabular-nums tracking-tight leading-none"
             style={{ color: 'var(--text-heading)' }}
           >
-            {animatedValue.toLocaleString()}
+            {isNumeric ? animatedValue.toLocaleString() : animatedValue}
           </p>
 
           {/* Subtitle or trend */}
           {subtitle && !trend && (
-            <p className="text-xs font-medium pt-1 whitespace-nowrap" style={{ color: '#4ade80' }}>
+            <p className="text-xs font-medium pt-1 whitespace-nowrap" style={{ color: subtitleColor || '#4ade80' }}>
               {subtitle}
             </p>
           )}
@@ -251,7 +256,7 @@ export default StatCard
 
 StatCard.propTypes = {
   title: PropTypes.string.isRequired,
-  value: PropTypes.number.isRequired,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   subtitle: PropTypes.string,
   icon: PropTypes.node,
   iconColor: PropTypes.string,

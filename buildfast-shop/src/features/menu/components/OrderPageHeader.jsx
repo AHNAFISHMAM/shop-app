@@ -5,7 +5,7 @@
  */
 
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useTheme } from '../../../shared/hooks';
 import { fadeSlideUp } from '../../../components/animations/menuAnimations';
 import PropTypes from 'prop-types';
@@ -21,7 +21,7 @@ export function OrderPageHeader({ user, onShowSignupModal }) {
   const isLightTheme = useTheme();
 
   return (
-    <motion.div
+    <m.div
       variants={fadeSlideUp}
       custom={0.1}
       initial="hidden"
@@ -94,7 +94,7 @@ export function OrderPageHeader({ user, onShowSignupModal }) {
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

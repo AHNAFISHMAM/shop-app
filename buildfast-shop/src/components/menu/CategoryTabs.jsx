@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { staggerContainer, fadeSlideUp, fadeSlideDown } from '../animations/menuAnimations';
 
@@ -57,7 +57,7 @@ const CategoryTabs = ({
   );
 
   return (
-    <motion.div
+    <m.div
       className="sticky top-16 z-20 backdrop-blur-md border-b py-3 sm:py-4"
       style={{
         backgroundColor: isLightTheme 
@@ -72,14 +72,14 @@ const CategoryTabs = ({
     >
       {/* Main Categories */}
       <div className="app-container">
-        <motion.div
+        <m.div
           className="flex items-center gap-3 sm:gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-2"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
         >
           {/* All Dishes Button */}
-          <motion.button
+          <m.button
             onClick={() => handleMainClick(null)}
             className={`px-4 sm:px-6 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-sm sm:text-base font-medium whitespace-nowrap transition-all duration-200 ${
               !selectedMainCategory
@@ -104,11 +104,11 @@ const CategoryTabs = ({
             layout
           >
             All Dishes
-          </motion.button>
+          </m.button>
 
           {/* Category Tabs */}
           {categories.map((category, index) => (
-            <motion.button
+            <m.button
               key={category.id}
               onClick={() => handleMainClick(category)}
               className={`px-4 sm:px-6 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-sm sm:text-base font-medium whitespace-nowrap transition-all duration-200 ${
@@ -135,14 +135,14 @@ const CategoryTabs = ({
               layout
             >
               {category.name}
-            </motion.button>
+            </m.button>
           ))}
-        </motion.div>
+        </m.div>
 
         {/* Subcategories (shown when main category is selected) */}
         <AnimatePresence mode="wait">
           {selectedMainCategory && filteredSubcategories.length > 0 && (
-            <motion.div
+            <m.div
               className="flex items-center gap-3 sm:gap-4 md:gap-6 overflow-x-auto scrollbar-hide mt-2"
               variants={staggerContainer}
               initial="hidden"
@@ -150,7 +150,7 @@ const CategoryTabs = ({
               exit="hidden"
             >
               {/* All in Category Button */}
-              <motion.button
+              <m.button
                 onClick={() => handleSubClick(null)}
                 className={`px-4 sm:px-6 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                   !selectedSubcategory
@@ -182,11 +182,11 @@ const CategoryTabs = ({
                 layout
               >
                 All {selectedMainCategory.name}
-              </motion.button>
+              </m.button>
 
               {/* Subcategory Tabs */}
               {filteredSubcategories.map((subcategory, index) => (
-                <motion.button
+                <m.button
                   key={subcategory.id}
                   onClick={() => handleSubClick(subcategory)}
                   className={`px-4 sm:px-6 py-3 min-h-[44px] rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-medium whitespace-nowrap transition-all duration-200 ${
@@ -220,13 +220,13 @@ const CategoryTabs = ({
                   layout
                 >
                   {subcategory.name}
-                </motion.button>
+                </m.button>
               ))}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 
