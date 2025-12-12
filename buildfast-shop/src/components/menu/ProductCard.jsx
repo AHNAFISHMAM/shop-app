@@ -129,7 +129,7 @@ const ProductCard = memo(({ product, onAddToCart, getImageUrl, enableCustomizati
           }}
         />
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {isFeatured && (
             <m.div
               key="featured"
