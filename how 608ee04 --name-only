@@ -1,0 +1,12 @@
+[33mcommit 608ee0418003a1eb3d6fccdc482bbf2e74edf0d6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: AHNAF ISHMAM <kinderahnaf@gmail.com>
+Date:   Fri Dec 12 21:37:07 2025 -0500
+
+    Update: Improve OrderHistory layout, add CSS styles, and enhance ReservationsPage
+
+ buildfast-shop/src/index.css                  | 155 [32m++++++++++++++[m
+ buildfast-shop/src/pages/AddressBook.jsx      |   1 [32m+[m
+ buildfast-shop/src/pages/OrderHistory.jsx     | 281 [32m++++++++++++++[m[31m------------[m
+ buildfast-shop/src/pages/OrderPage.jsx        |   1 [31m-[m
+ buildfast-shop/src/pages/ReservationsPage.jsx |  95 [32m++++++++[m[31m-[m
+ 5 files changed, 391 insertions(+), 142 deletions(-)
