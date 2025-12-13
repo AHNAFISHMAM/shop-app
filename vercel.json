@@ -1,5 +1,7 @@
 {
-  "buildCommand": null,
-  "ignoreCommand": "exit 1"
+  "buildCommand": "cd buildfast-shop && npm install && npm run build",
+  "outputDirectory": "buildfast-shop/dist",
+  "installCommand": "cd buildfast-shop && npm install",
+  "framework": null,
+  "rootDirectory": "buildfast-shop"
 }
-

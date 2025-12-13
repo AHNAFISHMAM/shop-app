@@ -1,8 +1,12 @@
 {
+  "name": "shop-app",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "cd buildfast-shop && npm run dev",
-    "build": "cd buildfast-shop && npm run build",
-    "preview": "cd buildfast-shop && npm run preview"
+    "build": "cd buildfast-shop && npm install && npm run build",
+    "preview": "cd buildfast-shop && npm run preview",
+    "install": "cd buildfast-shop && npm install"
   },
   "dependencies": {
     "@stream-io/video-client": "^1.36.0",
