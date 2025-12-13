@@ -31,6 +31,12 @@ const ReservationsPage = () => {
     return document.documentElement.classList.contains('theme-light');
   });
 
+  // Mobile detection for background attachment
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768;
+  });
+
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
@@ -47,6 +53,19 @@ const ReservationsPage = () => {
     });
 
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
@@ -200,7 +219,7 @@ const ReservationsPage = () => {
         backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), ${backgroundStyle.backgroundImage}`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundAttachment: isMobile ? 'scroll' : 'fixed'
       }
     : backgroundStyle; // Use the background style as-is for solid/gradient
 
@@ -238,13 +257,41 @@ const ReservationsPage = () => {
     >
       <div
         className="relative h-[60vh] md:h-[70vh] bg-cover bg-center bg-fixed"
-        style={heroOverlayStyle}
+        style={{
+          ...heroOverlayStyle,
+          position: 'relative',
+          overflow: 'hidden',
+          isolation: 'isolate'
+        }}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1,
+            transform: 'none',
+            willChange: 'auto'
+          }}
+        >
           <div
             className="text-center text-[var(--text-main)] px-4 max-w-4xl mx-auto"
             data-animate="fade-scale"
             data-animate-active="false"
+            style={{
+              position: 'relative',
+              top: 'auto',
+              left: 'auto',
+              right: 'auto',
+              bottom: 'auto',
+              transform: 'none',
+              margin: '0 auto',
+              width: '100%',
+              maxWidth: '56rem'
+            }}
           >
             <div
               className="inline-flex items-center gap-2 rounded-full backdrop-blur-md border border-theme-medium px-5 py-2.5 mb-6"
@@ -255,7 +302,14 @@ const ReservationsPage = () => {
                 backgroundColor: isLightTheme 
                   ? 'rgba(0, 0, 0, 0.08)' 
                   : 'rgba(255, 255, 255, 0.1)',
-                borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.15)' : undefined
+                borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.15)' : undefined,
+                position: 'relative',
+                top: 'auto',
+                left: 'auto',
+                right: 'auto',
+                bottom: 'auto',
+                transform: 'none',
+                willChange: 'auto'
               }}
             >
               <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,7 +322,16 @@ const ReservationsPage = () => {
               className="text-xl sm:text-2xl md:text-3xl font-bold mb-6 tracking-tight"
               data-animate="fade-rise"
               data-animate-active="false"
-              style={{ transitionDelay: '160ms' }}
+              style={{ 
+                transitionDelay: '160ms',
+                position: 'relative',
+                top: 'auto',
+                left: 'auto',
+                right: 'auto',
+                bottom: 'auto',
+                transform: 'none',
+                willChange: 'auto'
+              }}
             >
               Reserve Your Table
             </h1>
@@ -277,7 +340,16 @@ const ReservationsPage = () => {
               className="text-[10px] sm:text-xs text-[var(--text-main)] font-light leading-relaxed mb-8"
               data-animate="fade-rise"
               data-animate-active="false"
-              style={{ transitionDelay: '220ms' }}
+              style={{ 
+                transitionDelay: '220ms',
+                position: 'relative',
+                top: 'auto',
+                left: 'auto',
+                right: 'auto',
+                bottom: 'auto',
+                transform: 'none',
+                willChange: 'auto'
+              }}
             >
               Experience exceptional dining at Star Café
             </p>
@@ -286,7 +358,16 @@ const ReservationsPage = () => {
               className="flex flex-wrap gap-4 justify-center"
               data-animate="fade-scale"
               data-animate-active="false"
-              style={{ transitionDelay: '280ms' }}
+              style={{ 
+                transitionDelay: '280ms',
+                position: 'relative',
+                top: 'auto',
+                left: 'auto',
+                right: 'auto',
+                bottom: 'auto',
+                transform: 'none',
+                willChange: 'auto'
+              }}
             >
               <button
                 type="button"

@@ -33,7 +33,7 @@ function OrderHistory() {
     if (typeof document === 'undefined') return false;
     return document.documentElement.classList.contains('theme-light');
   });
-  
+
   // Watch for theme changes
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -845,19 +845,11 @@ Thank you for your order!
    }
 
   return (
-   <m.main
-     className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
-     data-animate="fade-scale"
-     data-animate-active="false"
-     variants={pageFade}
-     initial="hidden"
-     animate="visible"
-     exit="exit"
-   >
+    <>
       <UpdateTimestamp />
-      {/* Header */}
+      {/* Header - Positioned to sit flush with navbar using CSS best practices */}
       <m.header
-        className="border-b border-theme bg-[rgba(5,5,9,0.92)]"
+        className="order-history-header border-b border-theme bg-[rgba(5,5,9,0.92)] w-full"
         data-animate="fade-scale"
         data-animate-active="false"
         variants={fadeSlideUp}
@@ -866,7 +858,7 @@ Thank you for your order!
         exit="exit"
         custom={0.1}
       >
-        <div className="app-container flex flex-col gap-3 sm:gap-4 md:gap-6 py-10 lg:flex-row lg:items-center lg:justify-between">
+        <div className="app-container flex flex-col gap-3 sm:gap-4 md:gap-6 pt-0 pb-3 sm:pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div
             className="space-y-2"
             data-animate="fade-rise"
@@ -900,14 +892,23 @@ Thank you for your order!
         </div>
       </m.header>
 
-      <div className="app-container px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
+   <m.main
+     className="order-history-main min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
+     data-animate="fade-scale"
+     data-animate-active="false"
+     variants={pageFade}
+     initial="hidden"
+     animate="visible"
+     exit="exit"
+   >
+      <div className="app-container px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-6 sm:pb-8 lg:pb-10">
         {user ? (
           <>
             {enableLoyalty && loyalty && (
-              <div className="glow-surface glow-soft relative overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 mb-8">
+              <div className="glow-surface glow-soft relative overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 mb-6 sm:mb-8">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(197,157,95,0.25),transparent_60%)]" />
-                <div className="relative z-10 flex flex-col gap-3 sm:gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="space-y-2 max-w-xl">
+                <div className="relative z-10 flex flex-col gap-4 sm:gap-6 lg:gap-8 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="space-y-3 sm:space-y-4 max-w-xl">
                     <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#F5DEB3]/80">Loyalty Snapshot</p>
                     <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">
                       {loyalty.tier} · {loyalty.projectedPoints} pts
@@ -917,7 +918,7 @@ Thank you for your order!
                         ? `${loyalty.pointsToNextTier} points until ${loyalty.nextTierLabel}. ${orders.length} lifetime orders logged.`
                         : `You've maxed out ${loyalty.tier} benefits. Keep dining to maintain VIP status.`}
                     </p>
-                    <div className="flex items-center gap-3 pt-2">
+                    <div className="flex items-center gap-4 pt-2">
                       <div className="relative h-2 w-full max-w-xs rounded-full bg-white/10 overflow-hidden">
                         <div
                           className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#FDE68A] via-[#FBBF24] to-[#D97706] transition-all duration-700"
@@ -935,10 +936,10 @@ Thank you for your order!
                     </p>
                   </div>
                   {referral && (
-                    <div className="flex w-full max-w-sm flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-theme bg-theme-elevated px-4 sm:px-6 py-3 sm:py-4 backdrop-blur-sm">
-                      <div>
+                    <div className="flex w-full max-w-sm flex-col gap-4 sm:gap-6 rounded-xl sm:rounded-2xl border border-theme bg-theme-elevated px-4 sm:px-6 lg:px-8 py-4 sm:py-6 backdrop-blur-sm">
+                      <div className="space-y-2">
                         <p className="text-sm sm:text-base font-semibold text-[var(--text-main)]">{referral.headline}</p>
-                        <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-main)]/70">{referral.subcopy}</p>
+                        <p className="text-[10px] sm:text-xs text-[var(--text-main)]/70">{referral.subcopy}</p>
                       </div>
                       <div className="flex items-center justify-between rounded-xl sm:rounded-2xl border border-theme bg-[var(--bg-main)]/30 px-4 sm:px-6 py-3">
                         <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Code</span>
@@ -970,38 +971,38 @@ Thank you for your order!
                 </div>
               </div>
             )}
-        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
           {summaryStats.map((stat, index) => (
           <div
               key={stat.label}
-            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 py-3 sm:py-4 shadow-[0_18px_40px_-30px_rgba(197,157,95,0.6)]"
+            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 shadow-[0_18px_40px_-30px_rgba(197,157,95,0.6)]"
             data-animate="fade-rise"
             data-animate-active="false"
             style={{ transitionDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <span className="text-sm sm:text-base text-muted">{stat.label}</span>
                 <span className="text-base sm:text-lg">{stat.icon}</span>
               </div>
-              <p className="mt-2 text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">{stat.value}</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">{stat.value}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-3 mb-6 sm:mb-8">
           {quickActions.map((action, index) => (
             <button
               key={action.label}
               onClick={action.onClick}
-              className="group glow-surface glow-soft flex items-start gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 py-3 sm:py-4 text-left transition hover:border-[var(--accent)]/70 hover:bg-[rgba(255,255,255,0.05)] min-h-[44px]"
+              className="group glow-surface glow-soft flex items-start gap-4 sm:gap-6 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 text-left transition hover:border-[var(--accent)]/70 hover:bg-[rgba(255,255,255,0.05)] min-h-[44px]"
               data-animate="fade-rise"
               data-animate-active="false"
               style={{ transitionDelay: `${index * 120}ms` }}
             >
               <span className="mt-0.5 text-base sm:text-lg">{action.icon}</span>
-              <span>
+              <span className="space-y-1">
                 <span className="block text-sm sm:text-base font-semibold text-[var(--text-main)] group-hover:text-[var(--accent)]">{action.label}</span>
-                <span className="mt-1 block text-[10px] sm:text-xs text-muted">{action.description}</span>
+                <span className="block text-[10px] sm:text-xs text-muted">{action.description}</span>
               </span>
             </button>
           ))}
@@ -1009,9 +1010,9 @@ Thank you for your order!
 
         {/* Return Request Success Message */}
         {returnSuccess && (
-          <div className="mb-6 rounded-xl sm:rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 sm:px-6 py-3 sm:py-4 animate-fade-in">
-            <div className="flex items-center">
-              <svg className="mr-2 h-5 w-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 animate-fade-in">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <svg className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <p className="text-sm sm:text-base font-medium text-emerald-100">
@@ -1026,26 +1027,26 @@ Thank you for your order!
           <>
             {loadingRecommendations && (
               <div
-                className="glow-surface glow-soft mb-8 rounded-xl sm:rounded-2xl border border-theme bg-gradient-to-r from-[rgba(197,157,95,0.1)] via-[rgba(255,255,255,0.03)] to-[rgba(197,157,95,0.05)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5"
+                className="glow-surface glow-soft mb-6 sm:mb-8 rounded-xl sm:rounded-2xl border border-theme bg-gradient-to-r from-[rgba(197,157,95,0.1)] via-[rgba(255,255,255,0.03)] to-[rgba(197,157,95,0.05)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8"
                 data-animate="fade-scale"
                 data-animate-active="false"
               >
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold text-[var(--text-main)]">
-                    <svg className="h-5 w-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mb-4 sm:mb-6 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
                     Recommended for You
                   </h2>
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 sm:grid-cols-3 lg:grid-cols-6">
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 sm:grid-cols-3 lg:grid-cols-6">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div
                       key={i}
-                      className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.05)] p-4 sm:p-6 animate-pulse"
+                      className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.05)] p-4 sm:p-6 space-y-3 animate-pulse"
                     >
-                      <div className="mb-2 aspect-square bg-[var(--bg-elevated)] rounded-lg"></div>
-                      <div className="h-4 bg-[var(--bg-elevated)] rounded mb-2"></div>
+                      <div className="aspect-square bg-[var(--bg-elevated)] rounded-lg"></div>
+                      <div className="h-4 bg-[var(--bg-elevated)] rounded"></div>
                       <div className="h-4 w-16 bg-[var(--bg-elevated)] rounded"></div>
                     </div>
                   ))}
@@ -1054,22 +1055,23 @@ Thank you for your order!
             )}
             {!loadingRecommendations && recommendations.length > 0 && (
           <div
-            className="glow-surface glow-soft mb-8 rounded-xl sm:rounded-2xl border border-theme bg-gradient-to-r from-[rgba(197,157,95,0.1)] via-[rgba(255,255,255,0.03)] to-[rgba(197,157,95,0.05)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 shadow-[0_20px_45px_-35px_rgba(197,157,95,0.65)]"
+            className="glow-surface glow-soft mb-6 sm:mb-8 rounded-xl sm:rounded-2xl border border-theme bg-gradient-to-r from-[rgba(197,157,95,0.1)] via-[rgba(255,255,255,0.03)] to-[rgba(197,157,95,0.05)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 shadow-[0_20px_45px_-35px_rgba(197,157,95,0.65)]"
             data-animate="fade-scale"
             data-animate-active="false"
           >
-            <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
               <div
+                className="space-y-2"
                 data-animate="fade-rise"
                 data-animate-active="false"
               >
-                <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold text-[var(--text-main)]">
-                  <svg className="h-5 w-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                  <svg className="h-5 w-5 sm:h-6 sm:w-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
                   Recommended for You
                 </h2>
-                <p className="mt-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted">Based on your recent orders</p>
+                <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted">Based on your recent orders</p>
               </div>
               <button
                 onClick={() => navigate('/products')}
@@ -1079,29 +1081,31 @@ Thank you for your order!
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 sm:grid-cols-3 lg:grid-cols-6">
               {recommendations.slice(0, 6).map((product, index) => (
                 <button
                   key={product.id}
                   onClick={() => navigate(`/products`)}
-                  className="group rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.05)] px-4 sm:px-6 py-3 sm:py-4 text-left transition hover:border-[var(--accent)]/70 hover:bg-[rgba(255,255,255,0.08)]"
+                  className="group rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.05)] px-4 sm:px-6 py-4 sm:py-6 text-left transition hover:border-[var(--accent)]/70 hover:bg-[rgba(255,255,255,0.08)] space-y-3"
                   data-animate="fade-rise"
                   data-animate-active="false"
                   style={{ transitionDelay: `${index * 90}ms` }}
                 >
-                  <div className="mb-2 aspect-square overflow-hidden rounded-lg">
+                  <div className="aspect-square overflow-hidden rounded-lg">
                     <img
                       src={product.images?.[0] || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'}
                       alt={product.name}
                       className="h-full w-full object-cover transition duration-300 ease-out group-hover:scale-110"
                     />
                   </div>
-                  <h3 className="mb-1 line-clamp-2 text-[10px] sm:text-xs font-semibold text-[var(--text-main)]">
-                    {product.name}
-                  </h3>
-                  <p className="text-sm sm:text-base font-semibold text-[var(--accent)]">
-                    {formatCurrency(product.price || 0)}
-                  </p>
+                  <div className="space-y-1">
+                    <h3 className="line-clamp-2 text-[10px] sm:text-xs font-semibold text-[var(--text-main)]">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm sm:text-base font-semibold text-[var(--accent)]">
+                      {formatCurrency(product.price || 0)}
+                    </p>
+                  </div>
                 </button>
               ))}
             </div>
@@ -1113,7 +1117,7 @@ Thank you for your order!
         {/* Search and Filter Bar */}
          {orders.length > 0 && (
           <div
-            className="glow-surface glow-soft mb-8 space-y-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 py-3 sm:py-4 md:py-5"
+            className="glow-surface glow-soft mb-6 sm:mb-8 space-y-4 sm:space-y-6 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8"
             data-animate="fade-scale"
             data-animate-active="false"
           >
@@ -1144,7 +1148,7 @@ Thank you for your order!
             </div>
 
              {/* Status Filter Buttons */}
-            <div className="flex flex-wrap gap-3 sm:gap-4">
+            <div className="flex flex-wrap gap-2 sm:gap-3 lg:gap-4">
               {statusButtons.map(button => (
                 <button
                   key={button.value}
@@ -1173,7 +1177,7 @@ Thank you for your order!
             </div>
 
              {/* Date Filter and Sort Options */}
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-6">
               {/* Date Filter */}
               <CustomDropdown
                 options={[
@@ -1207,7 +1211,7 @@ Thank you for your order!
 
              {/* Active Filters Summary */}
             {(searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || sortBy !== 'newest') && (
-              <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted">
+              <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted pt-2 border-t border-theme">
                 <span>Showing {sortedOrders.length} of {orders.length} orders</span>
                 <button
                   onClick={() => {
@@ -1228,58 +1232,66 @@ Thank you for your order!
         {orders.length === 0 ? (
            // Empty state - no orders at all
           <div
-            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
+            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 text-center"
             data-animate="fade-scale"
             data-animate-active="false"
           >
-            <svg className="mx-auto mb-4 h-16 w-16 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            <h3 className="mb-2 text-base sm:text-lg font-semibold text-[var(--text-main)]">No orders yet</h3>
-            <p className="mb-6 text-sm sm:text-base text-muted">
-              You haven&apos;t placed any orders. Start shopping to see your order history here!
-            </p>
-            <button
-              onClick={() => navigate('/products')}
-              className="inline-flex min-h-[44px] items-center rounded-xl sm:rounded-2xl bg-[var(--accent)] px-4 sm:px-6 py-3 font-semibold text-[#111] transition hover:opacity-90"
-            >
-              <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="space-y-4 sm:space-y-6 max-w-md mx-auto">
+              <svg className="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              Start Shopping
-            </button>
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-[var(--text-main)]">No orders yet</h3>
+                <p className="text-sm sm:text-base text-muted">
+                  You haven&apos;t placed any orders. Start shopping to see your order history here!
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/products')}
+                className="inline-flex min-h-[44px] items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl bg-[var(--accent)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 font-semibold text-[#111] transition hover:opacity-90"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                Start Shopping
+              </button>
+            </div>
           </div>
         ) : sortedOrders.length === 0 ? (
           // Empty state - no matches found
           <div
-            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 text-center"
+            className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 text-center"
             data-animate="fade-scale"
             data-animate-active="false"
           >
-            <svg className="mx-auto mb-4 h-16 w-16 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <h3 className="mb-2 text-base sm:text-lg font-semibold text-[var(--text-main)]">No orders found</h3>
-            <p className="mb-6 text-sm sm:text-base text-muted">
-              {searchQuery
-                ? `No orders match "${searchQuery}"`
-                : `No ${statusFilter} orders found`}
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery('')
-                setStatusFilter('all')
-                setDateFilter('all')
-                setSortBy('newest')
-              }}
-              className="inline-flex min-h-[44px] items-center rounded-xl sm:rounded-2xl bg-[var(--accent)] px-4 sm:px-6 py-3 font-semibold text-[#111] transition hover:opacity-90"
-            >
-              Clear Filters
-            </button>
+            <div className="space-y-4 sm:space-y-6 max-w-md mx-auto">
+              <svg className="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-[var(--text-main)]">No orders found</h3>
+                <p className="text-sm sm:text-base text-muted">
+                  {searchQuery
+                    ? `No orders match "${searchQuery}"`
+                    : `No ${statusFilter} orders found`}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setSearchQuery('')
+                  setStatusFilter('all')
+                  setDateFilter('all')
+                  setSortBy('newest')
+                }}
+                className="inline-flex min-h-[44px] items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl bg-[var(--accent)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 font-semibold text-[#111] transition hover:opacity-90"
+              >
+                Clear Filters
+              </button>
+            </div>
           </div>
         ) : (
           // Orders list implementation
-          <div className="space-y-3 sm:space-y-4 md:space-y-6">
+          <div className="space-y-4 sm:space-y-6 lg:space-y-8">
             {sortedOrders.map((order, index) => {
               const isExpanded = expandedOrderId === order.id
               const items = orderItems[order.id] || []
@@ -1298,11 +1310,11 @@ Thank you for your order!
                   data-animate-active="false"
                   style={{ transitionDelay: `${index * 80}ms` }}
                 >
-                  <div className="px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
+                  <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
                     {/* Order Header */}
-                    <div className="flex flex-col gap-3 sm:gap-4 md:gap-6 lg:flex-row lg:items-center lg:justify-between">
-                      <div className="flex-1">
-                        <div className="mb-2 flex flex-wrap items-center gap-3 sm:gap-4">
+                    <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex-1 space-y-2 sm:space-y-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                           <span className="text-sm sm:text-base font-mono font-semibold uppercase tracking-wider text-[var(--text-main)]">
                             #{order.order_number || order.id.substring(0, 8)}
                           </span>
@@ -1317,11 +1329,11 @@ Thank you for your order!
                         </div>
                         <p className="text-sm sm:text-base text-muted">{formatDate(order.created_at)}</p>
                         {order.customer_name && (
-                          <p className="mt-1 text-sm sm:text-base text-muted">Customer: {order.customer_name}</p>
+                          <p className="text-sm sm:text-base text-muted">Customer: {order.customer_name}</p>
                         )}
                       </div>
 
-                      <div className="flex flex-col items-start gap-3 sm:gap-4 lg:items-end">
+                      <div className="flex flex-col items-start gap-4 sm:gap-6 lg:items-end">
                         <div className="text-lg sm:text-xl md:text-2xl font-bold text-[var(--accent)]">
                           {formatCurrency(order.order_total || 0)}
                         </div>
@@ -1338,23 +1350,23 @@ Thank you for your order!
 
                     {/* Expanded Details */}
                     {isExpanded && (
-                      <div className="mt-6 space-y-6 border-t border-theme pt-6">
+                      <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8 border-t border-theme pt-6 sm:pt-8">
                         {/* Order Items */}
-                        <div>
-                          <h3 className="mb-3 text-base sm:text-lg font-semibold text-[var(--text-main)]">Order Items</h3>
+                        <div className="space-y-4 sm:space-y-6">
+                          <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">Order Items</h3>
 
                           {isLoadingItems ? (
-                            <div className="flex items-center justify-center py-8">
+                            <div className="flex items-center justify-center py-8 sm:py-12">
                               <div className="inline-flex h-8 w-8 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent"></div>
                             </div>
                           ) : itemsLoadError ? (
-                            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-red-200">
+                            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 text-sm sm:text-base text-red-200">
                               {itemsLoadError}
                             </div>
                           ) : items.length === 0 ? (
                             <p className="text-sm sm:text-base text-muted">No items found for this order.</p>
                           ) : (
-                            <div className="space-y-3 sm:space-y-4">
+                            <div className="space-y-4 sm:space-y-6">
                               {items.map(item => {
                                 const product = item.products
                                 const variantText = getVariantDisplay(item)
@@ -1362,17 +1374,17 @@ Thank you for your order!
                                 return (
                                   <div
                                     key={item.id}
-                                    className="flex gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 py-3 sm:py-4"
+                                    className="flex gap-4 sm:gap-6 rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6"
                                   >
-                                    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg sm:h-20 sm:w-20">
+                                    <div className="h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 flex-shrink-0 overflow-hidden rounded-lg">
                                       <img
                                         src={getProductImage(product)}
                                         alt={product?.name || 'Product'}
                                         className="h-full w-full object-cover"
                                       />
                                     </div>
-                                    <div className="flex flex-1 flex-col justify-between">
-                                      <div>
+                                    <div className="flex flex-1 flex-col justify-between gap-2 sm:gap-3">
+                                      <div className="space-y-1 sm:space-y-2">
                                         <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
                                           {product?.name || 'Unknown Item'}
                                         </h4>
@@ -1380,12 +1392,12 @@ Thank you for your order!
                                           <p className="text-[10px] sm:text-xs text-muted">{variantText}</p>
                                         )}
                                         {item.customizations && (
-                                          <p className="mt-1 text-[10px] sm:text-xs text-muted">
+                                          <p className="text-[10px] sm:text-xs text-muted">
                                             Customizations: {item.customizations}
                                           </p>
                                         )}
                                       </div>
-                                      <div className="mt-2 flex items-center justify-between">
+                                      <div className="flex items-center justify-between pt-2 border-t border-theme/50">
                                         <span className="text-sm sm:text-base text-muted">Qty: {item.quantity}</span>
                                         <span className="text-sm sm:text-base font-semibold text-[var(--accent)]">
                                           {formatCurrency(item.unit_price * item.quantity)}
@@ -1401,17 +1413,17 @@ Thank you for your order!
 
                         {/* Order Timeline */}
                         {enableOrderTracking && (
-                          <div>
-                            <h3 className="mb-3 text-base sm:text-lg font-semibold text-[var(--text-main)]">Order Timeline</h3>
+                          <div className="space-y-4 sm:space-y-6">
+                            <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">Order Timeline</h3>
                             <OrderTimeline status={order.status} createdAt={order.created_at} />
                           </div>
                         )}
 
                         {/* Delivery Information */}
                         {order.shipping_address && (
-                          <div>
-                            <h3 className="mb-3 text-base sm:text-lg font-semibold text-[var(--text-main)]">Delivery Address</h3>
-                            <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 py-3 sm:py-4">
+                          <div className="space-y-4 sm:space-y-6">
+                            <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">Delivery Address</h3>
+                            <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
                               <p className="text-sm sm:text-base text-[var(--text-main)] whitespace-pre-line">
                                 {order.shipping_address}
                               </p>
@@ -1420,9 +1432,9 @@ Thank you for your order!
                         )}
 
                         {/* Payment Information */}
-                        <div>
-                          <h3 className="mb-3 text-base sm:text-lg font-semibold text-[var(--text-main)]">Payment Details</h3>
-                          <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 py-3 sm:py-4 space-y-2">
+                        <div className="space-y-4 sm:space-y-6">
+                          <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">Payment Details</h3>
+                          <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-3 sm:space-y-4">
                             <div className="flex justify-between text-sm sm:text-base">
                               <span className="text-muted">Payment Method:</span>
                               <span className="font-medium text-[var(--text-main)]">
@@ -1556,7 +1568,7 @@ Thank you for your order!
                         )}
 
                         {/* Quick Actions */}
-                        <div className="flex flex-wrap gap-3 sm:gap-4">
+                        <div className="flex flex-wrap gap-3 sm:gap-4 lg:gap-6">
                           <button
                             onClick={() => handleReorder(order)}
                             className="inline-flex items-center gap-2 rounded-lg border border-theme bg-white/5 px-4 sm:px-6 py-3 text-sm sm:text-base font-medium text-[var(--text-main)] transition hover:border-[var(--accent)]/70 hover:bg-[var(--accent)]/10 min-h-[44px]"
@@ -1647,21 +1659,21 @@ Thank you for your order!
               </button>
             </div>
 
-            <form onSubmit={handleSubmitReturnRequest} className="space-y-5 px-4 sm:px-6 py-3 sm:py-4 md:py-5 text-[var(--text-main)]">
+            <form onSubmit={handleSubmitReturnRequest} className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 text-[var(--text-main)]">
               {returnError && (
-                <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 sm:px-6 py-3 text-sm sm:text-base text-red-200">
+                <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base text-red-200">
                   {returnError}
                 </div>
               )}
 
-              <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 py-3 sm:py-4">
-                <h4 className="mb-2 text-sm sm:text-base font-semibold text-[var(--text-main)]">Items in this order</h4>
+              <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-3 sm:space-y-4">
+                <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Items in this order</h4>
                 <ul
                   data-overlay-scroll
-                  className="max-h-40 space-y-2 overflow-y-auto pr-2 text-sm sm:text-base text-muted"
+                  className="max-h-40 space-y-2 sm:space-y-3 overflow-y-auto pr-2 text-sm sm:text-base text-muted"
                 >
                   {(orderItems[selectedOrderForReturn.id] || []).map(item => (
-                    <li key={item.id} className="flex items-center justify-between gap-3 rounded-lg border border-theme bg-white/5 px-4 sm:px-6 py-3">
+                    <li key={item.id} className="flex items-center justify-between gap-3 sm:gap-4 rounded-lg border border-theme bg-white/5 px-4 sm:px-6 py-3">
                       <span className="truncate text-[var(--text-main)]">{item.products?.name || 'Item'}</span>
                       <span className="text-muted/80">×{item.quantity}</span>
                     </li>
@@ -1669,8 +1681,8 @@ Thank you for your order!
                 </ul>
               </div>
 
-              <div>
-                <label htmlFor="return-reason" className="mb-1 block text-sm sm:text-base font-semibold text-[var(--text-main)]">
+              <div className="space-y-2 sm:space-y-3">
+                <label htmlFor="return-reason" className="block text-sm sm:text-base font-semibold text-[var(--text-main)]">
                   Reason for return
                 </label>
                 <CustomDropdown
@@ -1691,8 +1703,8 @@ Thank you for your order!
                 />
               </div>
 
-              <div>
-                <label htmlFor="return-details" className="mb-1 block text-sm sm:text-base font-semibold text-[var(--text-main)]">
+              <div className="space-y-2 sm:space-y-3">
+                <label htmlFor="return-details" className="block text-sm sm:text-base font-semibold text-[var(--text-main)]">
                   Additional details
                 </label>
                 <textarea
@@ -1701,11 +1713,11 @@ Thank you for your order!
                   onChange={(e) => setReturnDetails(e.target.value)}
                   rows="4"
                   placeholder="Share any extra information that helps us review your request..."
-                  className="block w-full rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.04)] px-4 sm:px-6 py-3 text-sm sm:text-base text-[var(--text-main)] placeholder:text-muted focus:border-[var(--accent)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 min-h-[44px]"
+                  className="block w-full rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.04)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base text-[var(--text-main)] placeholder:text-muted focus:border-[var(--accent)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 min-h-[44px]"
                 ></textarea>
               </div>
 
-              <div className="flex justify-end gap-3 sm:gap-4 pt-2 text-sm sm:text-base">
+              <div className="flex justify-end gap-3 sm:gap-4 lg:gap-6 pt-4 border-t border-theme text-sm sm:text-base">
                 <button
                   type="button"
                   onClick={closeReturnModal}
@@ -1733,6 +1745,7 @@ Thank you for your order!
         </div>
       )}
     </m.main>
+   </>
   )
 }
 

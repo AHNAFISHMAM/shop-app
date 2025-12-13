@@ -6,6 +6,7 @@ import { m } from 'framer-motion'
 import toast from 'react-hot-toast'
 import AddressCard from '../components/AddressCard'
 import AddressModal from '../components/AddressModal'
+import ConfirmationModal from '../components/ui/ConfirmationModal'
 import {
   fetchUserAddresses,
   createAddress,

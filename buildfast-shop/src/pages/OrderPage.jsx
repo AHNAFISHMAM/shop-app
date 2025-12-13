@@ -488,7 +488,6 @@ function OrderPage() {
                         })}
                       </m.div>
                     )}
-                  </AnimatePresence>
                 </m.div>
               )}
             </AnimatePresence>
