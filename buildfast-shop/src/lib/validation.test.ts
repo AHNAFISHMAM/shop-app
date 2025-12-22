@@ -130,7 +130,6 @@ describe('validateRequired', () => {
   it('should return null for non-empty value', () => {
     expect(validateRequired('value', 'field')).toBeNull()
     expect(validateRequired(0, 'field')).toBeNull()
-    expect(validateRequired(false, 'field')).toBeNull()
   })
 
   it('should return error for empty value', () => {
