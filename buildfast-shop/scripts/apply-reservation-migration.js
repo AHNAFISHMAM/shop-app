@@ -1,11 +1,8 @@
-const { createClient } = require('@supabase/supabase-js')
 const fs = require('fs')
 const path = require('path')
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://shgwzqhwoamcvruztfuz.supabase.co'
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoZ3d6cWh3b2FtY3ZydXp0ZnV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2MjcwOTMsImV4cCI6MjA3Nzk4NzA5M30.BEr2HpdZ5dWsUzPRMfCCKce0i521KVCz1ijJxplzRhY'
-
-const _supabase = createClient(supabaseUrl, supabaseKey)
+// Note: This script only displays SQL - it doesn't execute migrations
+// Supabase client not needed since we can't execute raw SQL with anon key
 
 async function applyMigration() {
   console.log('📋 Reading migration file...')

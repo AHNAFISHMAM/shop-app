@@ -29,13 +29,13 @@ describe('useToggle', () => {
     const { result } = renderHook(() => useToggle(false))
 
     act(() => {
-      result.current[1].toggle()
+      result.current[1]() // toggle is result.current[1]
     })
 
     expect(result.current[0]).toBe(true)
 
     act(() => {
-      result.current[1].toggle()
+      result.current[1]() // toggle again
     })
 
     expect(result.current[0]).toBe(false)
@@ -45,7 +45,7 @@ describe('useToggle', () => {
     const { result } = renderHook(() => useToggle(false))
 
     act(() => {
-      result.current[1].setTrue()
+      result.current[2]() // setTrue is result.current[2]
     })
 
     expect(result.current[0]).toBe(true)
@@ -55,7 +55,7 @@ describe('useToggle', () => {
     const { result } = renderHook(() => useToggle(true))
 
     act(() => {
-      result.current[1].setFalse()
+      result.current[3]() // setFalse is result.current[3]
     })
 
     expect(result.current[0]).toBe(false)
@@ -65,7 +65,7 @@ describe('useToggle', () => {
     const { result, rerender } = renderHook(() => useToggle(false))
 
     act(() => {
-      result.current[1].setTrue()
+      result.current[2]() // setTrue is result.current[2]
     })
 
     rerender()

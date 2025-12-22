@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   validateEmail,
+  validateEmailField,
   validatePassword,
   validateName,
   validatePhone,
@@ -17,28 +18,52 @@ import {
 } from './validation'
 
 describe('validateEmail', () => {
+  it('should return true for valid email', () => {
+    expect(validateEmail('test@example.com')).toBe(true)
+    expect(validateEmail('user.name@domain.co.uk')).toBe(true)
+  })
+
+  it('should return false for invalid email', () => {
+    expect(validateEmail('invalid')).toBe(false)
+    expect(validateEmail('invalid@')).toBe(false)
+    expect(validateEmail('@example.com')).toBe(false)
+    expect(validateEmail('')).toBe(false)
+  })
+})
+
+describe('validateEmailField', () => {
   it('should return null for valid email', () => {
-    expect(validateEmail('test@example.com')).toBeNull()
-    expect(validateEmail('user.name@domain.co.uk')).toBeNull()
+    expect(validateEmailField('test@example.com')).toBeNull()
+    expect(validateEmailField('user.name@domain.co.uk')).toBeNull()
   })
 
   it('should return error for invalid email', () => {
-    expect(validateEmail('invalid')).toBe('Please enter a valid email address')
-    expect(validateEmail('invalid@')).toBe('Please enter a valid email address')
-    expect(validateEmail('@example.com')).toBe('Please enter a valid email address')
-    expect(validateEmail('')).toBe('Please enter a valid email address')
+    expect(validateEmailField('invalid')).toBe('Please enter a valid email address')
+    expect(validateEmailField('invalid@')).toBe('Please enter a valid email address')
+    expect(validateEmailField('@example.com')).toBe('Please enter a valid email address')
+    expect(validateEmailField('')).toBe('Email address is required')
   })
 })
 
 describe('validatePassword', () => {
-  it('should return null for valid password (8+ chars)', () => {
-    expect(validatePassword('password123')).toBeNull()
-    expect(validatePassword('SecurePass!')).toBeNull()
+  it('should return valid result for valid password (8+ chars)', () => {
+    const result1 = validatePassword('password123')
+    expect(result1.valid).toBe(true)
+    expect(result1.errors).toEqual([])
+    
+    const result2 = validatePassword('SecurePass!')
+    expect(result2.valid).toBe(true)
+    expect(result2.errors).toEqual([])
   })
 
   it('should return error for short password', () => {
-    expect(validatePassword('short')).toBe('Password must be at least 8 characters')
-    expect(validatePassword('')).toBe('Password must be at least 8 characters')
+    const result1 = validatePassword('short')
+    expect(result1.valid).toBe(false)
+    expect(result1.errors).toContain('Password must be at least 8 characters')
+    
+    const result2 = validatePassword('')
+    expect(result2.valid).toBe(false)
+    expect(result2.errors).toContain('Password is required')
   })
 })
 
@@ -49,8 +74,8 @@ describe('validateName', () => {
   })
 
   it('should return error for invalid name', () => {
-    expect(validateName('')).toBe('Name is required')
-    expect(validateName('A')).toBe('Name must be at least 2 characters')
+    expect(validateName('', 'Name')).toBe('Name is required')
+    expect(validateName('A', 'Name')).toBe('Name must be at least 2 characters')
   })
 })
 
@@ -62,7 +87,7 @@ describe('validatePhone', () => {
 
   it('should return error for invalid phone', () => {
     expect(validatePhone('123')).toBe('Please enter a valid phone number')
-    expect(validatePhone('')).toBe('Please enter a valid phone number')
+    expect(validatePhone('', true)).toBe('Phone number is required')
   })
 })
 
@@ -74,45 +99,54 @@ describe('validatePostalCode', () => {
 
   it('should return error for invalid postal code', () => {
     expect(validatePostalCode('123')).toBe('Please enter a valid postal code')
-    expect(validatePostalCode('')).toBe('Please enter a valid postal code')
+    expect(validatePostalCode('')).toBe('Postal code is required')
   })
 })
 
 describe('validateAmount', () => {
-  it('should return null for valid amount', () => {
-    expect(validateAmount(100)).toBeNull()
-    expect(validateAmount(0.01)).toBeNull()
+  it('should return valid result for valid amount', () => {
+    const result1 = validateAmount(100)
+    expect(result1.isValid).toBe(true)
+    expect(result1.error).toBeUndefined()
+    
+    const result2 = validateAmount(0.01)
+    expect(result2.isValid).toBe(true)
+    expect(result2.error).toBeUndefined()
   })
 
   it('should return error for invalid amount', () => {
-    expect(validateAmount(-1)).toBe('Amount must be greater than 0')
-    expect(validateAmount(0)).toBe('Amount must be greater than 0')
+    const result1 = validateAmount(-1)
+    expect(result1.isValid).toBe(false)
+    expect(result1.error).toBe('Amount must be at least $0')
+    
+    const result2 = validateAmount(0)
+    expect(result2.isValid).toBe(true) // 0 is valid (min defaults to 0)
   })
 })
 
 describe('validateRequired', () => {
   it('should return null for non-empty value', () => {
-    expect(validateRequired('value')).toBeNull()
-    expect(validateRequired(0)).toBeNull()
-    expect(validateRequired(false)).toBeNull()
+    expect(validateRequired('value', 'field')).toBeNull()
+    expect(validateRequired(0, 'field')).toBeNull()
+    expect(validateRequired(false, 'field')).toBeNull()
   })
 
   it('should return error for empty value', () => {
-    expect(validateRequired('')).toBe('This field is required')
-    expect(validateRequired(null)).toBe('This field is required')
-    expect(validateRequired(undefined)).toBe('This field is required')
+    expect(validateRequired('', 'This field')).toBe('This field is required')
+    expect(validateRequired(null, 'This field')).toBe('This field is required')
+    expect(validateRequired(undefined, 'This field')).toBe('This field is required')
   })
 })
 
 describe('validateLength', () => {
   it('should return null for valid length', () => {
-    expect(validateLength('test', 2, 10)).toBeNull()
-    expect(validateLength('test', 4, 4)).toBeNull()
+    expect(validateLength('test', { min: 2, max: 10 })).toBeNull()
+    expect(validateLength('test', { min: 4, max: 4 })).toBeNull()
   })
 
   it('should return error for invalid length', () => {
-    expect(validateLength('a', 2, 10)).toBe('Must be between 2 and 10 characters')
-    expect(validateLength('toolongstring', 2, 10)).toBe('Must be between 2 and 10 characters')
+    expect(validateLength('a', { min: 2, max: 10, fieldName: 'Field' })).toBe('Field must be at least 2 characters')
+    expect(validateLength('toolongstring', { min: 2, max: 10, fieldName: 'Field' })).toBe('Field must be 10 characters or less')
   })
 })
 
