@@ -6,10 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "vite build --mode analyze",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify:feature-flags": "node scripts/verify-feature-flags.mjs"
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "verify:feature-flags": "node scripts/verify-feature-flags.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@internationalized/date": "^3.10.0",
@@ -36,6 +41,9 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@tailwindcss/postcss": "^4.1.16",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
@@ -46,10 +54,13 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
+    "jsdom": "^27.3.0",
     "postcss": "^8.5.6",
+    "rollup-plugin-visualizer": "^5.14.0",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "^4.1.16",
     "vite": "^5.4.10",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "web-vitals": "^4.2.4"
   }
 }

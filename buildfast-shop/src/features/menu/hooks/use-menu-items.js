@@ -37,7 +37,7 @@ async function fetchMenuItems() {
       logger.error('Error fetching menu items:', menuError);
       // Fallback to old dishes table
       const { data: dishesData, error: dishesError } = await supabase
-        .from('dishes')
+        .from('menu_items')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -52,7 +52,7 @@ async function fetchMenuItems() {
     if (menuError && menuError.code === '42P01') {
       // Table doesn't exist, try fallback
       const { data: dishesData, error: dishesError } = await supabase
-        .from('dishes')
+        .from('menu_items')
         .select('*')
         .order('created_at', { ascending: false });
 

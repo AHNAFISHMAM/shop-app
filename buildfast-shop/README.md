@@ -62,8 +62,14 @@ The app will be available at `http://localhost:5173`
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
+- `npm run build:analyze` - Build with bundle size visualization
 - `npm run preview` - Preview production build locally
+- `npm run test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run test:ui` - Run tests with Vitest UI
 - `npm run lint` - Run ESLint
+- `npm run typecheck` - TypeScript type checking
 
 ## Next Steps
 
@@ -87,6 +93,34 @@ const { data, error } = await supabase
   .from('products')
   .select('*')
 ```
+
+## Production Features
+
+### Automatic Reconnection
+The app includes automatic reconnection for Supabase Realtime channels to prevent timeouts:
+- Exponential backoff retry mechanism (1s → 30s max)
+- Health checks every 30 minutes
+- Self-healing connection management
+- Maximum 5 reconnection attempts
+
+### Security & Performance
+- Security headers (XSS, clickjacking, MIME sniffing protection)
+- SPA routing configuration (all routes work correctly)
+- Caching strategy (1-year cache for static assets)
+- Bundle size enforcement in CI (600KB per chunk limit)
+
+### Performance Monitoring
+- Web Vitals tracking (LCP, INP, CLS, TTFB)
+- Bundle size analysis
+- Production-ready error handling
+
+### Quality Assurance
+- Automated CI/CD pipeline (lint, test, build, security)
+- Cross-platform testing (Ubuntu + Windows)
+- TypeScript strict mode
+- ESLint + Prettier formatting
+
+See [Frontend Health Improvements](./docs/FRONTEND_HEALTH_IMPROVEMENTS.md), [Deployment Improvements](./docs/DEPLOYMENT_IMPROVEMENTS.md), and [Realtime Reconnection Fix](./docs/REALTIME_RECONNECTION_FIX.md) for details.
 
 ## License
 

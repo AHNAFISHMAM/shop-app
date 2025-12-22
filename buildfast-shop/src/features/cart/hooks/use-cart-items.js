@@ -134,7 +134,7 @@ async function fetchUserCartItemsWithoutJoins(userId) {
     if (dishIds.length > 0) {
       try {
         const { data: dishesData, error: dishError } = await supabase
-          .from('dishes')
+          .from('menu_items')
           .select('*')
           .in('id', dishIds);
 
@@ -209,7 +209,7 @@ async function getGuestCartItems() {
     if (dishIds.length > 0) {
       try {
         const { data: dishesData, error: dishError } = await supabase
-          .from('dishes')
+          .from('menu_items')
           .select('*')
           .in('id', dishIds);
 
@@ -231,7 +231,7 @@ async function getGuestCartItems() {
     if (productIds.length > 0) {
       try {
         const { data: productsData, error: productsError } = await supabase
-          .from('products')
+          .from('menu_items')
           .select('*')
           .in('id', productIds);
 

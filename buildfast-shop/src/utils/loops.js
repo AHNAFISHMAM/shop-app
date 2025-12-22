@@ -52,7 +52,7 @@ export async function sendOrderConfirmationEmail({
         // Main variables matching your Loops template
         First_Name: firstName,
         Order_Number: orderId,
-        Total_Amount: orderTotal.toFixed(2),
+        Order_Total: orderTotal.toFixed(2),
       }
     }
 

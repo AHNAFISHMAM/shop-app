@@ -151,45 +151,45 @@ export async function isInFavorites(targetId, userId, { isMenuItem = true } = {}
 export async function getFavoriteItems(userId) {
   try {
     const sessionUserId = await ensureAuthenticated(userId)
-    const { data, error } = await supabase
+    
+    // Query favorites without join (Supabase relationship not configured correctly)
+    // Fetch menu_items separately for better reliability
+    const { data: favoritesData, error: favoritesError } = await supabase
       .from('favorites')
       .select(`
         id,
         created_at,
-        menu_item_id,
-        product_id,
-        menu_items (
-          id,
-          name,
-          description,
-          price,
-          currency,
-          category,
-          image_url,
-          is_available
-        ),
-        dishes (
-          id,
-          name,
-          description,
-          price,
-          category,
-          images,
-          stock_quantity
-        )
+        product_id
       `)
       .eq('user_id', sessionUserId)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (favoritesError) throw favoritesError
 
-    const normalized = (data || []).map((item) => ({
-      ...item,
-      menu_items: item.menu_items ? { ...item.menu_items, isMenuItem: true } : null,
-      dishes: item.dishes ? { ...item.dishes, isMenuItem: false } : null
-    }))
+    // Fetch menu_items separately
+    const productIds = (favoritesData || []).map(f => f.product_id).filter(Boolean)
+    if (productIds.length > 0) {
+      const { data: menuItemsData, error: menuItemsError } = await supabase
+        .from('menu_items')
+        .select('id, name, description, price, category, images, is_available')
+        .in('id', productIds)
 
-    return { success: true, data: normalized }
+      if (menuItemsError) {
+        logger.error('Error fetching menu_items:', menuItemsError)
+      }
+
+      const menuItemsMap = new Map((menuItemsData || []).map(d => [d.id, d]))
+      
+      const normalized = (favoritesData || []).map((item) => ({
+        ...item,
+        menu_items: menuItemsMap.get(item.product_id) ? { ...menuItemsMap.get(item.product_id), isMenuItem: true } : null,
+        dishes: null
+      }))
+
+      return { success: true, data: normalized }
+    }
+
+    return { success: true, data: [] }
   } catch (error) {
     logger.error('Error fetching favorites:', error)
     return { success: false, error, data: [] }
@@ -259,6 +259,46 @@ export async function toggleFavorites(targetId, userId, { isMenuItem = true } = 
     throw insertError
   } catch (error) {
     logger.error('Error toggling favorites:', error)
+    return { success: false, error }
+  }
+}
+
+/**
+ * Remove favorite by favorite record ID
+ * This function accepts the favorite record ID and extracts the item ID automatically
+ * @param {string} favoriteId - The favorite record ID (from favorites table)
+ * @param {string} userId - The user's ID
+ * @returns {Object} Result object with success/error
+ */
+export async function removeFavorite(favoriteId, userId) {
+  try {
+    const sessionUserId = await ensureAuthenticated(userId)
+    
+    // First, fetch the favorite record to get the item ID
+    const { data: favorite, error: fetchError } = await supabase
+      .from('favorites')
+      .select('menu_item_id, product_id')
+      .eq('id', favoriteId)
+      .eq('user_id', sessionUserId)
+      .single()
+
+    if (fetchError) throw fetchError
+    if (!favorite) {
+      throw buildError('Favorite not found', 'NOT_FOUND')
+    }
+
+    // Determine if it's a menu item or product
+    const isMenuItem = !!favorite.menu_item_id
+    const targetId = favorite.menu_item_id || favorite.product_id
+
+    if (!targetId) {
+      throw buildError('Invalid favorite record: missing item ID', 'INVALID_DATA')
+    }
+
+    // Use the existing removeFromFavorites function
+    return await removeFromFavorites(targetId, sessionUserId, { isMenuItem })
+  } catch (error) {
+    logger.error('Error removing favorite by ID:', error)
     return { success: false, error }
   }
 }

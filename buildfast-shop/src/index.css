@@ -595,8 +595,11 @@
 }
 
 /* Prevent horizontal overflow at root level */
+/* NOTE: overflow-y must be visible to allow sticky positioning to work */
 #root {
   overflow-x: hidden !important;
+  overflow-y: visible !important;
+  overflow: visible !important;
   max-width: 100% !important;
   width: 100% !important;
   position: relative;
@@ -674,6 +677,10 @@
   
   /* 10% - Accent */
   --accent: var(--color-accent-gold);
+  
+  /* Semantic Colors */
+  --destructive: #EF4444;
+  --destructive-hover: #DC2626;
   --accent-rgb: 197, 157, 95;
   
   /* Text Hierarchy */
@@ -695,15 +702,38 @@
     0 0 0 1px rgba(255, 255, 255, 0.1);
   --status-success-bg: rgba(16, 185, 129, 0.1);
   --status-success-border: rgba(16, 185, 129, 0.3);
+  --success: #10B981;
   --status-warning-bg: rgba(245, 158, 11, 0.1);
   --status-warning-border: rgba(245, 158, 11, 0.3);
   --status-error-bg: rgba(239, 68, 68, 0.1);
   --status-error-border: rgba(239, 68, 68, 0.3);
+  --destructive: #EF4444;
+  --destructive-hover: #DC2626;
   --text-heading: rgba(248, 250, 252, 0.95);
   --text-subtitle: rgba(156, 163, 175, 0.9);
   --text-body-muted: rgba(148, 163, 184, 0.8);
   --text-body-muted-light: rgba(148, 163, 184, 0.7);
   --text-body-muted-lighter: rgba(148, 163, 184, 0.6);
+  
+  /* Semantic Color Variants for UI Components */
+  --color-amber: #F59E0B;
+  --color-amber-rgb: 245, 158, 11;
+  --color-orange: #F97316;
+  --color-orange-rgb: 249, 115, 22;
+  --color-emerald: #10B981;
+  --color-emerald-rgb: 16, 185, 129;
+  --color-blue: #3B82F6;
+  --color-blue-rgb: 59, 130, 246;
+  --color-purple: #A855F7;
+  --color-purple-rgb: 168, 85, 247;
+  --color-green: #22C55E;
+  --color-green-rgb: 34, 197, 94;
+  --color-yellow: #EAB308;
+  --color-yellow-rgb: 234, 179, 8;
+  --color-red: #EF4444;
+  --color-red-rgb: 239, 68, 68;
+  --color-rose: #F43F5E;
+  --color-rose-rgb: 244, 63, 94;
   
   color-scheme: dark;
 }
@@ -729,6 +759,10 @@
   
   /* 10% - Accent */
   --accent: var(--color-accent-gold);
+  
+  /* Semantic Colors */
+  --destructive: #EF4444;
+  --destructive-hover: #DC2626;
   --accent-rgb: 197, 157, 95;
   
   /* Text Hierarchy - WCAG AA Compliant (4.5:1 contrast) */
@@ -750,15 +784,38 @@
     0 0 0 1px rgba(0, 0, 0, 0.1);
   --status-success-bg: rgba(16, 185, 129, 0.1);
   --status-success-border: rgba(16, 185, 129, 0.3);
+  --success: #10B981;
   --status-warning-bg: rgba(245, 158, 11, 0.1);
   --status-warning-border: rgba(245, 158, 11, 0.3);
   --status-error-bg: rgba(239, 68, 68, 0.1);
   --status-error-border: rgba(239, 68, 68, 0.3);
+  --destructive: #EF4444;
+  --destructive-hover: #DC2626;
   --text-heading: var(--text-primary);
   --text-subtitle: var(--text-secondary);
   --text-body-muted: var(--text-secondary);
   --text-body-muted-light: var(--text-tertiary);
   --text-body-muted-lighter: var(--text-tertiary);
+  
+  /* Semantic Color Variants for UI Components */
+  --color-amber: #F59E0B;
+  --color-amber-rgb: 245, 158, 11;
+  --color-orange: #F97316;
+  --color-orange-rgb: 249, 115, 22;
+  --color-emerald: #10B981;
+  --color-emerald-rgb: 16, 185, 129;
+  --color-blue: #3B82F6;
+  --color-blue-rgb: 59, 130, 246;
+  --color-purple: #A855F7;
+  --color-purple-rgb: 168, 85, 247;
+  --color-green: #22C55E;
+  --color-green-rgb: 34, 197, 94;
+  --color-yellow: #EAB308;
+  --color-yellow-rgb: 234, 179, 8;
+  --color-red: #EF4444;
+  --color-red-rgb: 239, 68, 68;
+  --color-rose: #F43F5E;
+  --color-rose-rgb: 244, 63, 94;
   
   color-scheme: light;
 }
@@ -1020,9 +1077,14 @@
   margin-right: auto;
   padding-left: clamp(1rem, 3vw, 3.5rem);
   padding-right: clamp(1rem, 3vw, 3.5rem);
-  overflow-x: hidden !important;
+  /* Removed overflow-x: hidden !important; to allow sticky positioning to work */
   box-sizing: border-box;
   position: relative;
+}
+
+/* Modifier class for pages that need horizontal overflow prevention */
+.app-container.prevent-horizontal-scroll {
+  overflow-x: hidden;
 }
 
 @media (min-width: 1536px) {
@@ -1094,6 +1156,8 @@
 
 html {
   overflow-x: hidden !important;
+  overflow-y: visible !important;
+  overflow: visible !important;
   max-width: 100% !important;
   width: 100% !important;
   box-sizing: border-box;
@@ -1106,6 +1170,8 @@ body {
   min-height: 100vh;
   scrollbar-gutter: stable;
   overflow-x: hidden !important;
+  overflow-y: visible !important;
+  overflow: visible !important;
   max-width: 100% !important;
   width: 100% !important;
   box-sizing: border-box;
@@ -5117,7 +5183,6 @@ input[type="file"]::file-selector-button:hover {
   transform: none !important;
   will-change: auto !important;
 }
-
 /* Override any animation transforms on hero content after animation completes */
 .relative > .absolute.inset-0 > div.text-center[data-animate-active="true"] {
   transform: none !important;
@@ -5137,3 +5202,39 @@ input[type="file"]::file-selector-button:hover {
   bottom: auto !important;
 }
 
+/* ============================================
+   STICKY SIDEBAR FIXES
+   Force sticky sidebar to work - override any conflicting styles
+   ============================================ */
+
+/* Force sticky positioning on sidebar - override Framer Motion and other transforms */
+aside[class*="sticky"],
+aside[style*="position: sticky"] {
+  position: sticky !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* Prevent parent containers from breaking sticky */
+.flex.gap-4.items-start.overflow-visible,
+.flex.gap-6.items-start.overflow-visible,
+.flex.gap-4.sm\\:gap-6.items-start.overflow-visible {
+  transform: none !important;
+  willChange: auto !important;
+}
+
+/* Prevent main element from breaking sticky */
+main[role="main"] {
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* Force overflow: visible on all parent containers of sticky sidebar to prevent containing block creation */
+#main-content,
+#main-content > div,
+main[aria-label="Menu page"],
+main[aria-label="Menu page"] > div.flex {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}

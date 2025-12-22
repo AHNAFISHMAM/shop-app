@@ -16,6 +16,7 @@ Most migrations should already be applied. **You only need to run the NEW ones (
 
 **What it does**:
 - Adds restaurant-specific columns to `products` table (dietary_tags, spice_level, chef_special, prep_time, portion_sizes)
+  > **Note:** This migration is historical. Current schema uses `menu_items` table. This migration may have already been applied or superseded.
 - Adds restaurant-specific columns to `orders` table (order_type, table_number, delivery_time, special_instructions)
 - Updates categories to: Appetizers, Main Course, Desserts, Beverages, Chef Specials
 - Updates store settings to Star Café information

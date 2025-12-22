@@ -43,9 +43,13 @@ export const useAddToCart = (returnPath = '/products') => {
     }
 
     const isMenuItem = product?.isMenuItem ?? (product?.category_id !== undefined && product?.is_available !== undefined)
-    const stockQuantity = product?.stock_quantity
-    const hasFiniteStock = stockQuantity !== null && stockQuantity !== undefined
-    const isOutOfStock = isMenuItem ? product?.is_available === false : hasFiniteStock && stockQuantity === 0
+    // Note: menu_items doesn't have stock_quantity, use is_available instead
+    const isAvailable = product?.is_available !== false
+    // For non-menu items, check if stock_quantity exists (legacy products table)
+    const hasFiniteStock = product?.stock_quantity !== null && product?.stock_quantity !== undefined
+    const isOutOfStock = isMenuItem 
+      ? product?.is_available === false 
+      : hasFiniteStock && product?.stock_quantity === 0
 
     if (!product || isOutOfStock) {
       setMessage('This product is out of stock')

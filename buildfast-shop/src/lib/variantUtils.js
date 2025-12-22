@@ -101,7 +101,7 @@ export async function createVariant(variantData) {
         variant_type: variantData.variant_type,
         variant_value: variantData.variant_value,
         price_adjustment: variantData.price_adjustment || 0,
-        stock_quantity: variantData.stock_quantity || 0,
+        // Note: stock_quantity removed - table may not have this column in restaurant context
         sku: variantData.sku || null,
         is_active: variantData.is_active !== false
       })
@@ -196,14 +196,15 @@ export async function getTotalVariantStock(productId) {
   try {
     const { data, error } = await supabase
       .from('product_variants')
-      .select('stock_quantity')
+      .select('id')
       .eq('product_id', productId)
       .eq('is_active', true)
 
     if (error) throw error
 
-    const total = (data || []).reduce((sum, variant) => sum + (variant.stock_quantity || 0), 0)
-    return total
+    // Note: product_variants may not have stock_quantity in restaurant context
+    // Return count of active variants instead
+    return (data || []).length
   } catch (error) {
     logger.error('Error calculating total variant stock:', error)
     return 0

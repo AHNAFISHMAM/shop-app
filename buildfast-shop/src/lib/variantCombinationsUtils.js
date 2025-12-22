@@ -145,13 +145,15 @@ export async function getTotalCombinationStock(productId) {
   try {
     const { data, error } = await supabase
       .from('variant_combinations')
-      .select('stock_quantity')
+      .select('id')
       .eq('product_id', productId)
       .eq('is_active', true)
 
     if (error) throw error
 
-    return (data || []).reduce((sum, combo) => sum + (combo.stock_quantity || 0), 0)
+    // Note: variant_combinations may not have stock_quantity in restaurant context
+    // Return count of active combinations instead
+    return (data || []).length
   } catch (error) {
     logger.error('Error calculating total stock:', error)
     return 0
@@ -172,7 +174,7 @@ export async function createCombination(combinationData) {
         sku: combinationData.sku || null,
         variant_values: combinationData.variant_values,
         price_adjustment: combinationData.price_adjustment || 0,
-        stock_quantity: combinationData.stock_quantity || 0,
+        // Note: stock_quantity removed - table may not have this column in restaurant context
         is_active: combinationData.is_active !== false
       })
       .select()

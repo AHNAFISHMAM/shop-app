@@ -148,12 +148,13 @@ export const addProductToCart = async (product, userId, variant = null, combinat
   const variantId = variant?.id || null
   const combinationId = combination?.id || null
 
-  // Determine stock quantity to check (combination > variant > product)
-  let stockToCheck = product.stock_quantity
+  // Note: menu_items doesn't have stock_quantity, using is_available instead
+  // Determine availability to check (combination > variant > product)
+  let isAvailable = product.is_available !== false
   if (combination) {
-    stockToCheck = combination.stock_quantity
+    isAvailable = combination.is_available !== false
   } else if (variant) {
-    stockToCheck = variant.stock_quantity
+    isAvailable = variant.is_available !== false
   }
 
   // Get existing cart item (matching product, variant, and/or combination)
@@ -173,12 +174,13 @@ export const addProductToCart = async (product, userId, variant = null, combinat
     const newQuantity = existingItem.quantity + 1
 
     // Check stock availability
-    if (stockToCheck !== null && newQuantity > stockToCheck) {
+    // Note: menu_items doesn't have stock_quantity, skip stock limit check
+    if (!isAvailable) {
       return {
         success: false,
         error: null,
         stockExceeded: true,
-        stockLimit: stockToCheck
+        stockLimit: isAvailable ? 999 : 0 // Note: menu_items doesn't track stock, using availability
       }
     }
 
@@ -191,7 +193,7 @@ export const addProductToCart = async (product, userId, variant = null, combinat
     return { success: true, error: null, stockExceeded: false, stockLimit: null }
   } else {
     // Check if we have stock before inserting
-    if (stockToCheck !== null && stockToCheck < 1) {
+    if (!isAvailable) {
       return {
         success: false,
         error: null,

@@ -133,7 +133,7 @@ export async function getSubcategories() {
 export async function getDishes(filters = {}) {
   try {
     let query = supabase
-      .from('dishes')
+      .from('menu_items')
       .select(`
         *,
         subcategories (
@@ -195,7 +195,7 @@ export async function getDishes(filters = {}) {
 export async function getDishById(dishId) {
   try {
     const { data, error } = await supabase
-      .from('dishes')
+      .from('menu_items')
       .select(`
         *,
         subcategories (
@@ -249,7 +249,7 @@ export async function searchDishes(searchTerm) {
     }
 
     const { data, error } = await supabase
-      .from('dishes')
+      .from('menu_items')
       .select(`
         *,
         subcategories (

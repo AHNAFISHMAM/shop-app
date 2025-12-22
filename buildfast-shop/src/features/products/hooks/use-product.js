@@ -85,7 +85,7 @@ async function fetchProduct(productId) {
 
     // Fall back to dishes table
     const { data: dish, error: dishError } = await supabase
-      .from('dishes')
+      .from('menu_items')
       .select('*')
       .eq('id', productId)
       .maybeSingle();

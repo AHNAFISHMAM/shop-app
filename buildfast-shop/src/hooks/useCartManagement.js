@@ -68,7 +68,7 @@ export const useCartManagement = (user) => {
           // Fetch dishes if any (backward compatible)
           if (dishIds.length > 0) {
             const { data } = await supabase
-              .from('dishes')
+              .from('menu_items')
               .select('*')
               .eq('is_active', true)
               .in('id', dishIds);
@@ -139,7 +139,8 @@ export const useCartManagement = (user) => {
           toast.error('This item is currently unavailable');
           return;
         }
-        if (!isMenuItem && product.stock_quantity === 0) {
+        // Note: menu_items doesn't have stock_quantity, use is_available instead
+        if (!isMenuItem && product.is_available === false) {
           toast.error('This item is out of stock');
           return;
         }

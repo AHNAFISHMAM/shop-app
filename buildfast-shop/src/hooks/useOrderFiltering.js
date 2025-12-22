@@ -81,7 +81,8 @@ export const useOrderFiltering = (
 
     // In stock filter
     if (inStockOnly) {
-      results = results.filter((p) => p.stock_quantity > 0);
+      // Note: menu_items doesn't have stock_quantity, use is_available instead
+      results = results.filter((p) => p.is_available !== false);
     }
 
     // Sorting

@@ -104,36 +104,48 @@ export async function createReservation(reservationData) {
       };
     }
 
-    // Insert reservation directly (supports new fields)
-    const { data, error } = await supabase
-      .from('table_reservations')
-      .insert([{
-        user_id: userId || null,
-        customer_name: customerName.trim(),
-        customer_email: customerEmail.trim(),
-        customer_phone: customerPhone.trim(),
-        reservation_date: reservationDate,
-        reservation_time: normalizedTime,
-        party_size: parseInt(partySize),
-        special_requests: specialRequests?.trim() || null,
-        occasion: occasion || null,
-        table_preference: tablePreference || null,
-        status: 'pending',
-        check_in_date: checkInDate || reservationDate,
-        check_out_date: checkOutDate || null,
-        room_type: roomType || null,
-        guest_notes: guestNotes?.trim() || null
-      }])
-      .select('id')
-      .single();
+    // Use RPC function for server-side validation and atomic creation
+    // The RPC function provides: duplicate checking, past date/time validation, party size validation
+    const { data: reservationId, error: rpcError } = await supabase.rpc('create_reservation', {
+      _user_id: userId || null,
+      _customer_name: customerName.trim(),
+      _customer_email: customerEmail.trim(),
+      _customer_phone: customerPhone.trim(),
+      _reservation_date: reservationDate,
+      _reservation_time: normalizedTime,
+      _party_size: parseInt(partySize),
+      _special_requests: specialRequests?.trim() || null
+    });
 
-    const reservationId = data?.id;
+    let error = rpcError;
+    let finalReservationId = reservationId;
+
+    // If RPC succeeded and we have additional fields not supported by RPC, update the reservation
+    if (!error && reservationId && (occasion || tablePreference || checkInDate || checkOutDate || roomType || guestNotes)) {
+      const updateData = {};
+      if (occasion) updateData.occasion = occasion;
+      if (tablePreference) updateData.table_preference = tablePreference;
+      if (checkInDate) updateData.check_in_date = checkInDate;
+      if (checkOutDate) updateData.check_out_date = checkOutDate;
+      if (roomType) updateData.room_type = roomType;
+      if (guestNotes) updateData.guest_notes = guestNotes;
+
+      const { error: updateError } = await supabase
+        .from('table_reservations')
+        .update(updateData)
+        .eq('id', reservationId);
+
+      if (updateError) {
+        // Log warning but don't fail - core reservation was created successfully
+        logger.warn('RPC succeeded but additional fields update failed:', updateError);
+      }
+    }
 
     if (error) {
       logger.error('Error creating reservation:', error);
 
-      // Return user-friendly error messages
-      if (error.message.includes('already have a reservation')) {
+      // Return user-friendly error messages from RPC function
+      if (error.message && error.message.includes('already have a reservation')) {
         return {
           success: false,
           reservationId: null,
@@ -141,11 +153,19 @@ export async function createReservation(reservationData) {
         };
       }
 
-      if (error.message.includes('past')) {
+      if (error.message && (error.message.includes('past') || error.message.includes('Cannot make reservations'))) {
         return {
           success: false,
           reservationId: null,
           error: 'Cannot make reservations for past dates or times.'
+        };
+      }
+
+      if (error.message && error.message.includes('party_size')) {
+        return {
+          success: false,
+          reservationId: null,
+          error: 'Party size must be between 1 and 20 guests.'
         };
       }
 
@@ -158,7 +178,7 @@ export async function createReservation(reservationData) {
 
     return {
       success: true,
-      reservationId: reservationId,
+      reservationId: finalReservationId,
       error: null
     };
   } catch (err) {
