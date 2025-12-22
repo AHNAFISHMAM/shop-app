@@ -98,7 +98,9 @@ describe('validatePostalCode', () => {
   })
 
   it('should return error for invalid postal code', () => {
-    expect(validatePostalCode('123')).toBe('Please enter a valid postal code')
+    // '12' is too short (min 3 chars), '12345678901' is too long (max 10 chars)
+    expect(validatePostalCode('12')).toBe('Please enter a valid postal code')
+    expect(validatePostalCode('12345678901')).toBe('Please enter a valid postal code')
     expect(validatePostalCode('')).toBe('Postal code is required')
   })
 })
