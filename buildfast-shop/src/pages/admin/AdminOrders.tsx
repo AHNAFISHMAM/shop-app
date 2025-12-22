@@ -323,7 +323,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
     const matchesTotal = orderTotal.includes(query)
 
     // Search by shipping address components
-    const shippingAddr = typeof order.shipping_address === 'object' ? order.shipping_address : null
+    // shippingAddr already declared above on line 303, reuse it
     const matchesCity = (shippingAddr?.city || '').toLowerCase().includes(query)
     const matchesState = (shippingAddr?.stateProvince || '').toLowerCase().includes(query)
     const matchesPostal = (shippingAddr?.postalCode || '').toLowerCase().includes(query)

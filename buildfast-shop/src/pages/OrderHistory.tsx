@@ -1034,7 +1034,6 @@ Thank you for your order!
                           aria-valuemax={100}
                           aria-label={`Loyalty progress: ${loyalty.progressPercent}%`}
                           aria-hidden="true"
-                          style={{ width: `${Math.min(100, Math.max(loyalty.progressPercent, 4))}%` }}
                         />
                       </div>
                       <span className="text-sm sm:text-xs font-semibold text-[var(--color-amber)] whitespace-nowrap">
