@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # Check for lockfile and setup Node.js with conditional caching
+      # Check for lockfile
       - name: Check for package-lock.json
         id: check-lockfile
         run: |
@@ -29,13 +29,21 @@ jobs:
             echo "⚠️ package-lock.json not found - will use npm install (no caching)"
           fi
       
-      # Use Node 20 LTS - cache only if lockfile exists
-      - name: Setup Node.js
+      # Setup Node.js with caching (only when lockfile exists)
+      - name: Setup Node.js (with cache)
+        if: steps.check-lockfile.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: ${{ steps.check-lockfile.outputs.exists == 'true' && 'buildfast-shop/package-lock.json' || '' }}
+          cache-dependency-path: buildfast-shop/package-lock.json
+      
+      # Setup Node.js without caching (when lockfile doesn't exist)
+      - name: Setup Node.js (no cache)
+        if: steps.check-lockfile.outputs.exists != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       
       # Use npm ci if lockfile exists, otherwise npm install
       - name: Install dependencies
@@ -79,13 +87,21 @@ jobs:
             echo "⚠️ package-lock.json not found - will use npm install"
           fi
       
-      # Use Node 20 LTS - cache only if lockfile exists
-      - name: Setup Node.js ${{ matrix.node-version }}
+      # Setup Node.js with caching (only when lockfile exists)
+      - name: Setup Node.js ${{ matrix.node-version }} (with cache)
+        if: steps.check-lockfile.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: ${{ steps.check-lockfile.outputs.exists == 'true' && 'buildfast-shop/package-lock.json' || '' }}
+          cache-dependency-path: buildfast-shop/package-lock.json
+      
+      # Setup Node.js without caching (when lockfile doesn't exist)
+      - name: Setup Node.js ${{ matrix.node-version }} (no cache)
+        if: steps.check-lockfile.outputs.exists != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
       
       # Use npm ci if lockfile exists, otherwise npm install
       - name: Install dependencies
@@ -130,13 +146,21 @@ jobs:
             echo "⚠️ package-lock.json not found - will use npm install"
           fi
       
-      # Use Node 20 LTS - cache only if lockfile exists
-      - name: Setup Node.js
+      # Setup Node.js with caching (only when lockfile exists)
+      - name: Setup Node.js (with cache)
+        if: steps.check-lockfile.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: ${{ steps.check-lockfile.outputs.exists == 'true' && 'buildfast-shop/package-lock.json' || '' }}
+          cache-dependency-path: buildfast-shop/package-lock.json
+      
+      # Setup Node.js without caching (when lockfile doesn't exist)
+      - name: Setup Node.js (no cache)
+        if: steps.check-lockfile.outputs.exists != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       
       # Use npm ci if lockfile exists, otherwise npm install
       - name: Install dependencies
@@ -215,13 +239,21 @@ jobs:
             echo "⚠️ package-lock.json not found - will use npm install"
           fi
       
-      # Use Node 20 LTS - cache only if lockfile exists
-      - name: Setup Node.js
+      # Setup Node.js with caching (only when lockfile exists)
+      - name: Setup Node.js (with cache)
+        if: steps.check-lockfile.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: ${{ steps.check-lockfile.outputs.exists == 'true' && 'buildfast-shop/package-lock.json' || '' }}
+          cache-dependency-path: buildfast-shop/package-lock.json
+      
+      # Setup Node.js without caching (when lockfile doesn't exist)
+      - name: Setup Node.js (no cache)
+        if: steps.check-lockfile.outputs.exists != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       
       # Use npm ci if lockfile exists, otherwise npm install
       - name: Install dependencies
