@@ -188,6 +188,9 @@ export default function AdminMenuItems() {
     is_discount_combo: false
   });
 
+  // Valid dietary tags constant
+  const VALID_DIETARY_TAGS = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'spicy'];
+
   // Fetch data
   useEffect(() => {
     fetchCategories();
@@ -305,6 +308,20 @@ export default function AdminMenuItems() {
     }));
   }
 
+  // Validate dietary tags
+  function validateDietaryTags(dietaryTags) {
+    if (dietaryTags && !Array.isArray(dietaryTags)) {
+      toast.error('Invalid dietary tags format');
+      return false;
+    }
+    const invalidTags = (dietaryTags || []).filter(tag => !VALID_DIETARY_TAGS.includes(tag));
+    if (invalidTags.length > 0) {
+      toast.error(`Invalid dietary tags: ${invalidTags.join(', ')}`);
+      return false;
+    }
+    return true;
+  }
+
   // Add menu item
   async function handleAddItem(e) {
     e.preventDefault();
@@ -314,15 +331,7 @@ export default function AdminMenuItems() {
       return;
     }
 
-    // Validate dietary_tags
-    const validTags = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'spicy'];
-    if (formData.dietary_tags && !Array.isArray(formData.dietary_tags)) {
-      toast.error('Invalid dietary tags format');
-      return;
-    }
-    const invalidTags = (formData.dietary_tags || []).filter(tag => !validTags.includes(tag));
-    if (invalidTags.length > 0) {
-      toast.error(`Invalid dietary tags: ${invalidTags.join(', ')}`);
+    if (!validateDietaryTags(formData.dietary_tags)) {
       return;
     }
 
@@ -369,15 +378,7 @@ export default function AdminMenuItems() {
       return;
     }
 
-    // Validate dietary_tags
-    const validTags = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'spicy'];
-    if (formData.dietary_tags && !Array.isArray(formData.dietary_tags)) {
-      toast.error('Invalid dietary tags format');
-      return;
-    }
-    const invalidTags = (formData.dietary_tags || []).filter(tag => !validTags.includes(tag));
-    if (invalidTags.length > 0) {
-      toast.error(`Invalid dietary tags: ${invalidTags.join(', ')}`);
+    if (!validateDietaryTags(formData.dietary_tags)) {
       return;
     }
 

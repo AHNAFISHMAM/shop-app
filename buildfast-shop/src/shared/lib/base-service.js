@@ -8,7 +8,7 @@
  */
 
 import { logger } from '../../utils/logger';
-import { handleAsyncError, handleDatabaseError } from '../../utils/errorHandler';
+import { handleAsyncError, handleDatabaseError } from '../../lib/error-handler';
 
 /**
  * Standard service response format
