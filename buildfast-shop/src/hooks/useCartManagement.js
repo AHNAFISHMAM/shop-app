@@ -145,6 +145,18 @@ export const useCartManagement = (user) => {
           return;
         }
 
+        // Check stock quantity for products that have it (legacy products table)
+        if (!isMenuItem && product.stock_quantity !== undefined && product.stock_quantity !== null) {
+          const existingItem = cartItems.find((item) => item.product_id === product.id);
+          const requestedQuantity = (existingItem?.quantity || 0) + 1;
+          
+          if (product.stock_quantity < requestedQuantity) {
+            const available = product.stock_quantity - (existingItem?.quantity || 0);
+            toast.error(`Only ${available} more available`);
+            return;
+          }
+        }
+
         if (user) {
           // Check if already in cart
           const existingItem = cartItems.find((item) =>

@@ -314,6 +314,18 @@ export default function AdminMenuItems() {
       return;
     }
 
+    // Validate dietary_tags
+    const validTags = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'spicy'];
+    if (formData.dietary_tags && !Array.isArray(formData.dietary_tags)) {
+      toast.error('Invalid dietary tags format');
+      return;
+    }
+    const invalidTags = (formData.dietary_tags || []).filter(tag => !validTags.includes(tag));
+    if (invalidTags.length > 0) {
+      toast.error(`Invalid dietary tags: ${invalidTags.join(', ')}`);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('menu_items')
@@ -325,7 +337,7 @@ export default function AdminMenuItems() {
           image_url: formData.image_url || null,
           dietary_tags: formData.dietary_tags,
           spice_level: parseInt(formData.spice_level),
-          prep_time: formData.prep_time ? parseInt(formData.prep_time) : null,
+          prep_time: formData.prep_time && formData.prep_time.trim() !== '' ? parseInt(formData.prep_time) : null,
           is_available: formData.is_available,
           is_featured: formData.is_featured,
           is_todays_menu: formData.is_todays_menu,
@@ -357,6 +369,18 @@ export default function AdminMenuItems() {
       return;
     }
 
+    // Validate dietary_tags
+    const validTags = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'spicy'];
+    if (formData.dietary_tags && !Array.isArray(formData.dietary_tags)) {
+      toast.error('Invalid dietary tags format');
+      return;
+    }
+    const invalidTags = (formData.dietary_tags || []).filter(tag => !validTags.includes(tag));
+    if (invalidTags.length > 0) {
+      toast.error(`Invalid dietary tags: ${invalidTags.join(', ')}`);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('menu_items')
@@ -368,7 +392,7 @@ export default function AdminMenuItems() {
           image_url: formData.image_url || null,
           dietary_tags: formData.dietary_tags,
           spice_level: parseInt(formData.spice_level),
-          prep_time: formData.prep_time ? parseInt(formData.prep_time) : null,
+          prep_time: formData.prep_time && formData.prep_time.trim() !== '' ? parseInt(formData.prep_time) : null,
           is_available: formData.is_available,
           is_featured: formData.is_featured,
           is_todays_menu: formData.is_todays_menu,
@@ -529,7 +553,7 @@ export default function AdminMenuItems() {
       image_url: item.image_url || '',
       dietary_tags: item.dietary_tags || [],
       spice_level: item.spice_level || 0,
-      prep_time: item.prep_time || '',
+      prep_time: item.prep_time !== undefined && item.prep_time !== null ? String(item.prep_time) : '',
       is_available: item.is_available,
       is_featured: item.is_featured,
       is_todays_menu: item.is_todays_menu,
