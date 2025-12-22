@@ -252,12 +252,12 @@ function AdminSettings() {
 
 
   // eslint-disable-next-line no-unused-vars
-  const handleQuickToggle = async (field) => {
+  const handleQuickToggle = async (field: keyof StoreSettings) => {
     const nextValue = !formData[field]
     const previousValue = formData[field]
     const previousTestimonials = formData.show_home_testimonials
 
-    const updates = { [field]: nextValue }
+    const updates: Partial<StoreSettings> = { [field]: nextValue as any }
     if (field === 'show_public_reviews') {
       updates.reviews_visibility_updated_at = new Date().toISOString()
       if (!nextValue) {
@@ -326,7 +326,7 @@ function AdminSettings() {
   }
 
   // eslint-disable-next-line no-unused-vars
-  const handleFeatureFlagToggle = async (field) => {
+  const handleFeatureFlagToggle = async (field: keyof StoreSettings) => {
     const nextValue = !formData[field]
     const previousValue = formData[field]
 

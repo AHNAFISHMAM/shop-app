@@ -238,7 +238,7 @@ const AdminSpecialSections = () => {
     try {
       const { error } = await supabase
         .from('special_sections')
-        .update({ is_available: optimisticValue } as Partial<SpecialSection>)
+        .update({ is_available: optimisticValue } as never)
         .eq('id', section.id);
 
       if (error) throw error;
@@ -263,7 +263,8 @@ const AdminSpecialSections = () => {
 
   // Generate nice message
   const generateMessage = async (section: SpecialSection) => {
-    const msgs = messages[section.section_key] || [];
+    const sectionKey = section.section_key as keyof typeof messages;
+    const msgs = messages[sectionKey] || [];
     const randomMsg = msgs[Math.floor(Math.random() * msgs.length)];
 
     setSections((prev) =>
@@ -275,7 +276,7 @@ const AdminSpecialSections = () => {
     try {
       const { error } = await supabase
         .from('special_sections')
-        .update({ custom_message: randomMsg })
+        .update({ custom_message: randomMsg } as never)
         .eq('id', section.id);
 
       if (error) throw error;
@@ -302,7 +303,7 @@ const AdminSpecialSections = () => {
     try {
       const { error } = await supabase
         .from('menu_items')
-        .update({ [flag]: !currentValue })
+        .update({ [flag]: !currentValue } as never)
         .eq('id', item.id);
 
       if (error) throw error;
@@ -477,8 +478,9 @@ const AdminSpecialSections = () => {
                     ৳{formatPrice(item.price)}
                   </td>
                   {sections.map((section) => {
-                    const flag = SECTION_FLAGS[section.section_key];
-                    const isChecked = item[flag];
+                    const sectionKey = section.section_key as keyof typeof SECTION_FLAGS;
+                    const flag = SECTION_FLAGS[sectionKey];
+                    const isChecked = Boolean(item[flag as keyof MenuItem]);
                     const busyKey = `${item.id}-${flag}`;
                     const disabled = !!itemBusy[busyKey] || !section.is_available;
 
@@ -488,7 +490,7 @@ const AdminSpecialSections = () => {
                           <input
                             type="checkbox"
                             checked={isChecked}
-                            onChange={() => toggleMenuItem(item, section.section_key)}
+                            onChange={() => toggleMenuItem(item, sectionKey)}
                             disabled={disabled}
                             className="sr-only peer"
                             aria-label={`${isChecked ? 'Remove from' : 'Add to'} ${section.section_name}`}

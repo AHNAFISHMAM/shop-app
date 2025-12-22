@@ -106,7 +106,7 @@ export function runStickySidebarDiagnostics(): DiagnosticResult | null {
   
   while (parent && parent !== document.body) {
     const style = window.getComputedStyle(parent);
-    const rect = parent.getBoundingClientRect();
+    const _rect = parent.getBoundingClientRect();
     const issues: string[] = [];
     
     if (style.overflow !== 'visible' && style.overflow !== 'clip') {

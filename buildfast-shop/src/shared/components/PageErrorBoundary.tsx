@@ -70,7 +70,7 @@ export function PageErrorBoundary({ children, pageName = 'page' }: PageErrorBoun
             </summary>
             <pre className="text-xs text-[var(--text-secondary)] overflow-auto">
               {error.toString()}
-              {errorInfo?.componentStack}
+              {errorInfo?.componentStack || ''}
             </pre>
           </m.details>
         )}

@@ -5,7 +5,7 @@
  * Provides fallback UI and error reporting.
  */
 
-import React, { Component, ReactNode, ErrorInfo } from 'react';
+import { Component, ReactNode, ErrorInfo } from 'react';
 import { logger } from '../../utils/logger';
 
 interface ErrorBoundaryProps {
@@ -33,7 +33,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error to error reporting service
     logger.error('ErrorBoundary caught an error:', error, errorInfo);
     
@@ -55,7 +55,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (this.state.hasError) {
       // Custom fallback UI
       if (this.props.fallback) {
@@ -94,7 +94,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 </summary>
                 <pre className="text-xs text-[var(--text-secondary)] overflow-auto">
                   {this.state.error.toString()}
-                  {this.state.errorInfo?.componentStack}
+                  {this.state.errorInfo?.componentStack || ''}
                 </pre>
               </details>
             )}

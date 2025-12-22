@@ -110,7 +110,7 @@ export function createOptimisticMutationConfig<T>(queryClient: QueryClient) {
       return { previousData }
     },
     onError: (
-      err: Error,
+      _err: Error,
       variables: OptimisticMutationVariables<T>,
       context: { previousData?: T } | undefined
     ) => {
@@ -119,7 +119,7 @@ export function createOptimisticMutationConfig<T>(queryClient: QueryClient) {
         queryClient.setQueryData<T>(variables.queryKey, context.previousData)
       }
     },
-    onSettled: (data: T | undefined, error: Error | null, variables: OptimisticMutationVariables<T>) => {
+    onSettled: (_data: T | undefined, _error: Error | null, variables: OptimisticMutationVariables<T>) => {
       // Refetch after mutation
       queryClient.invalidateQueries({ queryKey: variables.queryKey })
     },

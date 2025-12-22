@@ -13,12 +13,12 @@ import { onCLS, onFID, onLCP, onINP, onTTFB, Metric } from 'web-vitals'
  */
 function sendToAnalytics(metric: Metric) {
   // Development: log to console
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV ?? false) {
     console.log('[Web Vitals]', metric.name, metric.value, metric.id)
   }
 
   // Production: send to analytics service
-  if (import.meta.env.PROD) {
+  if (import.meta.env.PROD ?? false) {
     // Example: Google Analytics 4
     // gtag('event', metric.name, {
     //   event_category: 'Web Vitals',
@@ -50,7 +50,7 @@ export function initWebVitals() {
   onLCP(sendToAnalytics) // Largest Contentful Paint
   onTTFB(sendToAnalytics) // Time to First Byte
 
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV ?? false) {
     console.log('[Web Vitals] Performance monitoring initialized')
   }
 }
