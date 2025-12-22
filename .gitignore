@@ -60,3 +60,64 @@ lpt[1-9]
 *.bak
 *.backup
 
+# Editor swap files
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# OS files (already covered but explicit)
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Invalid/problematic filenames
+how 2f59cb3acb0238f55d63fd61de8ad7ed650dca0c --no-pager
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
