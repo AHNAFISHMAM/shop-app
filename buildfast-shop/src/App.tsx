@@ -146,6 +146,14 @@ function AppContent(): JSX.Element {
         };
       }
 
+      if (!(el instanceof HTMLElement)) {
+        return {
+          top: 0,
+          right: 0,
+          height: 0,
+          visible: true,
+        };
+      }
       const rect = el.getBoundingClientRect();
       const visible =
         rect.bottom > 0 &&
@@ -166,7 +174,7 @@ function AppContent(): JSX.Element {
         return managed.get(el)!;
       }
 
-      const isDocumentTarget = el === html || el === document || el === window;
+      const isDocumentTarget = el === html || (el instanceof Document && el === document) || (el instanceof Window && el === window);
       const scrollElement = isDocumentTarget ? window : el as HTMLElement;
       const thumb = createThumbElement();
 

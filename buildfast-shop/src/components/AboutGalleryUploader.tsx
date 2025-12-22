@@ -140,7 +140,7 @@ function AboutGalleryUploader({ onUploadSuccess }: AboutGalleryUploaderProps): J
       // Update store_settings with new image URL
       const { error: updateError } = await supabase
         .from('store_settings')
-        .update({ [columnName]: publicUrl } as Record<string, string>)
+        .update({ [columnName]: publicUrl } as any)
         .eq('singleton_guard', true)
 
       if (updateError) {
