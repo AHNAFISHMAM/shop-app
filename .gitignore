@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
-package-lock.json
+# Allow package-lock.json in subdirectories for CI/CD reproducibility
+# Only ignore root-level lockfiles
+/package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
