@@ -27,6 +27,7 @@ interface Reservation {
   customer_email?: string;
   customer_phone?: string;
   admin_notes?: string;
+  special_requests?: string | null;
   [key: string]: unknown;
 }
 
@@ -115,7 +116,7 @@ function AdminReservations() {
       const result = await getAllReservations({})
 
       if (result.success) {
-        setReservations(result.data || [])
+        setReservations((result.data || []) as Reservation[])
       } else {
         logger.error('Error fetching reservations:', result.error)
         toast.error('Failed to load reservations')
@@ -128,7 +129,7 @@ function AdminReservations() {
     }
   }
 
-  const updateReservationStatus = async (reservationId, newStatus, notes = '', table = '') => {
+  const updateReservationStatus = async (reservationId: string, newStatus: string, notes = '', table = '') => {
     try {
       // Use service layer for status updates
       const result = await updateReservationStatusService(reservationId, newStatus, notes)
@@ -142,7 +143,7 @@ function AdminReservations() {
       if (table) {
         const { error } = await supabase
           .from('table_reservations')
-          .update({ table_number: table })
+          .update({ table_number: table } as never)
           .eq('id', reservationId)
 
         if (error) {
@@ -162,8 +163,8 @@ function AdminReservations() {
     }
   }
 
-  const confirmDelete = (reservationId) => {
-    setReservationToDelete(reservationId)
+  const confirmDelete = (reservationId: string) => {
+    setReservationToDelete(reservationId as any)
     setShowDeleteConfirm(true)
   }
 
@@ -190,7 +191,7 @@ function AdminReservations() {
   }
 
   // Check for conflicting reservations (same date, overlapping time)
-  const getConflicts = (reservation) => {
+  const getConflicts = (reservation: Reservation) => {
     if (!reservation) return []
 
     return reservations.filter(r => {
@@ -203,8 +204,8 @@ function AdminReservations() {
     })
   }
 
-  const getStatusBadge = (status) => {
-    const styles = {
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
       pending: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
       confirmed: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
       declined: 'bg-red-500/20 text-red-300 border border-red-500/30',
@@ -213,7 +214,7 @@ function AdminReservations() {
       no_show: 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
     }
 
-    const icons = {
+    const icons: Record<string, string> = {
       pending: '⏳',
       confirmed: '✓',
       declined: '✕',
@@ -262,7 +263,7 @@ function AdminReservations() {
 
   // Group reservations by date - memoized for performance
   const groupedReservations = useMemo(() => {
-    return filteredReservations.reduce((groups, reservation) => {
+    return filteredReservations.reduce((groups: Record<string, Reservation[]>, reservation) => {
       const date = reservation.reservation_date
       if (!groups[date]) {
         groups[date] = []
@@ -275,7 +276,7 @@ function AdminReservations() {
 
   // Debug viewMode changes - only log when viewMode changes to avoid spam
   useEffect(() => {
-    if (import.meta.env.DEV) {
+    if (!!(import.meta.env?.DEV ?? false)) {
       logger.log('ViewMode changed to:', viewMode)
       logger.log('Filtered reservations count:', filteredReservations.length)
       logger.log('Grouped reservations keys:', Object.keys(groupedReservations))
@@ -380,7 +381,7 @@ function AdminReservations() {
                   { value: 'no_show', label: 'No Show' }
                 ]}
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => setStatusFilter(String(e.target.value))}
                 placeholder="All Statuses"
                 maxVisibleItems={5}
               />
@@ -509,7 +510,7 @@ function AdminReservations() {
           <button
             onClick={() => {
               setStatusFilter('all')
-              setSelectedDate(new Date().toISOString().split('T')[0])
+              setSelectedDate(new Date().toISOString().split('T')[0] || '')
             }}
             className="flex items-center gap-2 rounded-xl sm:rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 min-h-[44px] px-4 sm:px-6 py-3 text-sm sm:text-base font-medium text-[var(--accent)] transition-all hover:bg-[var(--accent)]/20"
           >
@@ -662,15 +663,15 @@ function AdminReservations() {
                           day: 'numeric'
                         })}
                       </h3>
-                      <p className="text-xs text-muted">{groupedReservations[date].length} reservations</p>
+                      <p className="text-xs text-muted">{(groupedReservations[date]?.length || 0)} reservations</p>
                     </div>
                     <div className="rounded-lg bg-[var(--accent)]/20 px-3 py-1.5">
-                      <span className="text-sm font-bold text-[var(--accent)]">{groupedReservations[date].length}</span>
+                      <span className="text-sm font-bold text-[var(--accent)]">{groupedReservations[date]?.length || 0}</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    {groupedReservations[date].slice(0, 5).map((reservation, index) => (
+                    {(groupedReservations[date] || []).slice(0, 5).map((reservation: Reservation, index: number) => (
                       <div
                         key={reservation.id}
                         onClick={() => {
@@ -708,9 +709,9 @@ function AdminReservations() {
                         </div>
                       </div>
                     ))}
-                    {groupedReservations[date].length > 5 && (
+                    {(groupedReservations[date]?.length || 0) > 5 && (
                       <button className="w-full rounded-lg border border-theme bg-[rgba(255,255,255,0.02)] py-2 text-xs font-medium text-muted transition-all hover:bg-[rgba(255,255,255,0.05)]">
-                        +{groupedReservations[date].length - 5} more
+                        +{(groupedReservations[date]?.length || 0) - 5} more
                       </button>
                     )}
                   </div>
@@ -754,7 +755,7 @@ function AdminReservations() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
-                      {groupedReservations[date].map(reservation => (
+                      {(groupedReservations[date] || []).map((reservation: Reservation) => (
                         <tr key={reservation.id} className="transition hover:bg-[rgba(255,255,255,0.04)]">
                           <td className="px-6 py-4 font-medium">
                             {reservation.reservation_time}
@@ -868,7 +869,7 @@ function AdminReservations() {
 
               {/* Tab Content */}
               {modalTab === 'history' ? (
-                <CustomerHistory customerEmail={selectedReservation.customer_email} />
+                <CustomerHistory customerEmail={selectedReservation.customer_email || ''} />
               ) : (
                 <div>
                   {/* Conflict Warning */}
@@ -928,7 +929,7 @@ function AdminReservations() {
                     {selectedReservation.special_requests && (
                       <div>
                         <p className="text-sm font-medium text-muted">Special Requests</p>
-                        <p className="mt-1 rounded-lg bg-[rgba(255,255,255,0.05)] p-3 text-sm text-[var(--text-main)]">{selectedReservation.special_requests}</p>
+                        <p className="mt-1 rounded-lg bg-[rgba(255,255,255,0.05)] p-3 text-sm text-[var(--text-main)]">{String(selectedReservation.special_requests || '')}</p>
                       </div>
                     )}
 
@@ -1162,6 +1163,7 @@ function AdminReservations() {
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
               {/* Left Side - Calendar */}
               <div className="flex-1 lg:flex-[0_0_50%] p-4 sm:p-6 overflow-y-auto hide-scrollbar border-r-0 lg:border-r border-theme flex items-center justify-center">
+                {/* @ts-expect-error - Calendar component props type mismatch with react-aria-components */}
                 <Calendar
                   value={selectedCalendarDate}
                   onChange={setSelectedCalendarDate}
@@ -1194,7 +1196,7 @@ function AdminReservations() {
 
                       {dayReservations.length > 0 ? (
                         <div className="space-y-3 flex-1">
-                          {dayReservations.map((reservation) => (
+                          {dayReservations.map((reservation: Reservation) => (
                             <div
                               key={reservation.id}
                               onClick={() => {
@@ -1238,7 +1240,7 @@ function AdminReservations() {
                               {reservation.special_requests && (
                                 <div className="mt-3 pt-3 border-t border-theme">
                                   <p className="text-xs text-muted mb-1">Special Requests:</p>
-                                  <p className="text-sm text-[var(--text-main)]">{reservation.special_requests}</p>
+                                  <p className="text-sm text-[var(--text-main)]">{String(reservation.special_requests || '')}</p>
                                 </div>
                               )}
                             </div>

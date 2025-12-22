@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useStoreSettings, ShippingType, StoreSettings } from '../../contexts/StoreSettingsContext'
@@ -212,7 +212,9 @@ function AdminSettings() {
     }
 
     // Handle standard form events
-    const { name, value, type, checked } = (e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>).target
+    const target = (e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>).target
+    const { name, value, type } = target
+    const checked = 'checked' in target ? target.checked : undefined
 
     if (type === 'checkbox') {
       if (name === 'show_public_reviews' && !checked) {
