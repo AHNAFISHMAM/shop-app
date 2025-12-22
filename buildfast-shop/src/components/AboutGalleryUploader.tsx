@@ -140,7 +140,7 @@ function AboutGalleryUploader({ onUploadSuccess }: AboutGalleryUploaderProps): J
       // Update store_settings with new image URL
       const { error: updateError } = await supabase
         .from('store_settings')
-        .update({ [columnName]: publicUrl })
+        .update({ [columnName]: publicUrl } as Record<string, string>)
         .eq('singleton_guard', true)
 
       if (updateError) {
@@ -235,7 +235,9 @@ function AboutGalleryUploader({ onUploadSuccess }: AboutGalleryUploaderProps): J
         <button
           onClick={() => {
             const [slot] = slotKey.split('_')
-            handleUpload(slot, imageType)
+            if (slot) {
+              handleUpload(slot, imageType)
+            }
           }}
           disabled={!hasFile || isUploading}
           className="w-full btn-primary text-xs py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

@@ -75,6 +75,7 @@ function AddressModal({ isOpen, onClose, address = null, onSave, loading = false
       }, 100);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen]);
 
   // Ensure we can render at body level (SSR safety)

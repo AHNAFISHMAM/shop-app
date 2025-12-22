@@ -180,6 +180,7 @@ const AdminSpecialSections = () => {
         // Activate current visible rows + at least one row ahead
         elements.forEach((el, index) => {
           try {
+            if (!(el instanceof HTMLElement)) return;
             if (el.dataset.animateActive === 'true') return; // Already active
             
             const rect = el.getBoundingClientRect();
@@ -237,7 +238,7 @@ const AdminSpecialSections = () => {
     try {
       const { error } = await supabase
         .from('special_sections')
-        .update({ is_available: optimisticValue })
+        .update({ is_available: optimisticValue } as Partial<SpecialSection>)
         .eq('id', section.id);
 
       if (error) throw error;

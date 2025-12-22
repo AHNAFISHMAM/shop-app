@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense, ReactNode } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { StoreSettingsProvider, useStoreSettings } from './contexts/StoreSettingsContext';
@@ -136,7 +136,7 @@ function AppContent(): JSX.Element {
       return thumb;
     };
 
-    const getRect = (el: Element): { top: number; right: number; height: number; visible: boolean } => {
+    const getRect = (el: Element | Document | Window): { top: number; right: number; height: number; visible: boolean } => {
       if (el === html || el === document || el === window) {
         return {
           top: 0,
@@ -341,7 +341,9 @@ function AppContent(): JSX.Element {
 
     const activateAll = () => {
       document.querySelectorAll('[data-animate]').forEach((el) => {
-        el.dataset.animateActive = 'true';
+        if (el instanceof HTMLElement) {
+          el.dataset.animateActive = 'true';
+        }
       });
     };
 
@@ -353,6 +355,7 @@ function AppContent(): JSX.Element {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(({ isIntersecting, target }) => {
+          if (!(target instanceof HTMLElement)) return;
           const once = target.dataset.animateOnce !== 'false';
           if (isIntersecting) {
             target.dataset.animateActive = 'true';
@@ -374,6 +377,7 @@ function AppContent(): JSX.Element {
 
     const scan = () => {
       document.querySelectorAll('[data-animate]').forEach((el) => {
+        if (!(el instanceof HTMLElement)) return;
         if (reduceMotionQuery.matches) {
           el.dataset.animateActive = 'true';
           return;

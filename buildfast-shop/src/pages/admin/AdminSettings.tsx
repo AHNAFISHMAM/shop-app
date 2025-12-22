@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { m } from 'framer-motion'
-import { useStoreSettings } from '../../contexts/StoreSettingsContext'
+import { useStoreSettings, ShippingType, StoreSettings } from '../../contexts/StoreSettingsContext'
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger'
 import { pageFade } from '../../components/animations/menuAnimations'
 import { logger } from '../../utils/logger'
@@ -75,7 +75,7 @@ function AdminSettings() {
     store_description: string;
     store_logo_url: string;
     tax_rate: number;
-    shipping_type: string;
+    shipping_type: ShippingType;
     shipping_cost: number;
     free_shipping_threshold: number;
     currency: string;
@@ -199,8 +199,20 @@ function AdminSettings() {
 
   // Real-time theme adjustment application
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string | number; name?: string } }) => {
+    // Handle CustomDropdown event format
+    if ('target' in e && !('type' in e.target)) {
+      const name = e.target.name || ''
+      const value = String(e.target.value)
+      setFormData(prev => ({
+        ...prev,
+        [name]: name === 'shipping_type' ? (value as ShippingType) : value
+      }))
+      return
+    }
+
+    // Handle standard form events
+    const { name, value, type, checked } = (e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>).target
 
     if (type === 'checkbox') {
       if (name === 'show_public_reviews' && !checked) {
@@ -233,7 +245,7 @@ function AdminSettings() {
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: value
+        [name]: name === 'shipping_type' ? (value as ShippingType) : value
       }))
     }
   }
@@ -362,7 +374,7 @@ function AdminSettings() {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
@@ -398,10 +410,10 @@ function AdminSettings() {
       payload.scroll_thumb_brightness = Math.max(0.05, Math.min(1, Number((payload.scroll_thumb_brightness ?? 0.6).toFixed(2))))
 
       if (settings && payload.show_public_reviews !== (settings.show_public_reviews ?? false)) {
-        payload.reviews_visibility_updated_at = new Date().toISOString()
+        (payload as any).reviews_visibility_updated_at = new Date().toISOString()
       }
 
-      const result = await updateSettings(payload)
+      const result = await updateSettings(payload as Partial<StoreSettings>)
 
       if (result.success) {
         setSuccess(true)
@@ -411,7 +423,7 @@ function AdminSettings() {
       }
     } catch (err) {
       logger.error('Error saving settings:', err)
-      setError('Failed to save settings: ' + err.message)
+      setError('Failed to save settings: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setSaving(false)
     }
