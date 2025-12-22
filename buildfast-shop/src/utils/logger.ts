@@ -4,7 +4,7 @@
  * Prevents console statements from appearing in production builds
  */
 
-const isDevelopment = import.meta.env.DEV ?? false
+const isDevelopment: boolean = !!(import.meta.env?.DEV ?? false)
 
 /**
  * Logger interface for type-safe logging

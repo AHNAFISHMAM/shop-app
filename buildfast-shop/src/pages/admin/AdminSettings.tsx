@@ -253,8 +253,9 @@ function AdminSettings() {
 
   // eslint-disable-next-line no-unused-vars
   const handleQuickToggle = async (field: keyof StoreSettings) => {
-    const nextValue = !formData[field]
-    const previousValue = formData[field]
+    const fieldValue = formData[field as keyof typeof formData];
+    const nextValue = !(fieldValue as boolean)
+    const previousValue = fieldValue as boolean
     const previousTestimonials = formData.show_home_testimonials
 
     const updates: Partial<StoreSettings> = { [field]: nextValue as any }
@@ -327,8 +328,9 @@ function AdminSettings() {
 
   // eslint-disable-next-line no-unused-vars
   const handleFeatureFlagToggle = async (field: keyof StoreSettings) => {
-    const nextValue = !formData[field]
-    const previousValue = formData[field]
+    const fieldValue = formData[field as keyof typeof formData];
+    const nextValue = !(fieldValue as boolean)
+    const previousValue = fieldValue as boolean
 
     setFormData(prev => ({
       ...prev,

@@ -87,7 +87,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             <p className="text-[var(--text-secondary)] mb-6">
               {this.props.message || 'We encountered an unexpected error. Please try refreshing the page.'}
             </p>
-            {this.state.error && import.meta.env.DEV && (
+            {this.state.error && !!(import.meta.env?.DEV ?? false) && (
               <details className="text-left mb-6 p-4 bg-[var(--bg-hover)] rounded-lg">
                 <summary className="cursor-pointer text-sm font-semibold mb-2">
                   Error Details

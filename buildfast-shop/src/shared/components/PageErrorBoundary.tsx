@@ -60,7 +60,7 @@ export function PageErrorBoundary({ children, pageName = 'page' }: PageErrorBoun
         >
           We encountered an error while loading the {pageName}. Please try again or return to the homepage.
         </m.p>
-        {error && import.meta.env.DEV && (
+        {error && !!(import.meta.env?.DEV ?? false) && (
           <m.details
             className="text-left mb-6 p-4 bg-[var(--bg-hover)] rounded-lg"
             variants={fadeSlideUp}
