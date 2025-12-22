@@ -17,5 +17,12 @@ export interface SearchFoodPhotosResult {
     nextPage: number | null;
 }
 
-export declare function searchFoodPhotos(query: string, options?: SearchFoodPhotosOptions): Promise<SearchFoodPhotosResult>;
+export interface BuildMenuImageUrlOptions {
+    width?: number;
+    height?: number;
+    format?: string;
+    params?: Record<string, string>;
+}
 
+export declare function searchFoodPhotos(query: string, options?: SearchFoodPhotosOptions): Promise<SearchFoodPhotosResult>;
+export declare function buildMenuImageUrl(photoId: string | number, options?: BuildMenuImageUrlOptions): string;

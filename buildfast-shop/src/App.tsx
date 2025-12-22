@@ -174,7 +174,7 @@ function AppContent(): JSX.Element {
         return managed.get(el)!;
       }
 
-      const isDocumentTarget = el === html || (el instanceof Document && el === document) || (el instanceof Window && el === window);
+      const isDocumentTarget = el === html || el === document || el === window;
       const scrollElement = isDocumentTarget ? window : el as HTMLElement;
       const thumb = createThumbElement();
 

@@ -1,19 +1,32 @@
-/**
- * Type declarations for loyalty utilities
- */
-export interface LoyaltyState {
-  tier: string;
-  currentPoints: number;
-  nextTierThreshold: number;
-  nextTierLabel: string;
-  pointsMultiplier: number;
-  pointsEarnedThisOrder: number;
-  projectedPoints: number;
-  progressPercent: number;
-  pointsToNextTier: number;
-  redeemableRewards: Array<{ id: string; label: string; cost: number }>;
-  newlyUnlockedRewards: Array<{ id: string; label: string; cost: number }>;
+interface LoyaltySnapshot {
+    tier: string;
+    currentPoints: number;
+    nextTierThreshold: number;
+    nextTierLabel: string;
+    pointsMultiplier: number;
 }
-
-export function resolveLoyaltyState(orderTotal?: number): LoyaltyState;
-
+interface Reward {
+    id: string;
+    label: string;
+    cost: number;
+}
+export declare const resolveLoyaltyState: (orderTotal?: number) => {
+    snapshot: LoyaltySnapshot;
+    pointsEarnedThisOrder: number;
+    projectedPoints: number;
+    nextTierThreshold: number;
+    progressPercent: number;
+    pointsToNextTier: number;
+    redeemableRewards: Reward[];
+    newlyUnlockedRewards: Reward[];
+};
+export declare const getRewardsCatalog: () => Reward[];
+export declare const redeemReward: (rewardId: string) => {
+    success: boolean;
+    message?: string;
+};
+export declare const resolveReferralInfo: (user: any) => {
+    referralCode: string | null;
+    referralCount: number;
+    referralRewards: number;
+};

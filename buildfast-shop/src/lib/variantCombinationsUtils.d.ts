@@ -10,4 +10,4 @@ export declare function getCombinationById(combinationId: string): Promise<Combi
 export declare function createCombination(combinationData: any): Promise<CombinationResult>;
 export declare function updateCombination(combinationId: string, updates: any): Promise<CombinationResult>;
 export declare function deleteCombination(combinationId: string): Promise<CombinationResult>;
-
+export declare function calculateCombinationPrice(basePrice: number, combinationAdjustment?: number): number;

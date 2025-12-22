@@ -10,4 +10,4 @@ export declare function getVariantById(variantId: string): Promise<VariantResult
 export declare function createVariant(variantData: any): Promise<VariantResult>;
 export declare function updateVariant(variantId: string, updates: any): Promise<VariantResult>;
 export declare function deleteVariant(variantId: string): Promise<VariantResult>;
-
+export declare function calculateVariantPrice(basePrice: number, priceAdjustment: number): number;

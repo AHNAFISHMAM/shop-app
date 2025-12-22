@@ -1,24 +1,46 @@
-/**
- * Type declarations for cart item metadata
- */
-export interface CartItemNoteResult {
-  success: boolean;
-  error?: any;
-}
-
-export interface SavedForLaterItem {
-  id: string;
-  product_id?: string | null;
-  menu_item_id?: string | null;
-  quantity: number;
-  [key: string]: any;
-}
-
-export function getCartItemNotes(): Record<string, string>;
-export function saveCartItemNote(itemId: string, note: string): CartItemNoteResult;
-export function getCartItemNote(itemId: string): string | null;
-export function getSavedForLaterItems(): SavedForLaterItem[];
-export function addToSavedForLater(item: SavedForLaterItem): CartItemNoteResult;
-export function removeFromSavedForLater(itemId: string): CartItemNoteResult;
-export function clearSavedForLater(): void;
-
+export declare const getCartItemNotes: () => Record<string, string>;
+export declare const saveCartItemNote: (itemId: string, note: string) => {
+    success: boolean;
+    error?: undefined;
+} | {
+    success: boolean;
+    error: any;
+};
+export declare const getCartItemNote: (itemId: string) => string | null;
+export declare const removeCartItemNote: (itemId: string) => {
+    success: boolean;
+    error?: undefined;
+} | {
+    success: boolean;
+    error: any;
+};
+export declare const getSavedForLaterItems: () => any[];
+export declare const saveForLater: (item: any) => {
+    success: boolean;
+    error?: undefined;
+} | {
+    success: boolean;
+    error: any;
+};
+export declare const moveToCart: (itemId: string) => {
+    success: boolean;
+    error?: undefined;
+} | {
+    success: boolean;
+    error: any;
+};
+export declare const removeFromSavedForLater: (itemId: string) => {
+    success: boolean;
+    error?: undefined;
+} | {
+    success: boolean;
+    error: any;
+};
+export declare const saveItemForLater: (item: any) => {
+    success: boolean;
+    error?: any;
+};
+export declare const saveSelectedReward: (reward: any) => {
+    success: boolean;
+    error?: any;
+};
