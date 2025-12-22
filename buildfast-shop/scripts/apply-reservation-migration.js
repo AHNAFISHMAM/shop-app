@@ -5,7 +5,7 @@ const path = require('path')
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://shgwzqhwoamcvruztfuz.supabase.co'
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoZ3d6cWh3b2FtY3ZydXp0ZnV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2MjcwOTMsImV4cCI6MjA3Nzk4NzA5M30.BEr2HpdZ5dWsUzPRMfCCKce0i521KVCz1ijJxplzRhY'
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+const _supabase = createClient(supabaseUrl, supabaseKey)
 
 async function applyMigration() {
   console.log('📋 Reading migration file...')

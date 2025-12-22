@@ -16,9 +16,9 @@ import { logger } from '../utils/logger'
  * @param {string} returnPath - Path to return to after login if needed
  * @returns {{ addToCart: Function, addingToCart: boolean, message: string|null }}
  */
-export const useAddToCart = (returnPath = '/products') => {
+export const useAddToCart = (_returnPath = '/products') => {
   const { user } = useAuth()
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
   const [addingToCart, setAddingToCart] = useState(false)
   const [message, setMessage] = useState(null)
   const [messageType, setMessageType] = useState('success') // 'success' or 'error'
@@ -44,7 +44,7 @@ export const useAddToCart = (returnPath = '/products') => {
 
     const isMenuItem = product?.isMenuItem ?? (product?.category_id !== undefined && product?.is_available !== undefined)
     // Note: menu_items doesn't have stock_quantity, use is_available instead
-    const isAvailable = product?.is_available !== false
+    const _isAvailable = product?.is_available !== false
     // For non-menu items, check if stock_quantity exists (legacy products table)
     const hasFiniteStock = product?.stock_quantity !== null && product?.stock_quantity !== undefined
     const isOutOfStock = isMenuItem 

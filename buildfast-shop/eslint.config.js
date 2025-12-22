@@ -6,8 +6,25 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
   { ignores: ['dist'] },
+  // Node.js configuration for scripts and config files
+  {
+    files: ['scripts/**/*.js', '*.config.js', 'tailwind.config.js'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'commonjs',
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
+  },
+  // Browser/React configuration for source files
   {
     files: ['**/*.{js,jsx}'],
+    ignores: ['scripts/**', '*.config.js', 'tailwind.config.js'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -33,6 +50,10 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      'no-unused-vars': ['warn', { 
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
     },
   },
 ]

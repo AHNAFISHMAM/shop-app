@@ -72,7 +72,7 @@ async function runMigration() {
   try {
     // Read the migration file
     const migrationPath = join(__dirname, '..', 'supabase', 'migrations', '060_star_cafe_official_menu_import.sql');
-    const sql = readFileSync(migrationPath, 'utf-8');
+    const _sql = readFileSync(migrationPath, 'utf-8');
 
     // Execute via RPC (note: this requires the SQL to be run via Supabase admin)
     console.log('⚠️  Note: This script can only verify the current state.');

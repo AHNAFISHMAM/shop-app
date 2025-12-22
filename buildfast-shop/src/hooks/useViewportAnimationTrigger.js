@@ -43,7 +43,7 @@ export function useViewportAnimationTrigger() {
         }
       })
       
-      pendingUpdates.forEach((el, index) => {
+      pendingUpdates.forEach((el, _index) => {
         if (el.dataset.animateActive === 'true') return; // Already active
         
         const rect = el.getBoundingClientRect()
