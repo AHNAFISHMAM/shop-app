@@ -139,7 +139,13 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
     try {
       if (settings) {
         const loadedConfig = dbFormatToConfig(settings, section);
-        setConfig(loadedConfig);
+        // Normalize config to match component's required fields
+        setConfig({
+          type: loadedConfig.type,
+          color: loadedConfig.color || '',
+          gradient: loadedConfig.gradient || '',
+          imageUrl: loadedConfig.imageUrl || ''
+        });
         setActiveTab(loadedConfig.type === 'none' ? 'solid' : loadedConfig.type);
       }
     } catch (error) {
@@ -220,7 +226,7 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
     }
   }, [section, handleImageUrlChange]);
 
-  const handlePresetSelect = useCallback((preset: Preset) => {
+  const handlePresetSelect = useCallback((preset: Partial<Preset>) => {
     if (preset.color) {
       setConfig({ type: 'solid', color: preset.color, gradient: '', imageUrl: '' });
       setActiveTab('solid');
@@ -248,7 +254,8 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
     // Validate config
     const validation = validateBackgroundConfig(config);
     if (!validation.isValid && config.type !== 'none') {
-      toast.error(validation.errors[0]);
+      const errorMessage = validation.errors[0] || 'Invalid background configuration';
+      toast.error(errorMessage);
       return;
     }
 
@@ -414,7 +421,7 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
                 {solidColorPresets.map((preset) => (
                   <button
                     key={preset.id}
-                    onClick={() => handleColorChange(preset.color)}
+                    onClick={() => preset.color && handleColorChange(preset.color)}
                     className={`aspect-square min-h-[44px] rounded-xl border-2 transition-all duration-200 ${
                       config.color === preset.color
                         ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30 shadow-md'
@@ -481,7 +488,7 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
                 {gradientPresets.map((preset) => (
                   <button
                     key={preset.id}
-                    onClick={() => handleGradientChange(preset.gradient)}
+                    onClick={() => preset.gradient && handleGradientChange(preset.gradient)}
                     className={`h-28 min-h-[44px] rounded-xl border-2 transition-all duration-200 ${
                       config.gradient === preset.gradient
                         ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30 shadow-md'
@@ -597,7 +604,7 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
                   {restaurantInteriorImages.map((preset) => (
                     <button
                       key={preset.id}
-                      onClick={() => handleImageUrlChange(preset.url)}
+                      onClick={() => preset.url && handleImageUrlChange(preset.url)}
                       className={`h-32 min-h-[44px] rounded-xl border-2 transition-all duration-200 ${
                         config.imageUrl === preset.url ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30' : 'border-[var(--border-default)]'
                       } ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95'} hover:shadow-lg overflow-hidden relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2`}
@@ -646,7 +653,7 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
                   {tableSettingsImages.map((preset) => (
                     <button
                       key={preset.id}
-                      onClick={() => handleImageUrlChange(preset.url)}
+                      onClick={() => preset.url && handleImageUrlChange(preset.url)}
                       className={`h-32 min-h-[44px] rounded-xl border-2 transition-all duration-200 ${
                         config.imageUrl === preset.url ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30' : 'border-[var(--border-default)]'
                       } ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95'} hover:shadow-lg overflow-hidden relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2`}
@@ -695,7 +702,7 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
                   {subtleTextureImages.map((preset) => (
                     <button
                       key={preset.id}
-                      onClick={() => handleImageUrlChange(preset.url)}
+                      onClick={() => preset.url && handleImageUrlChange(preset.url)}
                       className={`h-32 min-h-[44px] rounded-xl border-2 transition-all duration-200 ${
                         config.imageUrl === preset.url ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30' : 'border-[var(--border-default)]'
                       } ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95'} hover:shadow-lg overflow-hidden relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2`}
@@ -744,7 +751,7 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
                   {additionalImages.map((preset) => (
                     <button
                       key={preset.id}
-                      onClick={() => handleImageUrlChange(preset.url)}
+                      onClick={() => preset.url && handleImageUrlChange(preset.url)}
                       className={`h-32 min-h-[44px] rounded-xl border-2 transition-all duration-200 ${
                         config.imageUrl === preset.url ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/30' : 'border-[var(--border-default)]'
                       } ${prefersReducedMotion ? '' : 'hover:scale-105 active:scale-95'} hover:shadow-lg overflow-hidden relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2`}

@@ -106,7 +106,7 @@ function AppContent(): JSX.Element {
     const boxShadowAlpha = Number((0.08 + normalizedBrightness * 0.22).toFixed(3));
 
     const html = document.documentElement;
-    const managed = new Map<Element, { update: () => void; reveal: () => void; dispose: () => void }>();
+    const managed = new Map<Element | Document | Window, { update: () => void; reveal: () => void; dispose: () => void }>();
     const SELECTOR = '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]';
 
     const createThumbElement = (): HTMLDivElement => {
@@ -169,12 +169,12 @@ function AppContent(): JSX.Element {
       };
     };
 
-    const ensureManager = (el: Element) => {
+    const ensureManager = (el: Element | Document | Window) => {
       if (managed.has(el)) {
         return managed.get(el)!;
       }
 
-      const isDocumentTarget = el === html || el === document || el === window;
+      const isDocumentTarget = el === html || el === document || (typeof window !== 'undefined' && el === window);
       const scrollElement = isDocumentTarget ? window : el as HTMLElement;
       const thumb = createThumbElement();
 
@@ -278,10 +278,10 @@ function AppContent(): JSX.Element {
       window.addEventListener('resize', handleResize);
       window.addEventListener('scroll', handleViewportScroll, true);
 
-      const resizeObserver = !isDocumentTarget
+      const resizeObserver = !isDocumentTarget && el instanceof Element
         ? new ResizeObserver(() => requestUpdate())
         : null;
-      if (resizeObserver) {
+      if (resizeObserver && el instanceof Element) {
         resizeObserver.observe(el);
       }
 
@@ -314,7 +314,7 @@ function AppContent(): JSX.Element {
     };
 
     const scan = () => {
-      const elements = new Set([html, ...document.querySelectorAll(SELECTOR)]);
+      const elements = new Set<Element | Document | Window>([html, ...document.querySelectorAll(SELECTOR)]);
       elements.forEach((el) => ensureManager(el));
       managed.forEach((manager, el) => {
         if (!elements.has(el)) {
