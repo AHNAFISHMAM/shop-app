@@ -20,9 +20,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
-          cache-dependency-path: './buildfast-shop/package-lock.json'
+          cache-dependency-path: 'buildfast-shop/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
@@ -40,7 +40,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        node-version: [20]
+        node-version: [24]
     defaults:
       run:
         working-directory: ./buildfast-shop
@@ -52,7 +52,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: './buildfast-shop/package-lock.json'
+          cache-dependency-path: 'buildfast-shop/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
@@ -81,9 +81,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
-          cache-dependency-path: './buildfast-shop/package-lock.json'
+          cache-dependency-path: 'buildfast-shop/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
@@ -145,9 +145,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
-          cache-dependency-path: './buildfast-shop/package-lock.json'
+          cache-dependency-path: 'buildfast-shop/package-lock.json'
       
       - name: Install dependencies
         run: npm ci
