@@ -67,6 +67,7 @@ function AdminSettings() {
       };
     } catch (err) {
       logger.error('Error setting up theme observer:', err);
+      return undefined;
     }
   }, []);
 

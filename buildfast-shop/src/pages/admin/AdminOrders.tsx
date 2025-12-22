@@ -13,14 +13,35 @@ import { TableSkeleton } from '../../components/skeletons/TableSkeleton'
 import CustomDropdown from '../../components/ui/CustomDropdown'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
 
+interface ShippingAddress {
+  fullName?: string;
+  streetAddress?: string;
+  apartment?: string;
+  city?: string;
+  stateProvince?: string;
+  postalCode?: string;
+  country?: string;
+  phoneNumber?: string;
+}
+
 interface Order {
   id: string;
   created_at: string;
   status: string;
   order_total: string | number;
-  shipping_address?: string;
+  shipping_address?: ShippingAddress | string;
   is_guest?: boolean;
   customer_id?: string;
+  customer_name?: string;
+  customer_email?: string;
+  order_items?: Array<{
+    products?: {
+      name?: string;
+      images?: string[];
+    };
+    quantity?: number;
+    price?: number | string;
+  }>;
   [key: string]: unknown;
 }
 
@@ -68,7 +89,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
     if (!showDatePicker) return
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+      if (datePickerRef.current && event.target && !datePickerRef.current.contains(event.target as Node)) {
         setShowDatePicker(false)
       }
     }
@@ -91,7 +112,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       setError('')
 
       // Build filters for service layer
-      const filters = {}
+      const filters: Record<string, any> = {}
       if (statusFilter !== 'all') {
         filters.status = statusFilter
       }
@@ -197,7 +218,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
     }
   }, [fetchOrders])
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
         return 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30'
@@ -259,7 +280,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       toast.success('Order cancelled successfully')
     } catch (err) {
       logger.error('Error cancelling order:', err)
-      toast.error('Failed to cancel order: ' + err.message)
+      toast.error('Failed to cancel order: ' + (err instanceof Error ? err.message : String(err)))
     }
   }
 
@@ -279,10 +300,11 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
     const matchesEmail = (order.customer_email || '').toLowerCase().includes(query)
 
     // Search shipping address name as fallback
-    const matchesShippingName = (order.shipping_address?.fullName || '').toLowerCase().includes(query)
+    const shippingAddr = typeof order.shipping_address === 'object' ? order.shipping_address : null
+    const matchesShippingName = (shippingAddr?.fullName || '').toLowerCase().includes(query)
 
     // Search by phone number (strip formatting for better matching)
-    const phoneNumber = order.shipping_address?.phoneNumber || ''
+    const phoneNumber = shippingAddr?.phoneNumber || ''
     const normalizedPhone = phoneNumber.replace(/[\s\-().]/g, '') // Remove spaces, dashes, parentheses, dots
     const normalizedQuery = query.replace(/[\s\-().]/g, '')
     const matchesPhone = normalizedPhone.toLowerCase().includes(normalizedQuery) || phoneNumber.toLowerCase().includes(query)
@@ -301,11 +323,12 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
     const matchesTotal = orderTotal.includes(query)
 
     // Search by shipping address components
-    const matchesCity = (order.shipping_address?.city || '').toLowerCase().includes(query)
-    const matchesState = (order.shipping_address?.stateProvince || '').toLowerCase().includes(query)
-    const matchesPostal = (order.shipping_address?.postalCode || '').toLowerCase().includes(query)
-    const matchesCountry = (order.shipping_address?.country || '').toLowerCase().includes(query)
-    const matchesStreet = (order.shipping_address?.streetAddress || '').toLowerCase().includes(query)
+    const shippingAddr = typeof order.shipping_address === 'object' ? order.shipping_address : null
+    const matchesCity = (shippingAddr?.city || '').toLowerCase().includes(query)
+    const matchesState = (shippingAddr?.stateProvince || '').toLowerCase().includes(query)
+    const matchesPostal = (shippingAddr?.postalCode || '').toLowerCase().includes(query)
+    const matchesCountry = (shippingAddr?.country || '').toLowerCase().includes(query)
+    const matchesStreet = (shippingAddr?.streetAddress || '').toLowerCase().includes(query)
 
     return matchesId || matchesName || matchesEmail || matchesShippingName || matchesPhone ||
            matchesProduct || matchesStatus || matchesTotal || matchesCity || matchesState ||
@@ -353,7 +376,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
               return (
                 <button
                   key={key}
-                  onClick={() => setFilter(key)}
+                  onClick={() => setFilter(key as 'all' | 'guest' | 'user')}
                   className={`group relative overflow-hidden rounded-lg min-h-[44px] px-4 py-3 text-sm sm:text-base font-medium transition-all ${
                     isActive
                       ? 'bg-[var(--accent)] text-black shadow-[0_15px_30px_-15px_rgba(197,157,95,0.65)]'
@@ -476,7 +499,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                               if (key === 'custom') {
                                 setDateFilter('custom')
                               } else {
-                                setDateFilter(key)
+                                setDateFilter(key as 'all' | 'today' | '7days' | '30days' | 'custom')
                                 setStartDate('')
                                 setEndDate('')
                                 setShowDatePicker(false)
@@ -709,10 +732,10 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                       </td>
                       <td className="px-2 sm:px-3 py-2.5 sm:py-3">
                         <div className="text-[10px] sm:text-xs font-medium text-[var(--text-main)] truncate max-w-[120px] sm:max-w-none">
-                          {order.customer_name || 'N/A'}
+                          {String(order.customer_name || 'N/A')}
                         </div>
                         <div className="mt-0.5 text-[9px] sm:text-[10px] text-muted truncate max-w-[120px] sm:max-w-none">
-                          {order.customer_email}
+                          {String(order.customer_email || '')}
                         </div>
                         {/* Show type on mobile when hidden */}
                         <div className="mt-1 sm:hidden">
@@ -886,13 +909,13 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                   <div>
                     <h3 className="mb-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-muted">Order Status</h3>
                     <span className={`inline-flex rounded-full px-4 py-3 min-h-[44px] text-sm sm:text-base font-semibold ${getStatusColor(selectedOrder.status)}`}>
-                      {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                      {String(selectedOrder.status).charAt(0).toUpperCase() + String(selectedOrder.status).slice(1)}
                     </span>
                   </div>
                   <div>
                     <h3 className="mb-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-muted">Order Date</h3>
                     <p className="text-sm sm:text-base text-[var(--text-main)]">
-                      {new Date(selectedOrder.created_at).toLocaleDateString('en-US', {
+                      {new Date(String(selectedOrder.created_at)).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -931,21 +954,21 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                 {/* Shipping Address */}
                 <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-5 sm:p-6 md:p-8">
                   <h3 className="mb-4 sm:mb-5 md:mb-6 text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">Shipping Address</h3>
-                  {selectedOrder.shipping_address && (
+                  {selectedOrder.shipping_address && typeof selectedOrder.shipping_address === 'object' && (
                     <div className="space-y-2 sm:space-y-3 text-[var(--text-main)]">
-                      <p className="font-medium text-sm sm:text-base">{selectedOrder.shipping_address.fullName}</p>
-                      <p className="text-sm sm:text-base text-muted">{selectedOrder.shipping_address.streetAddress}</p>
+                      <p className="font-medium text-sm sm:text-base">{selectedOrder.shipping_address.fullName || ''}</p>
+                      <p className="text-sm sm:text-base text-muted">{selectedOrder.shipping_address.streetAddress || ''}</p>
                       {selectedOrder.shipping_address.apartment && (
                         <p className="text-sm sm:text-base text-muted">{selectedOrder.shipping_address.apartment}</p>
                       )}
                       <p className="text-sm sm:text-base text-muted">
-                        {selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.stateProvince} {selectedOrder.shipping_address.postalCode}
+                        {selectedOrder.shipping_address.city || ''}, {selectedOrder.shipping_address.stateProvince || ''} {selectedOrder.shipping_address.postalCode || ''}
                       </p>
-                      <p className="text-sm sm:text-base text-muted">{selectedOrder.shipping_address.country}</p>
+                      <p className="text-sm sm:text-base text-muted">{selectedOrder.shipping_address.country || ''}</p>
                       <p className="pt-2 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted">
                         Phone
                       </p>
-                      <p className="text-sm sm:text-base text-[var(--text-main)]">{selectedOrder.shipping_address.phoneNumber}</p>
+                      <p className="text-sm sm:text-base text-[var(--text-main)]">{selectedOrder.shipping_address.phoneNumber || ''}</p>
                     </div>
                   )}
                 </div>
@@ -954,7 +977,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                 <div>
                   <h3 className="mb-4 sm:mb-5 md:mb-6 text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)]">Order Items</h3>
                   <div className="divide-y divide-white/10 overflow-hidden rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] text-[var(--text-main)]">
-                    {selectedOrder.order_items?.map((item, index) => (
+                    {(selectedOrder.order_items || []).map((item: any, index: number) => (
                       <div key={index} className="flex items-center gap-4 sm:gap-5 md:gap-6 p-5 sm:p-6 md:p-8">
                         {/* Product Image */}
                         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-theme bg-[rgba(255,255,255,0.03)]">

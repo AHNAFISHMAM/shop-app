@@ -1163,10 +1163,8 @@ function AdminReservations() {
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
               {/* Left Side - Calendar */}
               <div className="flex-1 lg:flex-[0_0_50%] p-4 sm:p-6 overflow-y-auto hide-scrollbar border-r-0 lg:border-r border-theme flex items-center justify-center">
-                {/* @ts-expect-error - Calendar component props type mismatch with react-aria-components */}
                 <Calendar
-                  value={selectedCalendarDate}
-                  onChange={setSelectedCalendarDate}
+                  {...({ value: selectedCalendarDate, onChange: setSelectedCalendarDate } as any)}
                 />
               </div>
 
