@@ -3,13 +3,13 @@
  */
 interface SectionTitleProps {
   /** Small text above the title (eyebrow text) */
-  eyebrow?: string;
+  eyebrow?: string
   /** Main title text */
-  title: string;
+  title: string
   /** Subtitle text below the title */
-  subtitle?: string;
+  subtitle?: string
   /** Text alignment */
-  align?: 'left' | 'center' | 'right';
+  align?: 'left' | 'center' | 'right'
 }
 
 /**
@@ -25,13 +25,12 @@ interface SectionTitleProps {
  * - Animation support via data attributes
  */
 const SectionTitle = ({ eyebrow, title, subtitle, align = 'left' }: SectionTitleProps) => {
-
   const alignment =
     align === 'center'
       ? 'items-center text-center'
       : align === 'right'
         ? 'items-end text-right'
-        : 'items-start text-left';
+        : 'items-start text-left'
 
   return (
     <div
@@ -42,11 +41,17 @@ const SectionTitle = ({ eyebrow, title, subtitle, align = 'left' }: SectionTitle
       aria-level={2}
     >
       {eyebrow && (
-        <div className="text-sm font-semibold tracking-[0.32em] uppercase text-[var(--accent)]" aria-label={eyebrow}>
+        <div
+          className="text-sm font-semibold tracking-[0.32em] uppercase text-[var(--accent)]"
+          aria-label={eyebrow}
+        >
           {eyebrow}
         </div>
       )}
-      <h2 className="text-4xl sm:text-5xl font-bold leading-tight" style={{ color: 'var(--text-main)' }}>
+      <h2
+        className="text-4xl sm:text-5xl font-bold leading-tight"
+        style={{ color: 'var(--text-main)' }}
+      >
         {title}
       </h2>
       {subtitle && (
@@ -55,8 +60,7 @@ const SectionTitle = ({ eyebrow, title, subtitle, align = 'left' }: SectionTitle
         </p>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default SectionTitle;
-
+export default SectionTitle

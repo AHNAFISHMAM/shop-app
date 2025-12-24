@@ -1,0 +1,9 @@
+{
+  "agentId": 4,
+  "task": "TS7006 - Implicit Any",
+  "description": "Fix all TS7006 errors (implicit any)",
+  "strategy": "Add explicit type annotations, avoid any type",
+  "worktreePath": "../buildfast-shop-agent-4",
+  "branchName": "agent-4-worktree",
+  "createdAt": "2025-12-23T06:32:27.312Z"
+}

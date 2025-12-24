@@ -1,0 +1,24 @@
+﻿
+> buildfast-shop@0.0.0 typecheck:by-type
+> node scripts/errors-by-type.js
+
+
+≡ƒÄ» ERRORS BY TYPE (sorted by fix priority):
+
+
+TS6305: Unknown (0 errors)
+  Strategy: Review manually
+  Sample files:
+
+TS6310: Unknown (3 errors)
+  Strategy: Review manually
+  Sample files:
+    - tsconfig.json:63
+    - tsconfig.json:64
+    - tsconfig.json:65
+
+
+≡ƒôï RECOMMENDED FIX ORDER:
+
+1. Fix TS6305 (0 errors) - Review manually
+2. Fix TS6310 (3 errors) - Review manually

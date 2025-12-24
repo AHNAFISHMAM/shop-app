@@ -1,77 +1,96 @@
-import { useEffect, useRef, ReactNode } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { useStoreSettings } from '../contexts/StoreSettingsContext';
-import { getBackgroundStyle } from '../utils/backgroundUtils';
-import QuickActionsBar from '../components/QuickActionsBar';
-import ScrollProgress from '../components/ScrollProgress';
+import { useEffect, useRef, ReactNode } from 'react'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+import { useStoreSettings } from '../contexts/StoreSettingsContext'
+import { getBackgroundStyle, type BackgroundSettings } from '../utils/backgroundUtils'
+import QuickActionsBar from '../components/QuickActionsBar'
+import ScrollProgress from '../components/ScrollProgress'
 
 interface MainLayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 const MainLayout = ({ children }: MainLayoutProps): JSX.Element => {
-  const { settings } = useStoreSettings();
-  const mainContentRef = useRef<HTMLElement>(null);
+  const { settings } = useStoreSettings()
+  const mainContentRef = useRef<HTMLElement>(null)
 
   // Prevent scroll events from bubbling to window
   useEffect(() => {
-    const mainContent = mainContentRef.current;
-    if (!mainContent) return;
+    const mainContent = mainContentRef.current
+    if (!mainContent) return
 
-    const handleWheel = (e: WheelEvent) => {
+    const handleWheel = (e: Event) => {
+      const wheelEvent = e as WheelEvent
       // Only stop propagation if we're not at the scroll boundaries
-      const target = e.currentTarget as HTMLElement;
-      const { scrollTop, scrollHeight, clientHeight } = target;
-      const isScrollable = scrollHeight > clientHeight;
-      
+      const target = wheelEvent.currentTarget as HTMLElement
+      if (!target) return
+      const { scrollTop, scrollHeight, clientHeight } = target
+      const isScrollable = scrollHeight > clientHeight
+
       if (isScrollable) {
-        const isAtTop = scrollTop === 0;
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-        
+        const isAtTop = scrollTop === 0
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+
         // If we're at boundaries and trying to scroll further, prevent bubbling
-        if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
-          e.stopPropagation();
+        if ((isAtTop && wheelEvent.deltaY < 0) || (isAtBottom && wheelEvent.deltaY > 0)) {
+          wheelEvent.stopPropagation()
         }
       }
-    };
+    }
 
-    const handleTouchMove = (e: TouchEvent) => {
-      e.stopPropagation();
-    };
+    const handleTouchMove = (e: Event) => {
+      const touchEvent = e as TouchEvent
+      touchEvent.stopPropagation()
+    }
 
     // Add listeners to all scrollable children
-    const allElements = mainContent.querySelectorAll('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]');
-    
+    const allElements = mainContent.querySelectorAll(
+      '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
+    )
+
     // Filter to only actually scrollable elements
     const scrollableElements = Array.from(allElements).filter(el => {
-      const style = window.getComputedStyle(el);
-      const isScrollable = el.scrollHeight > el.clientHeight &&
-                          (style.overflow === 'auto' || 
-                           style.overflow === 'scroll' || 
-                           style.overflowY === 'auto' || 
-                           style.overflowY === 'scroll');
-      return isScrollable;
-    });
-    
+      const style = window.getComputedStyle(el)
+      const isScrollable =
+        el.scrollHeight > el.clientHeight &&
+        (style.overflow === 'auto' ||
+          style.overflow === 'scroll' ||
+          style.overflowY === 'auto' ||
+          style.overflowY === 'scroll')
+      return isScrollable
+    })
+
     scrollableElements.forEach(el => {
-      el.addEventListener('wheel', handleWheel, { passive: false });
-      el.addEventListener('touchmove', handleTouchMove, { passive: false });
-    });
+      el.addEventListener('wheel', handleWheel, { passive: false })
+      el.addEventListener('touchmove', handleTouchMove, { passive: false })
+    })
 
     return () => {
       scrollableElements.forEach(el => {
-        el.removeEventListener('wheel', handleWheel);
-        el.removeEventListener('touchmove', handleTouchMove);
-      });
-    };
-  }, []);
+        el.removeEventListener('wheel', handleWheel)
+        el.removeEventListener('touchmove', handleTouchMove)
+      })
+    }
+  }, [])
 
-  const backgroundStyle = settings ? getBackgroundStyle(settings, 'page') : {};
+  // Convert StoreSettings to BackgroundSettings format
+  const backgroundSettings: BackgroundSettings | null = settings
+    ? {
+        page_background_type: (settings as unknown as Record<string, unknown>).page_background_type as string | null,
+        page_background_color: (settings as unknown as Record<string, unknown>).page_background_color as string | null,
+        page_background_gradient: (settings as unknown as Record<string, unknown>).page_background_gradient as string | null,
+        page_background_image_url: (settings as unknown as Record<string, unknown>).page_background_image_url as string | null,
+      }
+    : null
+
+  const backgroundStyle = backgroundSettings
+    ? getBackgroundStyle(backgroundSettings, 'page')
+    : {}
   // Only apply inline style if it's not using theme variable
-  const shouldApplyStyle = backgroundStyle.background && 
-    backgroundStyle.background !== 'var(--bg-main)' && 
-    backgroundStyle.background !== 'transparent';
+  const shouldApplyStyle =
+    backgroundStyle.background &&
+    backgroundStyle.background !== 'var(--bg-main)' &&
+    backgroundStyle.background !== 'transparent'
 
   return (
     <div
@@ -85,62 +104,68 @@ const MainLayout = ({ children }: MainLayoutProps): JSX.Element => {
       <ScrollProgress />
 
       <Navbar />
-      <main 
+      <main
         ref={mainContentRef}
-        id="main-content" 
-        className="flex-1 overflow-visible" 
+        id="main-content"
+        className="flex-1 overflow-visible"
         style={{
           position: 'relative', // Ensure proper positioning context
           transform: 'none !important', // Force no transforms - critical for sticky sidebar
           willChange: 'auto !important', // Force no will-change - critical for sticky sidebar
           overflow: 'visible',
           overflowX: 'visible',
-          overflowY: 'visible'
+          overflowY: 'visible',
         }}
-        role="main" 
+        role="main"
         aria-label="Main content"
-        onWheel={(e) => {
+        onWheel={e => {
           // Prevent scroll bubbling for scrollable children
-          const target = e.target as HTMLElement;
-          const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]');
+          const target = e.target as HTMLElement
+          const scrollableParent = target.closest(
+            '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
+          )
           if (scrollableParent) {
             // Check if element is actually scrollable (not just overflow-hidden)
-            const style = window.getComputedStyle(scrollableParent);
-            const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-                                 (style.overflow === 'auto' || 
-                                  style.overflow === 'scroll' || 
-                                  style.overflowY === 'auto' || 
-                                  style.overflowY === 'scroll');
+            const style = window.getComputedStyle(scrollableParent)
+            const isScrollable =
+              scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+              (style.overflow === 'auto' ||
+                style.overflow === 'scroll' ||
+                style.overflowY === 'auto' ||
+                style.overflowY === 'scroll')
             if (isScrollable) {
-              e.stopPropagation();
+              e.stopPropagation()
             }
           }
         }}
-        onTouchMove={(e) => {
-          const target = e.target as HTMLElement;
-          const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]');
+        onTouchMove={e => {
+          const target = e.target as HTMLElement
+          const scrollableParent = target.closest(
+            '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
+          )
           if (scrollableParent) {
             // Check if element is actually scrollable (not just overflow-hidden)
-            const style = window.getComputedStyle(scrollableParent);
-            const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-                                 (style.overflow === 'auto' || 
-                                  style.overflow === 'scroll' || 
-                                  style.overflowY === 'auto' || 
-                                  style.overflowY === 'scroll');
+            const style = window.getComputedStyle(scrollableParent)
+            const isScrollable =
+              scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+              (style.overflow === 'auto' ||
+                style.overflow === 'scroll' ||
+                style.overflowY === 'auto' ||
+                style.overflowY === 'scroll')
             if (isScrollable) {
-              e.stopPropagation();
+              e.stopPropagation()
             }
           }
         }}
       >
         {/* Removed .app-container wrapper to allow sticky sidebars to work properly */}
         {/* Pages that need .app-container should add it themselves */}
-        <div 
+        <div
           className="pt-1 pb-14 md:pt-3 md:pb-16 overflow-visible"
           style={{
             overflow: 'visible',
             overflowX: 'visible',
-            overflowY: 'visible'
+            overflowY: 'visible',
           }}
         >
           {children}
@@ -151,8 +176,7 @@ const MainLayout = ({ children }: MainLayoutProps): JSX.Element => {
       </div>
       <Footer />
     </div>
-  );
-};
+  )
+}
 
-export default MainLayout;
-
+export default MainLayout

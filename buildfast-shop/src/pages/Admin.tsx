@@ -6,7 +6,7 @@ import StatCard from '../components/admin/StatCard'
 import RecentActivity from '../components/admin/RecentActivity'
 import LowStockAlerts from '../components/admin/LowStockAlerts'
 import { useViewportAnimationTrigger } from '../hooks/useViewportAnimationTrigger'
-import { useTheme } from '../shared/hooks/use-theme'
+import { useTheme as _useTheme } from '../shared/hooks/use-theme'
 import { pageFade } from '../components/animations/menuAnimations'
 import { logger } from '../utils/logger'
 
@@ -40,12 +40,12 @@ interface DashboardStats {
  * - Low stock alerts
  * - Sophisticated micro-interactions
  * - Entrance animations with stagger
- * 
+ *
  * @component
  */
 const Admin = memo((): JSX.Element => {
   const { user } = useAuth()
-  const isLightTheme = useTheme()
+  // const isLightTheme = useTheme()
   const containerRef = useViewportAnimationTrigger()
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
 
@@ -62,7 +62,7 @@ const Admin = memo((): JSX.Element => {
     confirmedReservations: 0,
     totalRevenue: 0,
     revenueToday: 0,
-    averageOrderValue: 0
+    averageOrderValue: 0,
   })
 
   const [loading, setLoading] = useState<boolean>(true)
@@ -70,12 +70,12 @@ const Admin = memo((): JSX.Element => {
   // Detect reduced motion preference
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
-    
+
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const handleChange = (e: MediaQueryListEvent | { matches: boolean }): void => {
       setPrefersReducedMotion('matches' in e ? e.matches : false)
     }
-    
+
     if (mediaQuery.addEventListener) {
       setPrefersReducedMotion(mediaQuery.matches)
       mediaQuery.addEventListener('change', handleChange)
@@ -107,9 +107,9 @@ const Admin = memo((): JSX.Element => {
         supabase
           .from('menu_items')
           .select('*', { count: 'exact', head: true })
-          .eq('is_available', false)
+          .eq('is_available', false),
       ])
-      
+
       if (availableResult.count !== null) {
         setStats(prev => ({ ...prev, menuItems: availableResult.count || 0 }))
       }
@@ -139,14 +139,16 @@ const Admin = memo((): JSX.Element => {
         { count: pendingReservationsCount },
         { count: confirmedReservationsCount },
         { data: revenueData },
-        { data: revenueTodayData }
+        { data: revenueTodayData },
       ] = await Promise.all([
         // Total menu items (available only)
-        supabase.from('menu_items')
+        supabase
+          .from('menu_items')
           .select('*', { count: 'exact', head: true })
           .eq('is_available', true),
         // Unavailable menu items
-        supabase.from('menu_items')
+        supabase
+          .from('menu_items')
           .select('*', { count: 'exact', head: true })
           .eq('is_available', false),
 
@@ -154,14 +156,13 @@ const Admin = memo((): JSX.Element => {
         supabase.from('orders').select('*', { count: 'exact', head: true }),
 
         // Today's orders
-        supabase.from('orders')
+        supabase
+          .from('orders')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', `${today}T00:00:00`),
 
         // Pending orders
-        supabase.from('orders')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
 
         // Total customers
         supabase.from('customers').select('*', { count: 'exact', head: true }),
@@ -170,42 +171,47 @@ const Admin = memo((): JSX.Element => {
         supabase.from('table_reservations').select('*', { count: 'exact', head: true }),
 
         // Pending reservations
-        supabase.from('table_reservations')
+        supabase
+          .from('table_reservations')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending'),
 
         // Confirmed reservations
-        supabase.from('table_reservations')
+        supabase
+          .from('table_reservations')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'confirmed'),
 
         // Calculate total revenue from completed orders
-        supabase.from('orders')
-          .select('order_total')
-          .in('status', ['delivered', 'completed']),
+        supabase.from('orders').select('order_total').in('status', ['delivered', 'completed']),
 
         // Today's revenue
-        supabase.from('orders')
+        supabase
+          .from('orders')
           .select('order_total')
           .in('status', ['delivered', 'completed'])
-          .gte('created_at', `${today}T00:00:00`)
+          .gte('created_at', `${today}T00:00:00`),
       ])
 
       // Calculate total revenue with type safety
-      const totalRevenue = revenueData?.reduce((sum: number, order: { order_total?: string | number }) => {
-        const amount = typeof order.order_total === 'string'
-          ? parseFloat(order.order_total)
-          : order.order_total
-        return sum + (amount || 0)
-      }, 0) || 0
+      const totalRevenue =
+        revenueData?.reduce((sum: number, order: { order_total?: string | number }) => {
+          const amount =
+            typeof order.order_total === 'string'
+              ? parseFloat(order.order_total)
+              : order.order_total
+          return sum + (amount || 0)
+        }, 0) || 0
 
       // Calculate today's revenue
-      const revenueToday = revenueTodayData?.reduce((sum: number, order: { order_total?: string | number }) => {
-        const amount = typeof order.order_total === 'string'
-          ? parseFloat(order.order_total)
-          : order.order_total
-        return sum + (amount || 0)
-      }, 0) || 0
+      const revenueToday =
+        revenueTodayData?.reduce((sum: number, order: { order_total?: string | number }) => {
+          const amount =
+            typeof order.order_total === 'string'
+              ? parseFloat(order.order_total)
+              : order.order_total
+          return sum + (amount || 0)
+        }, 0) || 0
 
       // Calculate average order value
       const averageOrderValue = ordersCount && ordersCount > 0 ? totalRevenue / ordersCount : 0
@@ -223,7 +229,7 @@ const Admin = memo((): JSX.Element => {
         confirmedReservations: confirmedReservationsCount || 0,
         totalRevenue: totalRevenue,
         revenueToday: revenueToday,
-        averageOrderValue: averageOrderValue
+        averageOrderValue: averageOrderValue,
       })
     } catch (err) {
       logger.error('Error fetching stats:', err)
@@ -244,7 +250,7 @@ const Admin = memo((): JSX.Element => {
         {
           event: '*',
           schema: 'public',
-          table: 'menu_items'
+          table: 'menu_items',
         },
         () => {
           fetchMenuItemsCount()
@@ -266,10 +272,10 @@ const Admin = memo((): JSX.Element => {
       ref={containerRef}
       className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)]"
       variants={prefersReducedMotion ? {} : pageFade}
-      initial={prefersReducedMotion ? undefined : "hidden"}
-      animate={prefersReducedMotion ? undefined : "visible"}
-      exit={prefersReducedMotion ? undefined : "exit"}
-      style={{ 
+      initial={prefersReducedMotion ? undefined : 'hidden'}
+      animate={prefersReducedMotion ? undefined : 'visible'}
+      exit={prefersReducedMotion ? undefined : 'exit'}
+      style={{
         pointerEvents: 'auto',
         // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
         paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -277,19 +283,18 @@ const Admin = memo((): JSX.Element => {
         // Ensure no overflow constraints that break positioning
         overflow: 'visible',
         overflowX: 'visible',
-        overflowY: 'visible'
+        overflowY: 'visible',
       }}
       role="main"
       aria-label="Admin dashboard"
     >
       {/* Page Header with Greeting */}
-      <div
-        className="mb-12"
-        data-animate="fade-rise"
-        data-animate-active="false"
-      >
+      <div className="mb-12" data-animate="fade-rise" data-animate-active="false">
         <div className="space-y-2">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight gradient-text" id="admin-dashboard-heading">
+          <h1
+            className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight gradient-text"
+            id="admin-dashboard-heading"
+          >
             {greeting}, {userName}
           </h1>
           <p className="text-sm sm:text-base" style={{ color: 'var(--text-subtitle)' }}>
@@ -320,13 +325,22 @@ const Admin = memo((): JSX.Element => {
         <StatCard
           title="Menu Items"
           value={stats.menuItems}
-          subtitle={stats.unavailableMenuItems > 0 
-            ? `${stats.unavailableMenuItems} unavailable` 
-            : `${stats.menuItems} available`}
-          subtitleColor={stats.unavailableMenuItems > 0 ? 'var(--color-red)' : 'var(--color-emerald)'}
+          subtitle={
+            stats.unavailableMenuItems > 0
+              ? `${stats.unavailableMenuItems} unavailable`
+              : `${stats.menuItems} available`
+          }
+          subtitleColor={
+            stats.unavailableMenuItems > 0 ? 'var(--color-red)' : 'var(--color-emerald)'
+          }
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
             </svg>
           }
           iconColor="text-[var(--accent)]"
@@ -343,14 +357,27 @@ const Admin = memo((): JSX.Element => {
           subtitle={`${stats.ordersPending} pending | ${stats.ordersToday} today`}
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
             </svg>
           }
           iconColor="text-[var(--color-emerald)]"
           iconBg="bg-[var(--color-emerald)]/20"
           link="/admin/orders"
           loading={loading}
-          trend={stats.ordersToday > 0 && stats.orders > 0 ? { value: Math.round((stats.ordersToday / stats.orders) * 100), direction: 'up', label: 'today' } : null}
+          trend={
+            stats.ordersToday > 0 && stats.orders > 0
+              ? {
+                  value: Math.round((stats.ordersToday / stats.orders) * 100),
+                  direction: 'up',
+                  label: 'today',
+                }
+              : undefined
+          }
           animationDelay={100}
         />
 
@@ -361,7 +388,12 @@ const Admin = memo((): JSX.Element => {
           subtitle={`${stats.confirmedReservations} confirmed | ${stats.pendingReservations} pending`}
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
           }
           iconColor="text-[var(--color-blue)]"
@@ -378,7 +410,12 @@ const Admin = memo((): JSX.Element => {
           subtitle={`${stats.customers} registered customers`}
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
             </svg>
           }
           iconColor="text-[var(--color-purple)]"
@@ -404,7 +441,12 @@ const Admin = memo((): JSX.Element => {
           subtitle="All-time revenue"
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           }
           iconColor="text-[var(--accent)]"
@@ -421,14 +463,27 @@ const Admin = memo((): JSX.Element => {
           subtitle={`${stats.ordersToday} orders today`}
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
             </svg>
           }
           iconColor="text-[var(--color-green)]"
           iconBg="bg-[var(--color-green)]/20"
           link="/admin/orders"
           loading={loading}
-          trend={stats.revenueToday > 0 && stats.totalRevenue > 0 ? { value: Math.round((stats.revenueToday / stats.totalRevenue) * 100), direction: 'up', label: 'of total' } : null}
+          trend={
+            stats.revenueToday > 0 && stats.totalRevenue > 0
+              ? {
+                  value: Math.round((stats.revenueToday / stats.totalRevenue) * 100),
+                  direction: 'up',
+                  label: 'of total',
+                }
+              : undefined
+          }
           animationDelay={500}
         />
 
@@ -439,7 +494,12 @@ const Admin = memo((): JSX.Element => {
           subtitle="Per order average"
           icon={
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
             </svg>
           }
           iconColor="text-[var(--color-orange)]"
@@ -466,7 +526,7 @@ const Admin = memo((): JSX.Element => {
           style={{
             backgroundColor: 'var(--bg-card)',
             borderColor: 'var(--border-default)',
-            transitionDelay: '400ms'
+            transitionDelay: '400ms',
           }}
         >
           <div className="flex items-start gap-3 sm:gap-4 md:gap-6 mb-4">
@@ -474,16 +534,30 @@ const Admin = memo((): JSX.Element => {
               className="p-3 rounded-xl sm:rounded-2xl min-h-[44px] min-w-[44px] flex items-center justify-center"
               style={{
                 backgroundColor: 'rgba(var(--accent-rgb), 0.2)',
-                color: 'var(--accent)'
+                color: 'var(--accent)',
               }}
               aria-hidden="true"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-semibold mb-1" style={{ color: 'var(--text-heading)' }}>
+              <h3
+                className="text-sm sm:text-base font-semibold mb-1"
+                style={{ color: 'var(--text-heading)' }}
+              >
                 Dashboard Ready
               </h3>
               <p className="text-sm sm:text-xs" style={{ color: 'var(--text-subtitle)' }}>
@@ -491,13 +565,31 @@ const Admin = memo((): JSX.Element => {
               </p>
             </div>
           </div>
-          <p className="text-sm sm:text-xs leading-relaxed" style={{ color: 'var(--text-body-muted)' }}>
-            Your admin dashboard is live with real-time updates. Use the sidebar to navigate and the quick actions below for common tasks.
+          <p
+            className="text-sm sm:text-xs leading-relaxed"
+            style={{ color: 'var(--text-body-muted)' }}
+          >
+            Your admin dashboard is live with real-time updates. Use the sidebar to navigate and the
+            quick actions below for common tasks.
           </p>
           <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
-            <div className="flex items-center gap-2 text-sm sm:text-xs font-medium" style={{ color: 'var(--status-success-border)' }}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <div
+              className="flex items-center gap-2 text-sm sm:text-xs font-medium"
+              style={{ color: 'var(--status-success-border)' }}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <span>Real-time updates enabled</span>
             </div>
@@ -512,12 +604,16 @@ const Admin = memo((): JSX.Element => {
           style={{
             backgroundColor: 'var(--bg-card)',
             borderColor: 'var(--border-default)',
-            transitionDelay: '500ms'
+            transitionDelay: '500ms',
           }}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-sm sm:text-base font-semibold" style={{ color: 'var(--text-heading)' }} id="recent-activity-heading">
+              <h3
+                className="text-sm sm:text-base font-semibold"
+                style={{ color: 'var(--text-heading)' }}
+                id="recent-activity-heading"
+              >
                 Recent Activity
               </h3>
               <p className="text-sm sm:text-xs mt-1" style={{ color: 'var(--text-body-muted)' }}>
@@ -528,12 +624,23 @@ const Admin = memo((): JSX.Element => {
               className="p-2 rounded-xl sm:rounded-2xl min-h-[44px] min-w-[44px] flex items-center justify-center"
               style={{
                 backgroundColor: 'rgba(var(--accent-rgb), 0.1)',
-                color: 'var(--accent)'
+                color: 'var(--accent)',
               }}
               aria-hidden="true"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
           </div>
@@ -547,4 +654,3 @@ const Admin = memo((): JSX.Element => {
 Admin.displayName = 'Admin'
 
 export default Admin
-

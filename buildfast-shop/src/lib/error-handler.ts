@@ -50,7 +50,7 @@ const ERROR_MAP: Record<string, Omit<ErrorInfo, 'message' | 'code' | 'status'>> 
     userMessage: 'Database table not found. Please contact support.',
     retryable: false,
   },
-  'PGRST116': {
+  PGRST116: {
     userMessage: 'Database relationship not found. Please contact support.',
     retryable: false,
   },
@@ -276,7 +276,9 @@ export async function handleApiError(
 export function createSafeAsync<T extends (...args: any[]) => Promise<any>>(
   asyncFn: T,
   context: string
-): (...args: Parameters<T>) => Promise<
+): (
+  ...args: Parameters<T>
+) => Promise<
   | { success: true; data: Awaited<ReturnType<T>> }
   | { success: false; error: string; code?: string | null; details?: unknown }
 > {
@@ -289,4 +291,3 @@ export function createSafeAsync<T extends (...args: any[]) => Promise<any>>(
     }
   }
 }
-

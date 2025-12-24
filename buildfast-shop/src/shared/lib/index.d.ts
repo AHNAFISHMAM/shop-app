@@ -1,6 +1,3 @@
-/**
- * Type declarations for shared library
- */
 export { BaseService, createSuccessResponse, createErrorResponse } from './base-service';
 export { ApiClient, apiClient, createApiClient } from './api-client';
 export { edgeFunctionClient } from './api-client-edge';
@@ -12,6 +9,6 @@ export {
   longLivedQueryConfig,
   shortLivedQueryConfig,
   realTimeQueryConfig,
-  createOptimisticMutationConfig
+  createOptimisticMutationConfig,
 } from './query-config';
 

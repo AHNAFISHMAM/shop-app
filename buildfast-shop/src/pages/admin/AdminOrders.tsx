@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { m } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { parsePrice } from '../../lib/priceUtils'
-import { getAllOrders, updateOrderStatus as updateOrderStatusService, getOrderById } from '../../lib/orderService'
+import { getAllOrders, updateOrderStatus as updateOrderStatusService } from '../../lib/orderService'
 import toast from 'react-hot-toast'
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger'
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock'
@@ -12,38 +11,9 @@ import { logger } from '../../utils/logger'
 import { TableSkeleton } from '../../components/skeletons/TableSkeleton'
 import CustomDropdown from '../../components/ui/CustomDropdown'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
+import type { Database } from '@/lib/database.types'
 
-interface ShippingAddress {
-  fullName?: string;
-  streetAddress?: string;
-  apartment?: string;
-  city?: string;
-  stateProvince?: string;
-  postalCode?: string;
-  country?: string;
-  phoneNumber?: string;
-}
-
-interface Order {
-  id: string;
-  created_at: string;
-  status: string;
-  order_total: string | number;
-  shipping_address?: ShippingAddress | string;
-  is_guest?: boolean;
-  customer_id?: string;
-  customer_name?: string;
-  customer_email?: string;
-  order_items?: Array<{
-    products?: {
-      name?: string;
-      images?: string[];
-    };
-    quantity?: number;
-    price?: number | string;
-  }>;
-  [key: string]: unknown;
-}
+type Order = Database['public']['Tables']['orders']['Row']
 
 interface AdminOrdersProps {
   fullPage?: boolean;
@@ -57,7 +27,6 @@ interface AdminOrdersProps {
  * @param {boolean} fullPage - If true, renders in full-page mode without admin layout
  */
 function AdminOrders({ fullPage = false }: AdminOrdersProps) {
-  const navigate = useNavigate()
   const containerRef = useViewportAnimationTrigger()
   const datePickerRef = useRef<HTMLDivElement>(null)
   const [orders, setOrders] = useState<Order[]>([])
@@ -150,11 +119,11 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       }
 
       // Apply guest/user filter (client-side filtering)
-      let filteredData = result.data || []
+      let filteredData = (result.data || []) as Order[]
       if (filter === 'guest') {
-        filteredData = filteredData.filter(order => order.is_guest === true)
+        filteredData = filteredData.filter(order => (order as Order).is_guest === true)
       } else if (filter === 'user') {
-        filteredData = filteredData.filter(order => order.is_guest === false)
+        filteredData = filteredData.filter(order => (order as Order).is_guest === false)
       }
 
       // Update orders
@@ -165,12 +134,12 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       }
 
       // Update pagination state
-      const resultCount = (result as any).count || 0
+      const resultCount = 'count' in result ? (result as { count?: number }).count || 0 : 0
       setTotalOrdersCount(resultCount)
       setHasMoreOrders(filteredData.length === ordersPerPage && resultCount > offset + ordersPerPage)
     } catch (err) {
       logger.error('Error fetching orders:', err)
-      setError('Failed to load orders: ' + err.message)
+      setError('Failed to load orders: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setLoading(false)
     }
@@ -233,7 +202,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
     }
   }
 
-  const updateOrderStatus = async (orderId, newStatus) => {
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       // Use service layer for status updates
       const result = await updateOrderStatusService(orderId, newStatus)
@@ -248,16 +217,17 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       fetchOrders()
     } catch (err) {
       logger.error('Error updating order status:', err)
-      toast.error('Failed to update order status: ' + err.message)
+      toast.error('Failed to update order status: ' + (err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err.message : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err)))
     }
   }
 
-  const getTotalItemsCount = (order) => {
-    return order.order_items?.reduce((sum, item) => sum + item.quantity, 0) || 0
+  const getTotalItemsCount = (order: Order) => {
+    return order.order_items?.reduce((sum: number, item) => sum + (item.quantity || 0), 0) || 0
   }
 
-  const openCancelConfirm = (orderId) => {
-    setOrderToCancel(orderId)
+  const openCancelConfirm = (orderId: string) => {
+    const order = orders.find(o => o.id === orderId)
+    setOrderToCancel(order || null)
     setShowCancelConfirm(true)
   }
 
@@ -266,7 +236,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
 
     try {
       // Use service layer for cancellation (just a status update)
-      const result = await updateOrderStatusService(orderToCancel, 'cancelled')
+      const result = await updateOrderStatusService(orderToCancel.id, 'cancelled')
 
       if (!result.success) {
         toast.error(result.error || 'Failed to cancel order')
@@ -280,7 +250,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       toast.success('Order cancelled successfully')
     } catch (err) {
       logger.error('Error cancelling order:', err)
-      toast.error('Failed to cancel order: ' + (err instanceof Error ? err.message : String(err)))
+      toast.error('Failed to cancel order: ' + (err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err instanceof Error ? err.message : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err) : String(err)))
     }
   }
 
@@ -777,7 +747,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                             { value: 'cancelled', label: 'Cancelled' }
                           ]}
                           value={order.status}
-                          onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                          onChange={(e) => updateOrderStatus(order.id, String(e.target.value))}
                           placeholder="Select status"
                           className={`inline-flex rounded-full px-2 py-1.5 min-h-[32px] sm:min-h-[36px] text-[9px] sm:text-[10px] font-semibold capitalize leading-none transition focus:outline-none focus:ring-2 focus:ring-offset-0 ${getStatusColor(
                             order.status

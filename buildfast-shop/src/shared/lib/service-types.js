@@ -1,6 +1,6 @@
 /**
  * Service Types and Interfaces
- * 
+ *
  * Type definitions and interfaces for service layer
  * (JSDoc types for JavaScript - can be converted to TypeScript later)
  */
@@ -58,4 +58,3 @@
  * @property {boolean} refetchOnWindowFocus - Whether to refetch on window focus
  * @property {boolean} refetchOnReconnect - Whether to refetch on reconnect
  */
-

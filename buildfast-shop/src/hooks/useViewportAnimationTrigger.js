@@ -8,8 +8,8 @@ export function useViewportAnimationTrigger() {
   const [container, setContainer] = useState(null)
   const observerRef = useRef(null)
   const rafRef = useRef(null)
-  
-  const containerRef = useCallback((node) => {
+
+  const containerRef = useCallback(node => {
     setContainer(node ?? null)
   }, [])
 
@@ -20,7 +20,7 @@ export function useViewportAnimationTrigger() {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (prefersReducedMotion) {
       // Activate all animations immediately
-      container.querySelectorAll('[data-animate]').forEach((el) => {
+      container.querySelectorAll('[data-animate]').forEach(el => {
         el.dataset.animateActive = 'true'
         el.style.willChange = 'auto'
       })
@@ -33,7 +33,7 @@ export function useViewportAnimationTrigger() {
     const updateElements = () => {
       const elementsArray = Array.from(pendingUpdates)
       const viewportHeight = window.innerHeight
-      
+
       // Find the last visible element
       let lastVisibleIndex = -1
       elementsArray.forEach((el, index) => {
@@ -42,18 +42,20 @@ export function useViewportAnimationTrigger() {
           lastVisibleIndex = index
         }
       })
-      
+
       pendingUpdates.forEach((el, _index) => {
-        if (el.dataset.animateActive === 'true') return; // Already active
-        
+        if (el.dataset.animateActive === 'true') return // Already active
+
         const rect = el.getBoundingClientRect()
         const triggerDistance = 300
-        
+
         // Activate if in viewport, near viewport, or is the next element after last visible
         const inViewport = rect.top < viewportHeight && rect.bottom > 0
-        const willEnterViewport = rect.top < viewportHeight + triggerDistance && rect.bottom > -triggerDistance
-        const isNextElement = lastVisibleIndex >= 0 && elementsArray.indexOf(el) === lastVisibleIndex + 1
-        
+        const willEnterViewport =
+          rect.top < viewportHeight + triggerDistance && rect.bottom > -triggerDistance
+        const isNextElement =
+          lastVisibleIndex >= 0 && elementsArray.indexOf(el) === lastVisibleIndex + 1
+
         if (inViewport || willEnterViewport || isNextElement) {
           el.dataset.animateActive = 'true'
           // Remove will-change after animation completes
@@ -68,8 +70,8 @@ export function useViewportAnimationTrigger() {
       rafRef.current = null
     }
 
-    const handleIntersection = (entries) => {
-      entries.forEach((entry) => {
+    const handleIntersection = entries => {
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
           pendingUpdates.add(entry.target)
           if (!rafRef.current) {
@@ -87,7 +89,7 @@ export function useViewportAnimationTrigger() {
     })
 
     const collect = () => {
-      container.querySelectorAll('[data-animate]').forEach((el) => {
+      container.querySelectorAll('[data-animate]').forEach(el => {
         if (!elements.has(el)) {
           elements.add(el)
           observerRef.current.observe(el)
@@ -114,7 +116,7 @@ export function useViewportAnimationTrigger() {
         observerRef.current.disconnect()
       }
       mutationObserver.disconnect()
-      elements.forEach((el) => {
+      elements.forEach(el => {
         el.style.willChange = 'auto'
       })
     }
@@ -122,5 +124,3 @@ export function useViewportAnimationTrigger() {
 
   return containerRef
 }
-
-

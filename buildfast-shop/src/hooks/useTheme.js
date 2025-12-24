@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 /**
  * Custom hook to detect current theme
@@ -6,28 +6,27 @@ import { useState, useEffect } from 'react';
  */
 export function useTheme() {
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
-  return isLightTheme;
+  return isLightTheme
 }
-

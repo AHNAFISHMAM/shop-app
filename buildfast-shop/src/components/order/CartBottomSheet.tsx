@@ -1,68 +1,58 @@
-import { useCallback, useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { m, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
-import { logger } from '../../utils/logger';
-import { saveItemForLater, saveCartItemNote, saveSelectedReward } from '../../lib/cartItemMetadata';
-import { fadeSlideUp } from '../animations/menuAnimations';
-import { resolveLoyaltyState } from '../../lib/loyaltyUtils';
-import { useStoreSettings } from '../../contexts/StoreSettingsContext';
-import SwipeableCartItem from './SwipeableCartItem';
-import EmptyCartState from './EmptyCartState';
-import CartTotals from './CartTotals';
-import LoyaltyCard from './LoyaltyCard';
-import CartSkeleton from './CartSkeleton';
-
-/**
- * Cart item interface
- */
-interface CartItem {
-  id: string;
-  product_id?: string;
-  menu_item_id?: string;
-  quantity: number;
-  dishes?: {
-    name: string;
-    price: number | string;
-  };
-  menu_items?: {
-    name: string;
-    price: number | string;
-  };
-}
+import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { m, AnimatePresence } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { logger } from '../../utils/logger'
+import { saveItemForLater, saveCartItemNote, saveSelectedReward } from '../../lib/cartItemMetadata'
+import { fadeSlideUp } from '../animations/menuAnimations'
+import { resolveLoyaltyState } from '../../lib/loyaltyUtils'
+import { useStoreSettings } from '../../contexts/StoreSettingsContext'
+import type { CartItem, GetImageUrlFunction } from '../../types/cart'
+import SwipeableCartItem from './SwipeableCartItem'
+import EmptyCartState from './EmptyCartState'
+import CartTotals from './CartTotals'
+import LoyaltyCard from './LoyaltyCard'
+import CartSkeleton from './CartSkeleton'
 
 /**
  * Loyalty reward interface
+ * Compatible with Reward from loyaltyUtils
  */
 interface LoyaltyReward {
-  id: string;
-  label: string;
-  cost: number;
+  id: string
+  label: string
+  cost: number
+  [key: string]: unknown
+}
+
+// Type guard to ensure Reward is compatible with LoyaltyReward
+function toLoyaltyReward(reward: { id: string; label: string; cost: number }): LoyaltyReward {
+  return { ...reward, [Symbol.for('__loyalty_reward')]: true }
 }
 
 /**
  * Loyalty state interface
  */
 interface LoyaltyState {
-  tier?: string;
-  currentPoints?: number;
-  nextTierThreshold?: number;
-  nextTierLabel?: string;
-  pointsEarnedThisOrder?: number;
-  progressPercent?: number;
-  pointsToNextTier?: number;
-  redeemableRewards?: LoyaltyReward[];
-  newlyUnlockedRewards?: LoyaltyReward[];
+  tier?: string
+  currentPoints?: number
+  nextTierThreshold?: number
+  nextTierLabel?: string
+  pointsEarnedThisOrder?: number
+  progressPercent?: number
+  pointsToNextTier?: number
+  redeemableRewards?: LoyaltyReward[]
+  newlyUnlockedRewards?: LoyaltyReward[]
 }
 
 /**
  * Cart summary interface
  */
 interface CartSummary {
-  subtotal: number;
-  deliveryFee: number;
-  total: number;
-  loyalty?: LoyaltyState;
+  subtotal: number
+  deliveryFee: number
+  total: number
+  loyalty?: LoyaltyState
 }
 
 /**
@@ -70,23 +60,23 @@ interface CartSummary {
  */
 interface CartBottomSheetProps {
   /** Whether the bottom sheet is open */
-  isOpen: boolean;
+  isOpen: boolean
   /** Callback to close the bottom sheet */
-  onClose: () => void;
+  onClose: () => void
   /** Array of cart items */
-  cartItems: CartItem[];
+  cartItems: CartItem[]
   /** Cart summary with totals and loyalty info */
-  cartSummary: CartSummary;
+  cartSummary: CartSummary
   /** Callback to update item quantity */
-  onUpdateQuantity: (itemId: string, quantity: number) => void;
+  onUpdateQuantity: (itemId: string, quantity: number) => void
   /** Callback to remove item from cart */
-  onRemoveItem: (itemId: string) => void;
+  onRemoveItem: (itemId: string) => void
   /** Function to get image URL for a product */
-  getImageUrl: (item: CartItem) => string;
+  getImageUrl: GetImageUrlFunction
   /** Whether cart is currently updating */
-  isUpdating?: boolean;
+  isUpdating?: boolean
   /** Error message to display */
-  error?: string | null;
+  error?: string | null
 }
 
 /**
@@ -113,142 +103,151 @@ const CartBottomSheet = ({
   isUpdating = false,
   error = null,
 }: CartBottomSheetProps) => {
-  const navigate = useNavigate();
-  const { settings, loading: settingsLoading } = useStoreSettings();
+  const navigate = useNavigate()
+  const { settings, loading: settingsLoading } = useStoreSettings()
 
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   // Check for reduced motion preference
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
 
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, [isOpen]);
+    return () => observer.disconnect()
+  }, [isOpen])
 
   // Watch for reduced motion preference
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mediaQuery.matches)
 
     const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
+      setPrefersReducedMotion(e.matches)
+    }
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
-  const enableLoyalty = settingsLoading ? false : (settings?.enable_loyalty_program ?? true);
+  const enableLoyalty = settingsLoading ? false : (settings?.enable_loyalty_program ?? true)
   const loyalty = useMemo(() => {
-    if (!enableLoyalty) return null;
-    if (cartSummary?.loyalty) return cartSummary.loyalty;
-    return resolveLoyaltyState(cartSummary?.total || 0);
-  }, [cartSummary, enableLoyalty]);
+    if (!enableLoyalty) return null
+    if (cartSummary?.loyalty) return cartSummary.loyalty
+    return resolveLoyaltyState(cartSummary?.total || 0)
+  }, [cartSummary, enableLoyalty])
 
   // Handle checkout with useCallback
   const handleCheckout = useCallback(() => {
     if (cartItems.length === 0) {
-      logger.warn('Attempted to checkout with empty cart');
-      return;
+      logger.warn('Attempted to checkout with empty cart')
+      return
     }
-    logger.log('Navigating to checkout', { cartItemsCount: cartItems.length });
-    onClose();
-    navigate('/checkout');
-  }, [onClose, navigate, cartItems.length]);
+    logger.log('Navigating to checkout', { cartItemsCount: cartItems.length })
+    onClose()
+    navigate('/checkout')
+  }, [onClose, navigate, cartItems.length])
 
   // Handle update quantity with useCallback
   const handleUpdateQuantity = useCallback(
     (itemId: string, newQuantity: number) => {
-      onUpdateQuantity(itemId, newQuantity);
+      onUpdateQuantity(itemId, newQuantity)
     },
     [onUpdateQuantity]
-  );
+  )
 
   // Handle remove item with useCallback
   const handleRemoveItem = useCallback(
     (itemId: string) => {
-      onRemoveItem(itemId);
+      onRemoveItem(itemId)
     },
     [onRemoveItem]
-  );
+  )
 
   // Handle save for later
-  const handleSaveForLater = useCallback((itemId: string) => {
-    try {
-      const item = cartItems.find((i) => i.id === itemId);
-      if (!item) return;
+  const handleSaveForLater = useCallback(
+    (itemId: string) => {
+      try {
+        const item = cartItems.find(i => i.id === itemId)
+        if (!item) return
 
-      const result = saveItemForLater(item);
+        const result = saveItemForLater(item)
 
-      if (result.success) {
-        // Remove from cart
-        onRemoveItem(itemId);
-        toast.success('Item saved for later!', { icon: '💾' });
-      } else {
-        toast.error('Failed to save item for later');
+        if (result.success) {
+          // Remove from cart
+          onRemoveItem(itemId)
+          toast.success('Item saved for later!', { icon: '💾' })
+        } else {
+          toast.error('Failed to save item for later')
+        }
+      } catch (error) {
+        logger.error('Error saving item for later:', error)
+        toast.error('Failed to save item for later')
       }
-    } catch (error) {
-      logger.error('Error saving item for later:', error);
-      toast.error('Failed to save item for later');
-    }
-  }, [cartItems, onRemoveItem]);
+    },
+    [cartItems, onRemoveItem]
+  )
 
   // Handle add note
   const handleAddNote = useCallback((itemId: string, note: string) => {
     try {
-      const result = saveCartItemNote(itemId, note);
+      const result = saveCartItemNote(itemId, note)
 
       if (result.success) {
-        toast.success('Note saved!', { icon: '📝', duration: 2000 });
+        toast.success('Note saved!', { icon: '📝', duration: 2000 })
       } else {
-        toast.error('Failed to save note');
+        toast.error('Failed to save note')
       }
     } catch (error) {
-      logger.error('Error saving note:', error);
-      toast.error('Failed to save note');
+      logger.error('Error saving note:', error)
+      toast.error('Failed to save note')
     }
-  }, []);
+  }, [])
 
   // Handle apply reward
-  const handleApplyReward = useCallback((rewardId: string) => {
-    try {
-      const reward = loyalty?.redeemableRewards?.find((r: LoyaltyReward) => r.id === rewardId);
-      if (!reward) {
-        toast.error('Reward not found');
-        return;
-      }
+  const handleApplyReward = useCallback(
+    (rewardId: string) => {
+      try {
+        const reward = loyalty?.redeemableRewards?.find((r) => r.id === rewardId)
+        if (!reward) {
+          toast.error('Reward not found')
+          return
+        }
 
-      const result = saveSelectedReward(reward);
-      if (result.success) {
-        toast.success(`${reward.label} will be applied at checkout!`, { icon: '🎁', duration: 3000 });
-      } else {
-        toast.error('Failed to apply reward');
+        const result = saveSelectedReward(toLoyaltyReward(reward))
+        if (result.success) {
+          toast.success(`${reward.label} will be applied at checkout!`, {
+            icon: '🎁',
+            duration: 3000,
+          })
+        } else {
+          toast.error('Failed to apply reward')
+        }
+      } catch (error) {
+        logger.error('Error applying reward:', error)
+        toast.error('Failed to apply reward')
       }
-    } catch (error) {
-      logger.error('Error applying reward:', error);
-      toast.error('Failed to apply reward');
-    }
-  }, [loyalty]);
+    },
+    [loyalty]
+  )
 
   // Animation variants with reduced motion support
   const backdropVariants = useMemo(() => {
@@ -257,14 +256,14 @@ const CartBottomSheet = ({
         initial: { opacity: 1 },
         animate: { opacity: 1 },
         exit: { opacity: 0 },
-      };
+      }
     }
     return {
       initial: { opacity: 0 },
       animate: { opacity: 1 },
       exit: { opacity: 0 },
-    };
-  }, [prefersReducedMotion]);
+    }
+  }, [prefersReducedMotion])
 
   const errorVariants = useMemo(() => {
     if (prefersReducedMotion) {
@@ -272,14 +271,14 @@ const CartBottomSheet = ({
         initial: { opacity: 1 },
         animate: { opacity: 1 },
         exit: { opacity: 0 },
-      };
+      }
     }
     return {
       initial: { opacity: 0, y: -10 },
       animate: { opacity: 1, y: 0 },
       exit: { opacity: 0 },
-    };
-  }, [prefersReducedMotion]);
+    }
+  }, [prefersReducedMotion])
 
   // Memoized fadeSlideUp variants with reduced motion support
   const sheetVariants = useMemo(() => {
@@ -288,13 +287,13 @@ const CartBottomSheet = ({
         hidden: { opacity: 1, y: 0 },
         visible: { opacity: 1, y: 0 },
         exit: { opacity: 0, y: 0 },
-      };
+      }
     }
-    return fadeSlideUp;
-  }, [prefersReducedMotion]);
+    return fadeSlideUp
+  }, [prefersReducedMotion])
 
   if (!isOpen) {
-    return null;
+    return null
   }
 
   return (
@@ -310,7 +309,7 @@ const CartBottomSheet = ({
         style={{
           backgroundColor: isLightTheme
             ? 'rgba(var(--bg-dark-rgb), 0.45)'
-            : 'rgba(var(--bg-dark-rgb), 0.5)'
+            : 'rgba(var(--bg-dark-rgb), 0.5)',
         }}
         onClick={onClose}
         aria-hidden="true"
@@ -326,7 +325,7 @@ const CartBottomSheet = ({
         style={{
           boxShadow: isLightTheme
             ? '0 -10px 40px rgba(var(--bg-dark-rgb), 0.2), 0 0 0 1px rgba(var(--bg-dark-rgb), 0.1)'
-            : '0 -10px 40px rgba(var(--bg-dark-rgb), 0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.1)'
+            : '0 -10px 40px rgba(var(--bg-dark-rgb), 0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.1)',
         }}
       >
         {/* Handle */}
@@ -349,17 +348,17 @@ const CartBottomSheet = ({
               style={{
                 backgroundColor: isLightTheme
                   ? 'rgba(var(--bg-dark-rgb), 0.04)'
-                  : 'rgba(var(--text-main-rgb), 0.05)'
+                  : 'rgba(var(--text-main-rgb), 0.05)',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 e.currentTarget.style.backgroundColor = isLightTheme
                   ? 'rgba(var(--bg-dark-rgb), 0.08)'
-                  : 'rgba(var(--text-main-rgb), 0.1)';
+                  : 'rgba(var(--text-main-rgb), 0.1)'
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 e.currentTarget.style.backgroundColor = isLightTheme
                   ? 'rgba(var(--bg-dark-rgb), 0.04)'
-                  : 'rgba(var(--text-main-rgb), 0.05)';
+                  : 'rgba(var(--text-main-rgb), 0.05)'
               }}
               aria-label="Close cart"
             >
@@ -415,8 +414,8 @@ const CartBottomSheet = ({
           {cartItems.length === 0 && !isUpdating ? (
             <EmptyCartState
               onBrowseMenu={() => {
-                onClose();
-                navigate('/menu');
+                onClose()
+                navigate('/menu')
               }}
               hasFavorites={false}
             />
@@ -427,7 +426,7 @@ const CartBottomSheet = ({
           ) : (
             <AnimatePresence mode="popLayout">
               <div className="cart-bottom-sheet-items-list">
-                {cartItems.map((item) => (
+                {cartItems.map(item => (
                   <SwipeableCartItem
                     key={item.id}
                     item={item}
@@ -448,10 +447,7 @@ const CartBottomSheet = ({
         {/* Totals - Fixed at Bottom */}
         <div className="cart-bottom-sheet-totals">
           {enableLoyalty && loyalty && (
-            <LoyaltyCard
-              loyalty={loyalty}
-              onApplyReward={handleApplyReward}
-            />
+            <LoyaltyCard loyalty={loyalty} onApplyReward={handleApplyReward} />
           )}
 
           <div className="cart-totals-wrapper">
@@ -473,8 +469,19 @@ const CartBottomSheet = ({
             >
               <span>{cartItems.length === 0 ? 'Cart is Empty' : 'Proceed to Checkout'}</span>
               {cartItems.length > 0 && (
-                <svg className="cart-swipe-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <svg
+                  className="cart-swipe-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               )}
             </button>
@@ -482,8 +489,7 @@ const CartBottomSheet = ({
         </div>
       </m.div>
     </div>
-  );
-};
+  )
+}
 
-export default CartBottomSheet;
-
+export default CartBottomSheet

@@ -9,7 +9,8 @@ import {
   deleteDiscountCode,
   getDiscountCodeUsageStats,
   formatDiscountDisplay,
-  isDiscountCodeActive
+  isDiscountCodeActive,
+  type DiscountCode,
 } from '../../lib/discountUtils'
 import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger'
 import { pageFade } from '../../components/animations/menuAnimations'
@@ -17,48 +18,30 @@ import { logger } from '../../utils/logger'
 import CustomDropdown from '../../components/ui/CustomDropdown'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
 
-interface DiscountCode {
-  id: string;
-  code: string;
-  description?: string;
-  discount_type: 'percentage' | 'fixed';
-  discount_value: number;
-  min_order_amount?: number;
-  max_discount_amount?: number;
-  starts_at?: string;
-  expires_at?: string;
-  usage_limit?: number;
-  usage_count?: number;
-  one_per_customer: boolean;
-  is_active: boolean;
-  created_at?: string;
-  created_by?: string;
-}
-
 interface FormData {
-  code: string;
-  description: string;
-  discount_type: 'percentage' | 'fixed';
-  discount_value: string;
-  min_order_amount: string;
-  max_discount_amount: string;
-  starts_at: string;
-  expires_at: string;
-  usage_limit: string;
-  one_per_customer: boolean;
-  is_active: boolean;
+  code: string
+  description: string
+  discount_type: 'percentage' | 'fixed'
+  discount_value: string
+  min_order_amount: string
+  max_discount_amount: string
+  starts_at: string
+  expires_at: string
+  usage_limit: string
+  one_per_customer: boolean
+  is_active: boolean
 }
 
 interface UsageStats {
-  usage_count: number;
-  total_revenue: number;
-  total_discount: number;
+  usage_count: number
+  total_revenue: number
+  total_discount: number
   usage_history?: Array<{
-    order_id?: string;
-    used_at?: string;
-    discount_amount?: number;
-    order_total?: number;
-  }>;
+    order_id?: string
+    used_at?: string
+    discount_amount?: number
+    order_total?: number
+  }>
 }
 
 /**
@@ -95,7 +78,7 @@ function AdminDiscountCodes(): JSX.Element {
     expires_at: '',
     usage_limit: '',
     one_per_customer: true,
-    is_active: true
+    is_active: true,
   })
 
   // Fetch discount codes
@@ -110,9 +93,9 @@ function AdminDiscountCodes(): JSX.Element {
         {
           event: '*',
           schema: 'public',
-          table: 'discount_codes'
+          table: 'discount_codes',
         },
-        (payload) => {
+        payload => {
           if (import.meta.env.DEV) {
             logger.log('Discount code change detected:', payload.eventType, payload)
           }
@@ -126,8 +109,12 @@ function AdminDiscountCodes(): JSX.Element {
               setCodes(prev => {
                 const exists = prev.some(c => c.id === payload.new.id)
                 if (exists) return prev
-                return [payload.new as DiscountCode, ...prev].sort((a, b) => 
-                  new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+                return [payload.new as DiscountCode, ...prev].sort(
+                  (a, b) => {
+                    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+                    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+                    return dateB - dateA
+                  }
                 )
               })
             }
@@ -135,15 +122,13 @@ function AdminDiscountCodes(): JSX.Element {
             if (payload.new && payload.new.id) {
               setCodes(prev =>
                 prev.map(code =>
-                  code.id === payload.new.id ? payload.new as DiscountCode : code
+                  code.id === payload.new.id ? (payload.new as DiscountCode) : code
                 )
               )
             }
           } else if (payload.eventType === 'DELETE') {
             if (payload.old && payload.old.id) {
-              setCodes(prev =>
-                prev.filter(code => code.id !== payload.old.id)
-              )
+              setCodes(prev => prev.filter(code => code.id !== payload.old.id))
             }
           }
         }
@@ -160,10 +145,11 @@ function AdminDiscountCodes(): JSX.Element {
       setLoading(true)
       const result = await getAllDiscountCodes()
 
-      if (result.success) {
-        setCodes(result.data || [])
+      if (result.success && result.data) {
+        setCodes(result.data as DiscountCode[])
       } else {
-        setError('Failed to load discount codes: ' + (result.error?.message || 'Unknown error'))
+        const errorMsg = result.error instanceof Error ? result.error.message : String(result.error || 'Unknown error')
+        setError('Failed to load discount codes: ' + errorMsg)
       }
     } catch (err) {
       logger.error('Error fetching discount codes:', err)
@@ -173,12 +159,31 @@ function AdminDiscountCodes(): JSX.Element {
     }
   }
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
-    const { name, value, type } = e.target
-    const checked = (e.target as HTMLInputElement).checked
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string | number; name?: string } }
+  ): void => {
+    let name: string | undefined
+    let value: string | number
+    let type: string | undefined
+    let checked: boolean | undefined
+
+    if ('target' in e && e.target) {
+      const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      name = target.name
+      value = target.value
+      type = target.type
+      checked = 'checked' in target ? target.checked : undefined
+    } else if ('target' in e) {
+      const target = e.target as { value: string | number; name?: string }
+      name = target.name
+      value = target.value
+    } else {
+      return
+    }
+    if (!name) return
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }))
     if (error) setError('')
     if (success) setSuccess(false)
@@ -248,13 +253,15 @@ function AdminDiscountCodes(): JSX.Element {
         discount_type: formData.discount_type,
         discount_value: discountValue,
         min_order_amount: formData.min_order_amount ? parseFloat(formData.min_order_amount) : 0,
-        max_discount_amount: formData.max_discount_amount ? parseFloat(formData.max_discount_amount) : null,
+        max_discount_amount: formData.max_discount_amount
+          ? parseFloat(formData.max_discount_amount)
+          : null,
         starts_at: formData.starts_at || new Date().toISOString(),
         expires_at: formData.expires_at || null,
         usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
         one_per_customer: formData.one_per_customer,
         is_active: formData.is_active,
-        created_by: user?.id
+        created_by: user?.id,
       }
 
       let result
@@ -265,7 +272,11 @@ function AdminDiscountCodes(): JSX.Element {
       }
 
       if (result.success) {
-        setSuccessMessage(editingCode ? 'Discount code updated successfully!' : 'Discount code created successfully!')
+        setSuccessMessage(
+          editingCode
+            ? 'Discount code updated successfully!'
+            : 'Discount code created successfully!'
+        )
         setSuccess(true)
         closeModal()
         setTimeout(() => {
@@ -273,15 +284,16 @@ function AdminDiscountCodes(): JSX.Element {
           setSuccessMessage('')
         }, 3000)
       } else {
-        if (result.error?.code === '23505') {
+        const error = result.error as { code?: string; message?: string } | undefined
+        if (error?.code === '23505') {
           setError('A discount code with this name already exists')
         } else {
-          setError(result.error?.message || 'Failed to save discount code')
+          setError(error?.message || 'Failed to save discount code')
         }
       }
     } catch (err) {
       logger.error('Error saving discount code:', err)
-      const error = err as Error;
+      const error = err as Error
       setError('Failed to save discount code: ' + (error.message || 'Unknown error'))
     }
   }
@@ -299,7 +311,7 @@ function AdminDiscountCodes(): JSX.Element {
       expires_at: code.expires_at ? new Date(code.expires_at).toISOString().slice(0, 16) : '',
       usage_limit: code.usage_limit ? String(code.usage_limit) : '',
       one_per_customer: code.one_per_customer !== false,
-      is_active: code.is_active !== false
+      is_active: code.is_active !== false,
     })
     setShowModal(true)
     setError('')
@@ -328,7 +340,8 @@ function AdminDiscountCodes(): JSX.Element {
         }, 3000)
         fetchCodes()
       } else {
-        setError('Failed to delete discount code: ' + (result.error?.message || 'Unknown error'))
+        const errorMsg = result.error instanceof Error ? result.error.message : String(result.error || 'Unknown error')
+        setError('Failed to delete discount code: ' + errorMsg)
       }
     } catch (err) {
       logger.error('Error deleting discount code:', err)
@@ -373,7 +386,7 @@ function AdminDiscountCodes(): JSX.Element {
       expires_at: '',
       usage_limit: '',
       one_per_customer: true,
-      is_active: true
+      is_active: true,
     })
     setError('')
     setSuccess(false)
@@ -409,7 +422,7 @@ function AdminDiscountCodes(): JSX.Element {
       initial="hidden"
       animate="visible"
       exit="exit"
-      style={{ 
+      style={{
         pointerEvents: 'auto',
         // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
         paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -417,11 +430,15 @@ function AdminDiscountCodes(): JSX.Element {
         // Ensure no overflow constraints that break positioning
         overflow: 'visible',
         overflowX: 'visible',
-        overflowY: 'visible'
+        overflowY: 'visible',
       }}
     >
       <div className="mx-auto max-w-[1600px] px-6">
-        <header className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between" data-animate="fade-rise" data-animate-active="false">
+        <header
+          className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between"
+          data-animate="fade-rise"
+          data-animate-active="false"
+        >
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted">Promotion Control</p>
             <h1 className="mt-1 text-3xl font-semibold md:text-4xl">Discount Codes</h1>
@@ -443,7 +460,7 @@ function AdminDiscountCodes(): JSX.Element {
                 expires_at: '',
                 usage_limit: '',
                 one_per_customer: true,
-                is_active: true
+                is_active: true,
               })
               setError('')
               setSuccess(false)
@@ -452,17 +469,36 @@ function AdminDiscountCodes(): JSX.Element {
             className="btn-primary flex items-center gap-2 px-5 py-2.5 text-sm font-semibold shadow-[0_18px_45px_-30px_rgba(197,157,95,0.65)]"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Create New Code
           </button>
         </header>
 
         {success && (
-          <div data-animate="fade-scale" data-animate-active="false" className="glow-surface glow-soft rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 shadow-[0_25px_60px_-40px_rgba(5,5,9,0.8)]">
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="glow-surface glow-soft rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 shadow-[0_25px_60px_-40px_rgba(5,5,9,0.8)]"
+          >
             <div className="flex items-center gap-3">
-              <svg className="h-5 w-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-5 w-5 text-emerald-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <p className="text-sm font-medium text-emerald-100">{successMessage}</p>
             </div>
@@ -470,10 +506,24 @@ function AdminDiscountCodes(): JSX.Element {
         )}
 
         {error && !showModal && (
-          <div data-animate="fade-scale" data-animate-active="false" className="glow-surface glow-soft rounded-2xl border border-rose-500/35 bg-rose-500/10 px-5 py-4 shadow-[0_25px_60px_-40px_rgba(5,5,9,0.8)]">
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="glow-surface glow-soft rounded-2xl border border-rose-500/35 bg-rose-500/10 px-5 py-4 shadow-[0_25px_60px_-40px_rgba(5,5,9,0.8)]"
+          >
             <div className="flex items-center gap-3">
-              <svg className="h-5 w-5 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-5 w-5 text-rose-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <p className="text-sm font-medium text-rose-100">{error}</p>
             </div>
@@ -491,8 +541,18 @@ function AdminDiscountCodes(): JSX.Element {
           ) : codes.length === 0 ? (
             <div className="glow-surface glow-soft rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-12 text-center shadow-[0_35px_80px_-60px_rgba(5,5,9,0.85)]">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-theme bg-[rgba(255,255,255,0.04)]">
-                <svg className="h-9 w-9 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-9 w-9 text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold">No discount codes yet</h3>
@@ -513,7 +573,7 @@ function AdminDiscountCodes(): JSX.Element {
                     expires_at: '',
                     usage_limit: '',
                     one_per_customer: true,
-                    is_active: true
+                    is_active: true,
                   })
                   setError('')
                   setSuccess(false)
@@ -522,13 +582,22 @@ function AdminDiscountCodes(): JSX.Element {
                 className="btn-primary mt-6 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold shadow-[0_18px_45px_-30px_rgba(197,157,95,0.65)]"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 Create Your First Code
               </button>
             </div>
           ) : (
-            <div data-animate="fade-scale" data-animate-active="false" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div
+              data-animate="fade-scale"
+              data-animate-active="false"
+              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            >
               {codes.map(code => (
                 <article
                   key={code.id}
@@ -561,16 +630,29 @@ function AdminDiscountCodes(): JSX.Element {
                     {code.one_per_customer && <span>One per customer</span>}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted">
-                    <span>Expires: {code.expires_at ? new Date(code.expires_at).toLocaleDateString() : 'Never'}</span>
+                    <span>
+                      Expires:{' '}
+                      {code.expires_at ? new Date(code.expires_at).toLocaleDateString() : 'Never'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-end gap-2">
                     <button
-                      onClick={() => handleViewUsage(code.id)}
+                      onClick={() => handleViewUsage(code.id as string)}
                       className="rounded-lg border border-theme bg-[rgba(255,255,255,0.04)] p-2 text-muted transition hover:border-[var(--accent)]/60 hover:text-[var(--accent)]"
                       title="View usage statistics"
                     >
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
                       </svg>
                     </button>
                     <button
@@ -578,8 +660,18 @@ function AdminDiscountCodes(): JSX.Element {
                       className="rounded-lg border border-theme bg-[rgba(255,255,255,0.04)] p-2 text-muted transition hover:border-[var(--accent)]/60 hover:text-[var(--accent)]"
                       title="Edit discount code"
                     >
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
                       </svg>
                     </button>
                     <button
@@ -587,8 +679,18 @@ function AdminDiscountCodes(): JSX.Element {
                       className="rounded-lg border border-rose-400/30 bg-rose-500/10 p-2 text-rose-200 transition hover:border-rose-400/50 hover:text-rose-100"
                       title="Delete discount code"
                     >
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -600,43 +702,53 @@ function AdminDiscountCodes(): JSX.Element {
       </div>
 
       {showModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4" 
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           data-overlay-scroll
           style={{
-            backgroundColor: 'var(--modal-backdrop)'
+            backgroundColor: 'var(--modal-backdrop)',
           }}
           onClick={closeModal}
         >
-          <div 
-            data-animate="fade-scale" 
-            data-animate-active="false" 
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
             className="glow-surface glow-soft w-full max-w-3xl rounded-3xl border border-theme bg-[var(--bg-main)]"
             style={{
-              boxShadow: 'var(--modal-shadow)'
+              boxShadow: 'var(--modal-shadow)',
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="sticky top-0 flex items-center justify-between border-b border-theme bg-[rgba(12,12,20,0.96)] px-6 py-5">
               <div>
-                <h2 id="modal-title" className="text-xl font-semibold"> {editingCode ? 'Edit Discount Code' : 'Create Discount Code'}</h2>
+                <h2 id="modal-title" className="text-xl font-semibold">
+                  {' '}
+                  {editingCode ? 'Edit Discount Code' : 'Create Discount Code'}
+                </h2>
                 <p className="mt-1 text-sm text-muted">
-                  {editingCode ? 'Fine-tune the details of this prom.' : 'Configure the incentives below.'}
+                  {editingCode
+                    ? 'Fine-tune the details of this prom.'
+                    : 'Configure the incentives below.'}
                 </p>
               </div>
               <button
                 onClick={closeModal}
                 className="rounded-lg border border-theme bg-theme-elevated p-2 text-muted transition hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
                 aria-label="Close modal"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '';
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = ''
                 }}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -650,7 +762,10 @@ function AdminDiscountCodes(): JSX.Element {
 
               <form onSubmit={handleSubmit} className="space-y-6 relative z-10 pointer-events-auto">
                 <div>
-                  <label htmlFor="code" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                  <label
+                    htmlFor="code"
+                    className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                  >
                     Code Name <span className="text-rose-300">*</span>
                   </label>
                   <input
@@ -666,12 +781,17 @@ function AdminDiscountCodes(): JSX.Element {
                     disabled={!!editingCode}
                   />
                   <p className="mt-1 text-xs text-muted">
-                    {editingCode ? 'Code name is locked once issued.' : 'Code will be auto-formatted to uppercase.'}
+                    {editingCode
+                      ? 'Code name is locked once issued.'
+                      : 'Code will be auto-formatted to uppercase.'}
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                  <label
+                    htmlFor="description"
+                    className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                  >
                     Description (Optional)
                   </label>
                   <textarea
@@ -688,7 +808,10 @@ function AdminDiscountCodes(): JSX.Element {
 
                 <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label htmlFor="discount_type" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                    <label
+                      htmlFor="discount_type"
+                      className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                    >
                       Discount Type <span className="text-rose-300">*</span>
                     </label>
                     <CustomDropdown
@@ -696,7 +819,7 @@ function AdminDiscountCodes(): JSX.Element {
                       name="discount_type"
                       options={[
                         { value: 'percentage', label: 'Percentage (%)' },
-                        { value: 'fixed', label: 'Fixed Amount ($)' }
+                        { value: 'fixed', label: 'Fixed Amount ($)' },
                       ]}
                       value={formData.discount_type}
                       onChange={handleChange}
@@ -707,7 +830,10 @@ function AdminDiscountCodes(): JSX.Element {
                   </div>
 
                   <div>
-                    <label htmlFor="discount_value" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                    <label
+                      htmlFor="discount_value"
+                      className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                    >
                       Discount Value <span className="text-rose-300">*</span>
                     </label>
                     <div className="relative">
@@ -726,11 +852,15 @@ function AdminDiscountCodes(): JSX.Element {
                             className={`${baseInputClass} pr-10`}
                             placeholder="20"
                           />
-                          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted">%</span>
+                          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted">
+                            %
+                          </span>
                         </>
                       ) : (
                         <>
-                          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">$</span>
+                          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">
+                            $
+                          </span>
                           <input
                             type="number"
                             id="discount_value"
@@ -751,11 +881,16 @@ function AdminDiscountCodes(): JSX.Element {
 
                 {formData.discount_type === 'percentage' && (
                   <div>
-                    <label htmlFor="max_discount_amount" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                    <label
+                      htmlFor="max_discount_amount"
+                      className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                    >
                       Max Discount Amount (Optional)
                     </label>
                     <div className="relative">
-                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">$</span>
+                      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">
+                        $
+                      </span>
                       <input
                         type="number"
                         id="max_discount_amount"
@@ -775,11 +910,16 @@ function AdminDiscountCodes(): JSX.Element {
                 )}
 
                 <div>
-                  <label htmlFor="min_order_amount" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                  <label
+                    htmlFor="min_order_amount"
+                    className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                  >
                     Minimum Order Amount (Optional)
                   </label>
                   <div className="relative">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">$</span>
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">
+                      $
+                    </span>
                     <input
                       type="number"
                       id="min_order_amount"
@@ -799,7 +939,10 @@ function AdminDiscountCodes(): JSX.Element {
 
                 <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label htmlFor="starts_at" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                    <label
+                      htmlFor="starts_at"
+                      className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                    >
                       Start Date (Optional)
                     </label>
                     <input
@@ -813,7 +956,10 @@ function AdminDiscountCodes(): JSX.Element {
                   </div>
 
                   <div>
-                    <label htmlFor="expires_at" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                    <label
+                      htmlFor="expires_at"
+                      className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                    >
                       Expiration Date (Optional)
                     </label>
                     <input
@@ -828,7 +974,10 @@ function AdminDiscountCodes(): JSX.Element {
                 </div>
 
                 <div>
-                  <label htmlFor="usage_limit" className="mb-2 block text-sm font-medium text-[var(--text-main)]">
+                  <label
+                    htmlFor="usage_limit"
+                    className="mb-2 block text-sm font-medium text-[var(--text-main)]"
+                  >
                     Usage Limit (Optional)
                   </label>
                   <input
@@ -897,38 +1046,45 @@ function AdminDiscountCodes(): JSX.Element {
       )}
 
       {showUsageModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4" 
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           data-overlay-scroll
           style={{
-            backgroundColor: 'var(--modal-backdrop)'
+            backgroundColor: 'var(--modal-backdrop)',
           }}
           onClick={closeUsageModal}
         >
-          <div 
-            data-animate="fade-scale" 
-            data-animate-active="false" 
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
             className="glow-surface glow-soft w-full max-w-2xl rounded-3xl border border-theme bg-[var(--bg-main)]"
             style={{
-              boxShadow: 'var(--modal-shadow)'
+              boxShadow: 'var(--modal-shadow)',
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="sticky top-0 flex items-center justify-between border-b border-theme bg-[rgba(12,12,20,0.96)] px-6 py-5">
-              <h2 id="usage-modal-title" className="text-xl font-semibold">Usage Performance</h2>
+              <h2 id="usage-modal-title" className="text-xl font-semibold">
+                Usage Performance
+              </h2>
               <button
                 onClick={closeUsageModal}
                 className="rounded-lg border border-theme bg-theme-elevated p-2 text-muted transition hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
                 aria-label="Close modal"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '';
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = ''
                 }}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -943,16 +1099,22 @@ function AdminDiscountCodes(): JSX.Element {
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="rounded-xl border border-theme bg-[rgba(255,255,255,0.03)] p-5">
                       <p className="text-xs uppercase tracking-[0.18em] text-muted">Total Uses</p>
-                      <p className="mt-3 text-2xl font-semibold text-[var(--accent)]">{usageStats.usage_count}</p>
+                      <p className="mt-3 text-2xl font-semibold text-[var(--accent)]">
+                        {usageStats.usage_count}
+                      </p>
                     </div>
                     <div className="rounded-xl border border-theme bg-[rgba(255,255,255,0.03)] p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted">Revenue Influenced</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted">
+                        Revenue Influenced
+                      </p>
                       <p className="mt-3 text-2xl font-semibold text-emerald-200">
                         ${parseFloat(String(usageStats.total_revenue || 0)).toFixed(2)}
                       </p>
                     </div>
                     <div className="rounded-xl border border-theme bg-[rgba(255,255,255,0.03)] p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted">Discount Given</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted">
+                        Discount Given
+                      </p>
                       <p className="mt-3 text-2xl font-semibold text-amber-200">
                         ${parseFloat(String(usageStats.total_discount || 0)).toFixed(2)}
                       </p>
@@ -961,17 +1123,24 @@ function AdminDiscountCodes(): JSX.Element {
 
                   {usageStats.usage_history && usageStats.usage_history.length > 0 ? (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-[var(--text-main)]">Usage History</h3>
+                      <h3 className="text-lg font-semibold text-[var(--text-main)]">
+                        Usage History
+                      </h3>
                       <div data-overlay-scroll className="max-h-96 space-y-3 overflow-y-auto pr-1">
                         {usageStats.usage_history.map((usage, index) => (
-                          <div key={index} className="rounded-xl border border-theme bg-[rgba(255,255,255,0.03)] p-4">
+                          <div
+                            key={index}
+                            className="rounded-xl border border-theme bg-[rgba(255,255,255,0.03)] p-4"
+                          >
                             <div className="flex items-start justify-between gap-4">
                               <div>
                                 <p className="text-sm font-semibold text-[var(--text-main)]">
                                   Order #{usage.order_id?.slice(0, 8) ?? '—'}
                                 </p>
                                 <p className="mt-1 text-xs text-muted">
-                                  {usage.used_at ? new Date(usage.used_at).toLocaleString() : 'Unknown date'}
+                                  {usage.used_at
+                                    ? new Date(usage.used_at).toLocaleString()
+                                    : 'Unknown date'}
                                 </p>
                               </div>
                               <div className="text-right">
@@ -1007,8 +1176,8 @@ function AdminDiscountCodes(): JSX.Element {
       <ConfirmationModal
         isOpen={showDeleteConfirm}
         onClose={() => {
-          setShowDeleteConfirm(false);
-          setCodeToDelete(null);
+          setShowDeleteConfirm(false)
+          setCodeToDelete(null)
         }}
         onConfirm={handleDelete}
         title="Delete Discount Code"
@@ -1022,4 +1191,3 @@ function AdminDiscountCodes(): JSX.Element {
 }
 
 export default AdminDiscountCodes
-

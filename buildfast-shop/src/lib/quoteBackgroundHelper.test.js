@@ -7,7 +7,8 @@ describe('quoteBackgroundHelper', () => {
   describe('getQuoteBackgroundUrl', () => {
     it('should return uploaded URL when settings has valid hero_quote_bg_url', () => {
       const settings = {
-        hero_quote_bg_url: 'https://example.com/storage/v1/object/public/background-images/test.jpg'
+        hero_quote_bg_url:
+          'https://example.com/storage/v1/object/public/background-images/test.jpg',
       }
 
       const result = getQuoteBackgroundUrl(settings)
@@ -29,7 +30,7 @@ describe('quoteBackgroundHelper', () => {
 
     it('should return fallback when hero_quote_bg_url is null', () => {
       const settings = {
-        hero_quote_bg_url: null
+        hero_quote_bg_url: null,
       }
 
       const result = getQuoteBackgroundUrl(settings)
@@ -39,7 +40,7 @@ describe('quoteBackgroundHelper', () => {
 
     it('should return fallback when hero_quote_bg_url is empty string', () => {
       const settings = {
-        hero_quote_bg_url: ''
+        hero_quote_bg_url: '',
       }
 
       const result = getQuoteBackgroundUrl(settings)
@@ -49,7 +50,7 @@ describe('quoteBackgroundHelper', () => {
 
     it('should return fallback when hero_quote_bg_url is whitespace only', () => {
       const settings = {
-        hero_quote_bg_url: '   '
+        hero_quote_bg_url: '   ',
       }
 
       const result = getQuoteBackgroundUrl(settings)
@@ -59,7 +60,7 @@ describe('quoteBackgroundHelper', () => {
 
     it('should return fallback when hero_quote_bg_url is not a string', () => {
       const settings = {
-        hero_quote_bg_url: 12345
+        hero_quote_bg_url: 12345,
       }
 
       const result = getQuoteBackgroundUrl(settings)
@@ -69,7 +70,7 @@ describe('quoteBackgroundHelper', () => {
 
     it('should return uploaded URL even with extra whitespace', () => {
       const settings = {
-        hero_quote_bg_url: ' https://example.com/image.jpg '
+        hero_quote_bg_url: ' https://example.com/image.jpg ',
       }
 
       const result = getQuoteBackgroundUrl(settings)
@@ -82,8 +83,8 @@ describe('quoteBackgroundHelper', () => {
     it('should handle settings with other properties', () => {
       const settings = {
         store_name: 'Star Café',
-        tax_rate: 8.00,
-        hero_quote_bg_url: 'https://example.com/custom-bg.png'
+        tax_rate: 8.0,
+        hero_quote_bg_url: 'https://example.com/custom-bg.png',
       }
 
       const result = getQuoteBackgroundUrl(settings)

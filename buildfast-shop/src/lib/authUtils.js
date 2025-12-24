@@ -13,8 +13,8 @@ export async function clearInvalidAuthTokens() {
     await supabase.auth.signOut()
 
     // Additionally clear all auth-related localStorage items
-    const authKeys = Object.keys(localStorage).filter(key =>
-      key.includes('supabase') || key.includes('auth')
+    const authKeys = Object.keys(localStorage).filter(
+      key => key.includes('supabase') || key.includes('auth')
     )
 
     authKeys.forEach(key => {
@@ -39,7 +39,10 @@ export async function clearInvalidAuthTokens() {
  */
 export async function isSessionValid() {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
 
     if (error) {
       logger.warn('Session validation error:', error.message)
@@ -73,7 +76,7 @@ export async function handleAuthError(error, navigate) {
 
     if (navigate) {
       navigate('/login', {
-        state: { message: 'Your session has expired. Please log in again.' }
+        state: { message: 'Your session has expired. Please log in again.' },
       })
     }
 

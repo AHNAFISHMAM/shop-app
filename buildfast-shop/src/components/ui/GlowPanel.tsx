@@ -1,29 +1,29 @@
-import { useState, useEffect, type ReactNode, type ElementType } from 'react';
+import { useState, useEffect, type ReactNode, type ElementType } from 'react'
 
 /**
  * GlowPanel component props
  */
 interface GlowPanelProps {
   /** HTML element or React component to render as */
-  as?: ElementType;
+  as?: ElementType
   /** Border radius class */
-  radius?: string;
+  radius?: string
   /** Padding class */
-  padding?: string;
+  padding?: string
   /** Background class */
-  background?: string;
+  background?: string
   /** Border color class */
-  borderColor?: string;
+  borderColor?: string
   /** Glow intensity level */
-  glow?: 'none' | 'subtle' | 'soft' | 'medium' | 'strong';
+  glow?: 'none' | 'subtle' | 'soft' | 'medium' | 'strong'
   /** Additional CSS classes */
-  className?: string;
+  className?: string
   /** Child content */
-  children?: ReactNode;
+  children?: ReactNode
   /** Inline styles */
-  style?: React.CSSProperties;
+  style?: React.CSSProperties
   /** Additional HTML attributes */
-  [key: string]: unknown;
+  [key: string]: unknown
 }
 
 /**
@@ -53,43 +53,40 @@ function GlowPanel({
 }: GlowPanelProps) {
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
+    if (typeof document === 'undefined') return undefined
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
-  const glowClass =
-    glow && glow !== 'medium'
-      ? glow === 'none'
-        ? ''
-        : `glow-${glow}`
-      : '';
+  const glowClass = glow && glow !== 'medium' ? (glow === 'none' ? '' : `glow-${glow}`) : ''
 
   // Determine default background based on theme if not provided
   // Use inline styles instead of Tailwind classes for better theme support
-  const defaultBackgroundStyle = background ? undefined : {
-    backgroundColor: isLightTheme
-      ? 'rgba(var(--text-main-rgb), 0.95)'
-      : 'rgba(var(--text-main-rgb), 0.03)'
-  };
+  const defaultBackgroundStyle = background
+    ? undefined
+    : {
+        backgroundColor: isLightTheme
+          ? 'rgba(var(--text-main-rgb), 0.95)'
+          : 'rgba(var(--text-main-rgb), 0.03)',
+      }
 
   const baseClasses = [
     'glow-surface',
@@ -99,26 +96,27 @@ function GlowPanel({
     background, // Only use if explicitly provided
     borderColor,
     glowClass,
-    className
+    className,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(' ')
 
   // Merge inline styles with theme-aware background and border color
   const mergedStyle: React.CSSProperties = {
     ...defaultBackgroundStyle,
     ...style,
-    ...(isLightTheme && !style?.borderColor ? {
-      borderColor: 'rgba(var(--bg-dark-rgb), 0.1)'
-    } : {})
-  };
+    ...(isLightTheme && !style?.borderColor
+      ? {
+          borderColor: 'rgba(var(--bg-dark-rgb), 0.1)',
+        }
+      : {}),
+  }
 
   return (
     <Component className={baseClasses} style={mergedStyle} {...props}>
       {children}
     </Component>
-  );
+  )
 }
 
-export default GlowPanel;
-
+export default GlowPanel

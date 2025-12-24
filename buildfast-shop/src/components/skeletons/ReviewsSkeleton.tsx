@@ -2,7 +2,7 @@
  * ReviewsSkeletonProps interface
  */
 export interface ReviewsSkeletonProps {
-  count?: number;
+  count?: number
 }
 
 /**
@@ -25,14 +25,14 @@ export function ReviewsSkeleton({ count = 3 }: ReviewsSkeletonProps) {
             </div>
             <div className="h-4 bg-[var(--bg-elevated)] rounded w-16" aria-hidden="true" />
           </div>
-          
+
           {/* Rating */}
           <div className="flex gap-1" aria-hidden="true">
-            {[1, 2, 3, 4, 5].map((j) => (
+            {[1, 2, 3, 4, 5].map(j => (
               <div key={j} className="h-5 w-5 bg-[var(--bg-elevated)] rounded" />
             ))}
           </div>
-          
+
           {/* Review text */}
           <div className="space-y-2" aria-hidden="true">
             <div className="h-4 bg-[var(--bg-elevated)] rounded w-full" />
@@ -42,6 +42,5 @@ export function ReviewsSkeleton({ count = 3 }: ReviewsSkeletonProps) {
         </div>
       ))}
     </div>
-  );
+  )
 }
-

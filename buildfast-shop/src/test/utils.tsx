@@ -1,6 +1,6 @@
 /**
  * Test Utilities
- * 
+ *
  * Custom render function and test helpers with all providers.
  */
 
@@ -8,9 +8,7 @@ import { render, type RenderOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { type ReactElement } from 'react'
-// @ts-ignore - JSX component without types
 import { AuthProvider } from '../contexts/AuthContext'
-// @ts-ignore - JSX component without types
 import { ThemeProvider } from '../contexts/ThemeContext'
 
 /**
@@ -41,7 +39,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 
 /**
  * Render component with all providers (Router, Query, Auth, Theme)
- * 
+ *
  * @example
  * ```tsx
  * const { getByText } = renderWithProviders(<MyComponent />)
@@ -60,9 +58,7 @@ export function renderWithProviders(
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </BrowserRouter>
@@ -78,4 +74,3 @@ export function renderWithProviders(
 // Re-export everything from testing library
 export * from '@testing-library/react'
 export { renderWithProviders as render }
-

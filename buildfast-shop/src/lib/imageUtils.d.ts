@@ -30,12 +30,20 @@ export declare function uploadMenuImage(file: File, dishName: string, metadata?:
     success: boolean;
     url: string | null;
     error: string | null;
+    duplicate?: boolean;
 }>;
 export declare function uploadMultipleImages(files: File[]): Promise<Array<{
     success: boolean;
     url: string | null;
     error: string | null;
+    fileName?: string;
+    duplicate?: boolean;
 }>>;
 export declare function generatePlaceholderImage(dishName: string, color?: string): string;
-export declare function autoMatchImages(uploadedFiles: File[], menuItems: any[]): Promise<any[]>;
+export interface AutoMatchResult {
+    matches: any[];
+    unmatched: any[];
+}
+export declare function autoMatchImages(uploadedFiles: Array<{ fileName: string; [key: string]: unknown }>, menuItems: any[]): Promise<AutoMatchResult>;
 export declare function compressImage(file: File, maxWidth?: number, quality?: number): Promise<File>;
+

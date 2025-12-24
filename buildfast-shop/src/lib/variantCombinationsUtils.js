@@ -110,7 +110,7 @@ export function createCombinationSnapshot(combination) {
     combination_id: combination.id,
     variant_values: combination.variant_values,
     price_adjustment: combination.price_adjustment,
-    sku: combination.sku
+    sku: combination.sku,
   }
 }
 
@@ -175,7 +175,7 @@ export async function createCombination(combinationData) {
         variant_values: combinationData.variant_values,
         price_adjustment: combinationData.price_adjustment || 0,
         // Note: stock_quantity removed - table may not have this column in restaurant context
-        is_active: combinationData.is_active !== false
+        is_active: combinationData.is_active !== false,
       })
       .select()
       .single()
@@ -220,10 +220,7 @@ export async function updateCombination(id, updates) {
  */
 export async function deleteCombination(id) {
   try {
-    const { error } = await supabase
-      .from('variant_combinations')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('variant_combinations').delete().eq('id', id)
 
     if (error) throw error
 
@@ -266,9 +263,9 @@ export function generateCombinations(variantsByType) {
         ...current,
         variant_values: {
           ...current.variant_values,
-          [type]: variant.variant_value
+          [type]: variant.variant_value,
         },
-        price_adjustment: (current.price_adjustment || 0) + (variant.price_adjustment || 0)
+        price_adjustment: (current.price_adjustment || 0) + (variant.price_adjustment || 0),
       })
     }
   }

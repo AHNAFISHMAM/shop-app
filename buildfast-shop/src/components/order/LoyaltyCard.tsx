@@ -1,37 +1,37 @@
-import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { useState } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
 
 /**
  * RedeemableReward interface
  */
 export interface RedeemableReward {
-  id: string;
-  label: string;
-  cost: number;
+  id: string
+  label: string
+  cost: number
 }
 
 /**
  * LoyaltyState interface
  */
 export interface LoyaltyState {
-  tier?: string;
-  currentPoints?: number;
-  nextTierThreshold?: number;
-  nextTierLabel?: string;
-  pointsEarnedThisOrder?: number;
-  progressPercent?: number;
-  pointsToNextTier?: number;
-  redeemableRewards?: RedeemableReward[];
-  newlyUnlockedRewards?: RedeemableReward[];
+  tier?: string
+  currentPoints?: number
+  nextTierThreshold?: number
+  nextTierLabel?: string
+  pointsEarnedThisOrder?: number
+  progressPercent?: number
+  pointsToNextTier?: number
+  redeemableRewards?: RedeemableReward[]
+  newlyUnlockedRewards?: RedeemableReward[]
 }
 
 /**
  * LoyaltyCardProps interface
  */
 export interface LoyaltyCardProps {
-  loyalty?: LoyaltyState;
-  onApplyReward?: (rewardId: string) => void;
-  onRemoveReward?: (rewardId: string) => void;
+  loyalty?: LoyaltyState
+  onApplyReward?: (rewardId: string) => void
+  onRemoveReward?: (rewardId: string) => void
 }
 
 /**
@@ -40,14 +40,11 @@ export interface LoyaltyCardProps {
  *
  * @param {LoyaltyCardProps} props - Component props
  */
-const LoyaltyCard = ({
-  loyalty,
-  onApplyReward,
-}: LoyaltyCardProps) => {
-  const [showRewards, setShowRewards] = useState<boolean>(false);
-  const availableRewards = loyalty?.redeemableRewards || [];
-  const upcomingRewards = loyalty?.newlyUnlockedRewards || [];
-  const progressPercent = loyalty?.progressPercent ?? 0;
+const LoyaltyCard = ({ loyalty, onApplyReward }: LoyaltyCardProps) => {
+  const [showRewards, setShowRewards] = useState<boolean>(false)
+  const availableRewards = loyalty?.redeemableRewards || []
+  const upcomingRewards = loyalty?.newlyUnlockedRewards || []
+  const progressPercent = loyalty?.progressPercent ?? 0
 
   return (
     <m.div
@@ -82,7 +79,8 @@ const LoyaltyCard = ({
       <div className="cart-loyalty-points">
         <span>{loyalty?.currentPoints ?? 0} pts</span>
         <span>
-          {Math.max(0, loyalty?.pointsToNextTier ?? 0)} pts to {loyalty?.nextTierLabel || 'next tier'}
+          {Math.max(0, loyalty?.pointsToNextTier ?? 0)} pts to{' '}
+          {loyalty?.nextTierLabel || 'next tier'}
         </span>
       </div>
 
@@ -94,7 +92,7 @@ const LoyaltyCard = ({
       {/* Rewards Toggle */}
       <button
         type="button"
-        onClick={() => setShowRewards((prev) => !prev)}
+        onClick={() => setShowRewards(prev => !prev)}
         aria-expanded={showRewards}
         aria-controls="rewards-list"
         className="cart-loyalty-toggle-btn min-h-[44px]"
@@ -120,7 +118,7 @@ const LoyaltyCard = ({
               <div>
                 <p className="cart-loyalty-rewards-section-title">Available now</p>
                 <ul className="cart-loyalty-rewards-list" role="list">
-                  {availableRewards.map((reward) => (
+                  {availableRewards.map(reward => (
                     <m.li
                       key={reward.id}
                       className="cart-loyalty-reward-item"
@@ -147,14 +145,19 @@ const LoyaltyCard = ({
               </div>
             ) : (
               <p className="cart-loyalty-message">
-                Earn {Math.max(0, loyalty?.pointsToNextTier ?? 0)} more pts to unlock your next perk.
+                Earn {Math.max(0, loyalty?.pointsToNextTier ?? 0)} more pts to unlock your next
+                perk.
               </p>
             )}
             {upcomingRewards.length > 0 && (
               <div>
                 <p className="cart-loyalty-rewards-section-title">Unlocking soon</p>
-                <ul className="cart-loyalty-rewards-list" style={{ color: 'rgba(var(--color-amber-rgb), 0.8)' }} role="list">
-                  {upcomingRewards.map((reward) => (
+                <ul
+                  className="cart-loyalty-rewards-list"
+                  style={{ color: 'rgba(var(--color-amber-rgb), 0.8)' }}
+                  role="list"
+                >
+                  {upcomingRewards.map(reward => (
                     <li key={reward.id} className="cart-loyalty-reward-upcoming">
                       <span className="cart-loyalty-reward-upcoming-label">{reward.label}</span>
                       <span className="cart-loyalty-reward-upcoming-cost">{reward.cost} pts</span>
@@ -167,8 +170,7 @@ const LoyaltyCard = ({
         )}
       </AnimatePresence>
     </m.div>
-  );
-};
+  )
+}
 
-export default LoyaltyCard;
-
+export default LoyaltyCard

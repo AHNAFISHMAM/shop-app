@@ -5,10 +5,9 @@ export const menuCategories = [
   { id: 'grill', name: 'Grill & Kabab' },
   { id: 'desserts', name: 'Desserts' },
   { id: 'beverages', name: 'Beverages' },
-];
+]
 
-const baseImage = (seed) =>
-  `https://images.unsplash.com/${seed}?auto=format&fit=crop&w=800&q=80`;
+const baseImage = seed => `https://images.unsplash.com/${seed}?auto=format&fit=crop&w=800&q=80`
 
 export const menuItems = [
   {
@@ -193,10 +192,9 @@ export const menuItems = [
     tags: ['refreshing'],
     isNew: true,
   },
-];
+]
 
 export default {
   menuCategories,
   menuItems,
-};
-
+}

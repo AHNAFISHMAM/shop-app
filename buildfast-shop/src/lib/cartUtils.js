@@ -10,7 +10,12 @@ import { logger } from '../utils/logger'
  * @param {string|null} combinationId - Optional combination ID (for multi-variant products)
  * @returns {Promise<{item: Object|null, error: Error|null}>}
  */
-export const getExistingCartItem = async (userId, productId, variantId = null, combinationId = null) => {
+export const getExistingCartItem = async (
+  userId,
+  productId,
+  variantId = null,
+  combinationId = null
+) => {
   let query = supabase
     .from('cart_items')
     .select('*')
@@ -69,17 +74,15 @@ export const updateCartItemQuantity = async (cartItemId, newQuantity, userId) =>
  * @returns {Promise<{error: Error|null}>}
  */
 export const insertCartItem = async (userId, productId, variantId = null, combinationId = null) => {
-  const { error } = await supabase
-    .from('cart_items')
-    .insert([
-      {
-        user_id: userId,
-        product_id: productId,
-        variant_id: variantId,
-        combination_id: combinationId,
-        quantity: 1
-      }
-    ])
+  const { error } = await supabase.from('cart_items').insert([
+    {
+      user_id: userId,
+      product_id: productId,
+      variant_id: variantId,
+      combination_id: combinationId,
+      quantity: 1,
+    },
+  ])
 
   if (!error) {
     emitCartChanged() // Trigger immediate UI update
@@ -97,7 +100,9 @@ export const insertCartItem = async (userId, productId, variantId = null, combin
  * @returns {Promise<{success: boolean, error: Error|null, stockExceeded: boolean, stockLimit: number|null}>}
  */
 export const addProductToCart = async (product, userId, variant = null, combination = null) => {
-  const isMenuItem = product?.isMenuItem ?? (product?.category_id !== undefined && product?.is_available !== undefined)
+  const isMenuItem =
+    product?.isMenuItem ??
+    (product?.category_id !== undefined && product?.is_available !== undefined)
 
   if (isMenuItem) {
     if (product?.is_available === false) {
@@ -129,13 +134,11 @@ export const addProductToCart = async (product, userId, variant = null, combinat
       return { success: true, error: null, stockExceeded: false, stockLimit: null }
     }
 
-    const { error: insertError } = await supabase
-      .from('cart_items')
-      .insert({
-        user_id: userId,
-        menu_item_id: product.id,
-        quantity: 1
-      })
+    const { error: insertError } = await supabase.from('cart_items').insert({
+      user_id: userId,
+      menu_item_id: product.id,
+      quantity: 1,
+    })
 
     if (insertError) {
       return { success: false, error: insertError, stockExceeded: false, stockLimit: null }
@@ -180,11 +183,15 @@ export const addProductToCart = async (product, userId, variant = null, combinat
         success: false,
         error: null,
         stockExceeded: true,
-        stockLimit: isAvailable ? 999 : 0 // Note: menu_items doesn't track stock, using availability
+        stockLimit: isAvailable ? 999 : 0, // Note: menu_items doesn't track stock, using availability
       }
     }
 
-    const { error: updateError } = await updateCartItemQuantity(existingItem.id, newQuantity, userId)
+    const { error: updateError } = await updateCartItemQuantity(
+      existingItem.id,
+      newQuantity,
+      userId
+    )
 
     if (updateError) {
       return { success: false, error: updateError, stockExceeded: false, stockLimit: null }
@@ -198,12 +205,17 @@ export const addProductToCart = async (product, userId, variant = null, combinat
         success: false,
         error: null,
         stockExceeded: true,
-        stockLimit: 0
+        stockLimit: 0,
       }
     }
 
     // Insert new cart item
-    const { error: insertError } = await insertCartItem(userId, product.id, variantId, combinationId)
+    const { error: insertError } = await insertCartItem(
+      userId,
+      product.id,
+      variantId,
+      combinationId
+    )
 
     if (insertError) {
       return { success: false, error: insertError, stockExceeded: false, stockLimit: null }
@@ -274,37 +286,36 @@ export const addMenuItemToCart = async (menuItem, userId) => {
       .select('*')
       .eq('user_id', userId)
       .eq('menu_item_id', menuItem.id)
-      .maybeSingle();
+      .maybeSingle()
 
     if (existingItem) {
       // Update quantity
       const { error } = await supabase
         .from('cart_items')
         .update({ quantity: existingItem.quantity + 1 })
-        .eq('id', existingItem.id);
+        .eq('id', existingItem.id)
 
-      if (error) throw error;
+      if (error) throw error
     } else {
       // Insert new cart item
-      const { error } = await supabase
-        .from('cart_items')
-        .insert([{
+      const { error } = await supabase.from('cart_items').insert([
+        {
           user_id: userId,
           menu_item_id: menuItem.id,
-          quantity: 1
-        }]);
+          quantity: 1,
+        },
+      ])
 
-      if (error) throw error;
+      if (error) throw error
     }
 
-    emitCartChanged(); // Trigger immediate UI update
-    return { success: true, error: null };
-
+    emitCartChanged() // Trigger immediate UI update
+    return { success: true, error: null }
   } catch (error) {
-    logger.error('Error adding menu item to cart:', error);
-    return { success: false, error };
+    logger.error('Error adding menu item to cart:', error)
+    return { success: false, error }
   }
-};
+}
 
 /**
  * Update menu item quantity in cart
@@ -321,28 +332,27 @@ export const updateMenuItemQuantity = async (cartItemId, newQuantity, userId) =>
         .from('cart_items')
         .delete()
         .eq('id', cartItemId)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
 
-      if (error) throw error;
+      if (error) throw error
     } else {
       // Update quantity
       const { error } = await supabase
         .from('cart_items')
         .update({ quantity: newQuantity })
         .eq('id', cartItemId)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
 
-      if (error) throw error;
+      if (error) throw error
     }
 
-    emitCartChanged(); // Trigger immediate UI update
-    return { success: true, error: null };
-
+    emitCartChanged() // Trigger immediate UI update
+    return { success: true, error: null }
   } catch (error) {
-    logger.error('Error updating menu item quantity:', error);
-    return { success: false, error };
+    logger.error('Error updating menu item quantity:', error)
+    return { success: false, error }
   }
-};
+}
 
 /**
  * Remove menu item from cart
@@ -356,29 +366,29 @@ export const removeMenuItemFromCart = async (cartItemId, userId) => {
       .from('cart_items')
       .delete()
       .eq('id', cartItemId)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
 
-    if (error) throw error;
+    if (error) throw error
 
-    emitCartChanged(); // Trigger immediate UI update
-    return { success: true, error: null };
-
+    emitCartChanged() // Trigger immediate UI update
+    return { success: true, error: null }
   } catch (error) {
-    logger.error('Error removing menu item from cart:', error);
-    return { success: false, error };
+    logger.error('Error removing menu item from cart:', error)
+    return { success: false, error }
   }
-};
+}
 
 /**
  * Get cart items with menu item details (joins menu_items table)
  * @param {string} userId - User ID
  * @returns {Promise<{data: Array|null, error: Error|null}>}
  */
-export const getCartWithMenuItems = async (userId) => {
+export const getCartWithMenuItems = async userId => {
   try {
     const { data, error } = await supabase
       .from('cart_items')
-      .select(`
+      .select(
+        `
         *,
         menu_items (
           id,
@@ -396,18 +406,17 @@ export const getCartWithMenuItems = async (userId) => {
             slug
           )
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .not('menu_item_id', 'is', null)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
 
-    if (error) throw error;
+    if (error) throw error
 
-    return { data: data || [], error: null };
-
+    return { data: data || [], error: null }
   } catch (error) {
-    logger.error('Error fetching cart with menu items:', error);
-    return { data: null, error };
+    logger.error('Error fetching cart with menu items:', error)
+    return { data: null, error }
   }
-};
-
+}

@@ -72,10 +72,7 @@ export async function getPublicMenu(): Promise<ServiceResponse<GetPublicMenuResu
  */
 export async function getCategories(): Promise<ServiceResponse<MenuCategory[]>> {
   try {
-    const { data, error } = await supabase
-      .from('menu_categories')
-      .select('*')
-      .order('sort_order')
+    const { data, error } = await supabase.from('menu_categories').select('*').order('sort_order')
 
     if (error) {
       logger.error('Error fetching categories:', error)
@@ -110,10 +107,12 @@ export async function getSubcategories(): Promise<ServiceResponse<unknown[]>> {
   try {
     const { data, error } = await supabase
       .from('subcategories')
-      .select(`
+      .select(
+        `
         *,
         categories (id, name)
-      `)
+      `
+      )
       .order('display_order')
 
     if (error) {
@@ -149,20 +148,20 @@ export async function getSubcategories(): Promise<ServiceResponse<unknown[]>> {
  * @param filters.chefSpecial - Filter chef's specials only
  * @returns Promise with dishes data or error
  */
-export async function getDishes(
-  filters: DishFilters = {}
-): Promise<ServiceResponse<MenuItem[]>> {
+export async function getDishes(filters: DishFilters = {}): Promise<ServiceResponse<MenuItem[]>> {
   try {
     let query = supabase
       .from('menu_items')
-      .select(`
+      .select(
+        `
         *,
         menu_categories (
           id,
           name,
           slug
         )
-      `)
+      `
+      )
       .eq('is_available', true)
 
     // Apply filters
@@ -216,14 +215,16 @@ export async function getDishById(dishId: string): Promise<ServiceResponse<MenuI
   try {
     const { data, error } = await supabase
       .from('menu_items')
-      .select(`
+      .select(
+        `
         *,
         menu_categories (
           id,
           name,
           slug
         )
-      `)
+      `
+      )
       .eq('id', dishId)
       .single()
 
@@ -257,9 +258,7 @@ export async function getDishById(dishId: string): Promise<ServiceResponse<MenuI
  * @param searchTerm - The search term
  * @returns Promise with matching dishes or error
  */
-export async function searchDishes(
-  searchTerm: string
-): Promise<ServiceResponse<MenuItem[]>> {
+export async function searchDishes(searchTerm: string): Promise<ServiceResponse<MenuItem[]>> {
   try {
     if (!searchTerm || searchTerm.trim() === '') {
       return {
@@ -271,14 +270,16 @@ export async function searchDishes(
 
     const { data, error } = await supabase
       .from('menu_items')
-      .select(`
+      .select(
+        `
         *,
         menu_categories (
           id,
           name,
           slug
         )
-      `)
+      `
+      )
       .eq('is_available', true)
       .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
       .order('created_at', { ascending: false })
@@ -315,4 +316,3 @@ export default {
   getDishById,
   searchDishes,
 }
-

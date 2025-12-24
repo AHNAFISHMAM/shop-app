@@ -1,6 +1,6 @@
 /**
  * Test Setup File
- * 
+ *
  * Global test configuration, mocks, and utilities.
  */
 
@@ -107,4 +107,3 @@ beforeEach(() => {
 //   error: vi.fn(),
 //   warn: vi.fn(),
 // }
-

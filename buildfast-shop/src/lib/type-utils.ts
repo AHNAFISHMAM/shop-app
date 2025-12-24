@@ -97,9 +97,7 @@ export interface PaginatedResponse<T> {
 /**
  * Result type for operations that can succeed or fail
  */
-export type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E }
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E }
 
 /**
  * Async result type
@@ -156,10 +154,15 @@ export type ReturnType<T extends (...args: any) => any> = T extends (...args: an
 
 /**
  * Common database table types
+ * Note: profiles table may not exist in all database schemas
  */
-export type Profile = TableRow<'profiles'>
-export type ProfileInsert = TableInsert<'profiles'>
-export type ProfileUpdate = TableUpdate<'profiles'>
+export type Profile = {
+  id: string
+  email: string | null
+  [key: string]: unknown
+}
+export type ProfileInsert = Partial<Profile>
+export type ProfileUpdate = Partial<Profile>
 
 export type MenuItem = TableRow<'menu_items'>
 export type MenuItemInsert = TableInsert<'menu_items'>
@@ -176,4 +179,3 @@ export type OrderUpdate = TableUpdate<'orders'>
 export type Reservation = TableRow<'table_reservations'>
 export type ReservationInsert = TableInsert<'table_reservations'>
 export type ReservationUpdate = TableUpdate<'table_reservations'>
-

@@ -192,7 +192,98 @@ You are the **entire development team in one person**:
 
 ---
 
-## 11. MASTER PROMPTS INTEGRATION WORKFLOW
+## 11. TYPESCRIPT ERROR FIXING WORKFLOW (AUTOMATIC)
+
+### Required Workflow for All Agents
+
+**Before fixing TypeScript errors:**
+1. **Error Analysis (Run First):**
+   ```bash
+   npm run typecheck:group    # Get error breakdown
+   npm run typecheck:by-type  # Prioritize by error type
+   npm run typecheck:by-file  # Group by file for parallel processing
+   ```
+
+2. **Auto-Fix Common Patterns (Always Run First):**
+   ```bash
+   npm run fix:auto          # Auto-fixes 30-40% of errors automatically
+   ```
+   Handles: `as Updates<>` → `asUpdate()`, error handling, null checks, `rows` attributes
+
+3. **Parallel Processing:**
+   ```bash
+   npm run fix:parallel      # Generate batch commands for parallel processing
+   ```
+
+4. **Watch Mode (Keep Running):**
+   ```bash
+   npm run typecheck:watch   # Real-time feedback (run in background)
+   ```
+
+5. **Use Helper Functions:**
+   - `asUpdate(table, data)` for Supabase updates
+   - `asInsert(table, data)` for Supabase inserts
+   - Located in `src/lib/supabase-helpers.ts`
+
+6. **Fix Errors in Priority Order:**
+   - **TS6133** (Unused vars) - Quick wins, auto-removable
+   - **TS2322** (Type mismatch) - Most common
+   - **TS2345** (Argument type) - Pattern-based
+   - **TS7006** (Implicit any) - Add explicit types
+   - **TS18046** (Null checks) - Add type guards
+   - **TS2339** (Property missing) - Add to type or assertion
+   - **TS7053** (Index signature) - Add index signature
+
+7. **VS Code Multi-Cursor (For Pattern Fixes):**
+   - Search pattern → `Alt+Enter` to select all → Replace
+   - Fixes 10-20 instances in seconds
+
+**Helper Functions Pattern:**
+```typescript
+// ❌ Don't use:
+.update({ field: value } as Updates<'table'>)
+
+// ✅ Use instead:
+import { asUpdate } from '@/lib/supabase-helpers'
+.update(asUpdate('table', { field: value }))
+```
+
+**Pre-Commit Enforcement:**
+- All TypeScript files are automatically linted and formatted before commit
+- TypeScript errors block commits (enforced by Husky + lint-staged)
+- Use `npm run lint:fix` and `npm run format` to auto-fix issues
+
+**Performance Optimizations:**
+- `typecheck:watch` - Instant feedback (0s delay)
+- `typecheck:watch:preserve` - Optimized watch mode (faster, preserves output)
+- `typecheck:build:watch` - Project references watch (modular compilation, 2-3x faster)
+- `typecheck:fast` - Quick validation (skips libs, 50% faster)
+- Incremental compilation - 2-3x faster subsequent runs
+- Project references - 2-3x faster (only recompile changed modules)
+- Parallel batch processing - 3-4x faster for file groups
+- Auto-fix - 30-40% of errors fixed automatically
+- Type-only imports - 10-20% faster compilation (use `fix:type-imports`)
+- **Total expected speedup: 10-30x faster overall**
+
+**Multi-Terminal Workflow (Recommended):**
+- Terminal 1: `typecheck:watch:preserve` or `typecheck:build:watch` (optimized watch)
+- Terminal 2: `typecheck:fast` (quick validation)
+- Terminal 3: Error analysis (`typecheck:group`, `typecheck:by-type`)
+- Terminal 4: Auto-fix (`fix:auto`, `fix:type-imports`)
+- Terminals 5-8: Parallel batches (from `fix:parallel`)
+
+**Setup Verification:**
+- Run `npm run verify:setup` to ensure all optimizations are configured
+
+**Reference:** 
+- `docs/TYPESCRIPT_QUICK_FIX_GUIDE.md`
+- `docs/PARALLEL_FIXING_WORKFLOW.md` (complete parallel workflow)
+- `docs/SPEED_OPTIMIZATIONS.md` (all performance optimizations)
+- `docs/AGENT_QUICK_REFERENCE.md` (quick reference for agents)
+
+---
+
+## 12. MASTER PROMPTS INTEGRATION WORKFLOW
 
 ### Two-Tier System
 

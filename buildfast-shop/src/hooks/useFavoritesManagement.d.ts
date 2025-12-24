@@ -1,13 +1,15 @@
-/**
- * Type declarations for useFavoritesManagement hook
- */
+export interface User {
+  id: string;
+  [key: string]: unknown;
+}
+
 export interface UseFavoritesManagementReturn {
   favoriteItems: Set<string>;
   togglingFavorites: Record<string, boolean>;
-  isFavorite: (itemId: string) => boolean;
   toggleFavorite: (itemId: string, isMenuItem?: boolean) => Promise<void>;
-  refreshFavorites: () => Promise<void>;
+  isFavorite: (itemId: string, isMenuItem?: boolean) => boolean;
+  isLoading: boolean;
 }
 
-export function useFavoritesManagement(user: { id: string } | null): UseFavoritesManagementReturn;
+export function useFavoritesManagement(user: User | null): UseFavoritesManagementReturn;
 

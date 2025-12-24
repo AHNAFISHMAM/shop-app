@@ -1,0 +1,9 @@
+{
+  "agentId": 1,
+  "task": "TS6133 - Unused Variables",
+  "description": "Fix all TS6133 errors (unused variables) - Quick wins",
+  "strategy": "Remove unused imports/variables, prefix intentionally unused with _",
+  "worktreePath": "../buildfast-shop-agent-1",
+  "branchName": "agent-1-worktree",
+  "createdAt": "2025-12-23T06:32:27.307Z"
+}

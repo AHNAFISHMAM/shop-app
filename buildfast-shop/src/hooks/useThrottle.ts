@@ -33,12 +33,15 @@ export function useThrottle<T>(value: T, limit = 1000): T {
   const lastRan = useRef<number>(Date.now())
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      if (Date.now() - lastRan.current >= limit) {
-        setThrottledValue(value)
-        lastRan.current = Date.now()
-      }
-    }, limit - (Date.now() - lastRan.current))
+    const handler = setTimeout(
+      () => {
+        if (Date.now() - lastRan.current >= limit) {
+          setThrottledValue(value)
+          lastRan.current = Date.now()
+        }
+      },
+      limit - (Date.now() - lastRan.current)
+    )
 
     return () => {
       clearTimeout(handler)
@@ -47,4 +50,3 @@ export function useThrottle<T>(value: T, limit = 1000): T {
 
   return throttledValue
 }
-

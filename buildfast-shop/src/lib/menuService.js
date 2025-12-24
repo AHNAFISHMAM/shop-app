@@ -5,8 +5,8 @@
  * Abstracts Supabase RPC calls for menu data.
  */
 
-import { supabase } from './supabase';
-import { logger } from '../utils/logger';
+import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 
 /**
  * Get the complete public menu using RPC function
@@ -18,29 +18,29 @@ import { logger } from '../utils/logger';
  */
 export async function getPublicMenu() {
   try {
-    const { data, error } = await supabase.rpc('get_public_menu');
+    const { data, error } = await supabase.rpc('get_public_menu')
 
     if (error) {
-      logger.error('Error fetching public menu:', error);
+      logger.error('Error fetching public menu:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load menu'
-      };
+        error: error.message || 'Failed to load menu',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getPublicMenu:', err);
+    logger.error('Unexpected error in getPublicMenu:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred while loading the menu'
-    };
+      error: 'An unexpected error occurred while loading the menu',
+    }
   }
 }
 
@@ -53,32 +53,29 @@ export async function getPublicMenu() {
  */
 export async function getCategories() {
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
+    const { data, error } = await supabase.from('categories').select('*').order('name')
 
     if (error) {
-      logger.error('Error fetching categories:', error);
+      logger.error('Error fetching categories:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load categories'
-      };
+        error: error.message || 'Failed to load categories',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getCategories:', err);
+    logger.error('Unexpected error in getCategories:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -91,33 +88,35 @@ export async function getSubcategories() {
   try {
     const { data, error } = await supabase
       .from('subcategories')
-      .select(`
+      .select(
+        `
         *,
         categories (id, name)
-      `)
-      .order('display_order');
+      `
+      )
+      .order('display_order')
 
     if (error) {
-      logger.error('Error fetching subcategories:', error);
+      logger.error('Error fetching subcategories:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load subcategories'
-      };
+        error: error.message || 'Failed to load subcategories',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getSubcategories:', err);
+    logger.error('Unexpected error in getSubcategories:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -134,7 +133,8 @@ export async function getDishes(filters = {}) {
   try {
     let query = supabase
       .from('menu_items')
-      .select(`
+      .select(
+        `
         *,
         subcategories (
           id,
@@ -142,47 +142,48 @@ export async function getDishes(filters = {}) {
           display_order,
           categories (id, name)
         )
-      `)
-      .eq('is_active', true);
+      `
+      )
+      .eq('is_active', true)
 
     // Apply filters
     if (filters.categoryId) {
-      query = query.eq('category_id', filters.categoryId);
+      query = query.eq('category_id', filters.categoryId)
     }
 
     if (filters.subcategoryId) {
-      query = query.eq('subcategory_id', filters.subcategoryId);
+      query = query.eq('subcategory_id', filters.subcategoryId)
     }
 
     if (filters.chefSpecial) {
-      query = query.eq('chef_special', true);
+      query = query.eq('chef_special', true)
     }
 
-    query = query.order('name');
+    query = query.order('name')
 
-    const { data, error } = await query;
+    const { data, error } = await query
 
     if (error) {
-      logger.error('Error fetching dishes:', error);
+      logger.error('Error fetching dishes:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load dishes'
-      };
+        error: error.message || 'Failed to load dishes',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getDishes:', err);
+    logger.error('Unexpected error in getDishes:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -196,39 +197,41 @@ export async function getDishById(dishId) {
   try {
     const { data, error } = await supabase
       .from('menu_items')
-      .select(`
+      .select(
+        `
         *,
         subcategories (
           id,
           name,
           categories (id, name)
         )
-      `)
+      `
+      )
       .eq('id', dishId)
       .eq('is_active', true)
-      .single();
+      .single()
 
     if (error) {
-      logger.error('Error fetching dish:', error);
+      logger.error('Error fetching dish:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Dish not found'
-      };
+        error: error.message || 'Dish not found',
+      }
     }
 
     return {
       success: true,
       data: data,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getDishById:', err);
+    logger.error('Unexpected error in getDishById:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -244,45 +247,47 @@ export async function searchDishes(searchTerm) {
       return {
         success: true,
         data: [],
-        error: null
-      };
+        error: null,
+      }
     }
 
     const { data, error } = await supabase
       .from('menu_items')
-      .select(`
+      .select(
+        `
         *,
         subcategories (
           id,
           name,
           categories (id, name)
         )
-      `)
+      `
+      )
       .eq('is_active', true)
       .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-      .order('name');
+      .order('name')
 
     if (error) {
-      logger.error('Error searching dishes:', error);
+      logger.error('Error searching dishes:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Search failed'
-      };
+        error: error.message || 'Search failed',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in searchDishes:', err);
+    logger.error('Unexpected error in searchDishes:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -292,5 +297,5 @@ export default {
   getSubcategories,
   getDishes,
   getDishById,
-  searchDishes
-};
+  searchDishes,
+}

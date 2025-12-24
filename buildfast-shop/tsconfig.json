@@ -6,6 +6,12 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
+    /* Performance Optimizations */
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "preserveWatchOutput": true,
+    "maxNodeModuleJsDepth": 1,
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -51,7 +57,6 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }
 

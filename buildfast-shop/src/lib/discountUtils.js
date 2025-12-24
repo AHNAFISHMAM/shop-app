@@ -32,7 +32,7 @@ export async function validateDiscountCode(code, userId, orderTotal) {
       return {
         valid: false,
         error: 'Invalid discount code',
-        message: 'This discount code does not exist or is not active.'
+        message: 'This discount code does not exist or is not active.',
       }
     }
 
@@ -44,7 +44,7 @@ export async function validateDiscountCode(code, userId, orderTotal) {
         return {
           valid: false,
           error: 'Expired code',
-          message: 'This discount code has expired.'
+          message: 'This discount code has expired.',
         }
       }
     }
@@ -57,7 +57,7 @@ export async function validateDiscountCode(code, userId, orderTotal) {
         return {
           valid: false,
           error: 'Code not started',
-          message: 'This discount code is not yet active.'
+          message: 'This discount code is not yet active.',
         }
       }
     }
@@ -67,7 +67,7 @@ export async function validateDiscountCode(code, userId, orderTotal) {
       return {
         valid: false,
         error: 'Minimum order not met',
-        message: `Minimum order amount of $${parseFloat(discountCode.min_order_amount).toFixed(2)} required.`
+        message: `Minimum order amount of $${parseFloat(discountCode.min_order_amount).toFixed(2)} required.`,
       }
     }
 
@@ -76,7 +76,7 @@ export async function validateDiscountCode(code, userId, orderTotal) {
       return {
         valid: false,
         error: 'Usage limit reached',
-        message: 'This discount code has reached its usage limit.'
+        message: 'This discount code has reached its usage limit.',
       }
     }
 
@@ -97,7 +97,7 @@ export async function validateDiscountCode(code, userId, orderTotal) {
         return {
           valid: false,
           error: 'Already used',
-          message: 'You have already used this discount code.'
+          message: 'You have already used this discount code.',
         }
       }
     }
@@ -127,14 +127,14 @@ export async function validateDiscountCode(code, userId, orderTotal) {
       valid: true,
       discountCode: discountCode,
       discountAmount: discountAmount,
-      finalTotal: orderTotal - discountAmount
+      finalTotal: orderTotal - discountAmount,
     }
   } catch (error) {
     logger.error('Error validating discount code:', error)
     return {
       valid: false,
       error: 'Validation error',
-      message: 'Failed to validate discount code. Please try again.'
+      message: 'Failed to validate discount code. Please try again.',
     }
   }
 }
@@ -148,18 +148,22 @@ export async function validateDiscountCode(code, userId, orderTotal) {
  * @param {number} orderTotal - The order total
  * @returns {Object} Success status
  */
-export async function applyDiscountCodeToOrder(discountCodeId, userId, orderId, discountAmount, orderTotal) {
+export async function applyDiscountCodeToOrder(
+  discountCodeId,
+  userId,
+  orderId,
+  discountAmount,
+  orderTotal
+) {
   try {
     // Record the usage (atomic operation with database constraints)
-    const { error: usageError } = await supabase
-      .from('discount_code_usage')
-      .insert({
-        discount_code_id: discountCodeId,
-        user_id: userId,
-        order_id: orderId,
-        discount_amount: discountAmount,
-        order_total: orderTotal
-      })
+    const { error: usageError } = await supabase.from('discount_code_usage').insert({
+      discount_code_id: discountCodeId,
+      user_id: userId,
+      order_id: orderId,
+      discount_amount: discountAmount,
+      order_total: orderTotal,
+    })
 
     if (usageError) {
       logger.error('Error recording discount code usage:', usageError)
@@ -171,7 +175,7 @@ export async function applyDiscountCodeToOrder(discountCodeId, userId, orderId, 
           success: false,
           error: usageError,
           message: 'You have already used this discount code.',
-          errorType: 'duplicate_usage'
+          errorType: 'duplicate_usage',
         }
       }
 
@@ -181,7 +185,7 @@ export async function applyDiscountCodeToOrder(discountCodeId, userId, orderId, 
           success: false,
           error: usageError,
           message: 'This discount code has reached its usage limit.',
-          errorType: 'usage_limit_reached'
+          errorType: 'usage_limit_reached',
         }
       }
 
@@ -236,7 +240,7 @@ export async function createDiscountCode(codeData) {
         usage_limit: codeData.usage_limit || null,
         one_per_customer: codeData.one_per_customer !== false,
         is_active: codeData.is_active !== false,
-        created_by: codeData.created_by
+        created_by: codeData.created_by,
       })
       .select()
       .single()
@@ -267,7 +271,7 @@ export async function updateDiscountCode(id, updates) {
       .from('discount_codes')
       .update({
         ...updates,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
@@ -289,10 +293,7 @@ export async function updateDiscountCode(id, updates) {
  */
 export async function deleteDiscountCode(id) {
   try {
-    const { error } = await supabase
-      .from('discount_codes')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('discount_codes').delete().eq('id', id)
 
     if (error) throw error
 
@@ -318,8 +319,14 @@ export async function getDiscountCodeUsageStats(discountCodeId) {
 
     if (error) throw error
 
-    const totalRevenue = (data || []).reduce((sum, usage) => sum + parseFloat(usage.order_total || 0), 0)
-    const totalDiscount = (data || []).reduce((sum, usage) => sum + parseFloat(usage.discount_amount || 0), 0)
+    const totalRevenue = (data || []).reduce(
+      (sum, usage) => sum + parseFloat(usage.order_total || 0),
+      0
+    )
+    const totalDiscount = (data || []).reduce(
+      (sum, usage) => sum + parseFloat(usage.discount_amount || 0),
+      0
+    )
 
     return {
       success: true,
@@ -327,8 +334,8 @@ export async function getDiscountCodeUsageStats(discountCodeId) {
         usage_count: data?.length || 0,
         total_revenue: totalRevenue,
         total_discount: totalDiscount,
-        usage_history: data || []
-      }
+        usage_history: data || [],
+      },
     }
   } catch (error) {
     logger.error('Error fetching usage stats:', error)

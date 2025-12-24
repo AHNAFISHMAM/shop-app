@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import { logger } from '../utils/logger';
+import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 
 /**
  * Image Upload & Management Utilities for Star Café Menu System
@@ -10,56 +10,57 @@ import { logger } from '../utils/logger';
 // IMAGE VALIDATION
 // =====================================================
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
 
 async function generateFileHash(file) {
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const arrayBuffer = await file.arrayBuffer()
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
   } catch (error) {
-    logger.error('Failed to hash file:', error);
-    return null;
+    logger.error('Failed to hash file:', error)
+    return null
   }
 }
 
 async function storeImageMetadata(hash, payload) {
-  const { error } = await supabase
-    .from('image_metadata')
-    .upsert({
+  const { error } = await supabase.from('image_metadata').upsert(
+    {
       hash,
       url: payload.url,
       stored_at: payload.storedAt,
-      metadata: payload
-    }, { onConflict: 'hash' });
+      metadata: payload,
+    },
+    { onConflict: 'hash' }
+  )
 
   if (error) {
-    throw error;
+    throw error
   }
 }
 
 export function validateImage(file) {
-  const errors = [];
+  const errors = []
 
   if (!file) {
-    errors.push('No file selected');
-    return { valid: false, errors };
+    errors.push('No file selected')
+    return { valid: false, errors }
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    errors.push('Invalid file type. Allowed: JPG, PNG, WEBP, GIF');
+    errors.push('Invalid file type. Allowed: JPG, PNG, WEBP, GIF')
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    errors.push(`File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+    errors.push(`File too large. Max size: ${MAX_FILE_SIZE / 1024 / 1024}MB`)
   }
 
   return {
     valid: errors.length === 0,
-    errors
-  };
+    errors,
+  }
 }
 
 // =====================================================
@@ -69,53 +70,54 @@ export function validateImage(file) {
 export async function uploadMenuImage(file, dishName, metadata = {}) {
   try {
     // Validate first
-    const validation = validateImage(file);
+    const validation = validateImage(file)
     if (!validation.valid) {
-      throw new Error(validation.errors.join(', '));
+      throw new Error(validation.errors.join(', '))
     }
 
     // Generate deterministic hash-based filename to block duplicates
-    const hash = await generateFileHash(file);
+    const hash = await generateFileHash(file)
     if (!hash) {
-      throw new Error('Failed to fingerprint image');
+      throw new Error('Failed to fingerprint image')
     }
 
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split('.').pop()
     const sanitizedName = dishName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    const baseFileName = `${hash}-${sanitizedName || 'image'}`;
-    const fileName = `${baseFileName}.${fileExt}`;
-    const filePath = `menu/${fileName}`;
+      .replace(/^-+|-+$/g, '')
+    const baseFileName = `${hash}-${sanitizedName || 'image'}`
+    const fileName = `${baseFileName}.${fileExt}`
+    const filePath = `menu/${fileName}`
 
     // Upload to Supabase Storage
     const { error } = await supabase.storage
       .from('product-images') // Using existing bucket
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false
-      });
+        upsert: false,
+      })
 
     if (error) {
       const errorSnapshot = [error.statusCode, error.status, error.name, error.message]
         .filter(Boolean)
-        .map(value => String(value).toLowerCase());
+        .map(value => String(value).toLowerCase())
 
-      const isConflict = errorSnapshot.some(value =>
-        value.includes('409') ||
-        value.includes('conflict') ||
-        value.includes('already exists') ||
-        value.includes('duplicate')
-      );
+      const isConflict = errorSnapshot.some(
+        value =>
+          value.includes('409') ||
+          value.includes('conflict') ||
+          value.includes('already exists') ||
+          value.includes('duplicate')
+      )
 
       if (!isConflict) {
-        throw error;
+        throw error
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('product-images').getPublicUrl(filePath)
 
       const metadataPayload = {
         ...metadata,
@@ -127,23 +129,23 @@ export async function uploadMenuImage(file, dishName, metadata = {}) {
         duplicate: true,
         url: publicUrl,
         storedAt: filePath,
-        uploadedAt: new Date().toISOString()
-      };
+        uploadedAt: new Date().toISOString(),
+      }
 
-      await storeImageMetadata(hash, metadataPayload);
+      await storeImageMetadata(hash, metadataPayload)
 
       return {
         success: true,
         url: publicUrl,
         path: filePath,
-        duplicate: true
-      };
+        duplicate: true,
+      }
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('product-images').getPublicUrl(filePath)
 
     const metadataPayload = {
       ...metadata,
@@ -155,23 +157,23 @@ export async function uploadMenuImage(file, dishName, metadata = {}) {
       duplicate: false,
       url: publicUrl,
       storedAt: filePath,
-      uploadedAt: new Date().toISOString()
-    };
+      uploadedAt: new Date().toISOString(),
+    }
 
-    await storeImageMetadata(hash, metadataPayload);
+    await storeImageMetadata(hash, metadataPayload)
 
     return {
       success: true,
       url: publicUrl,
       path: filePath,
-      duplicate: false
-    };
+      duplicate: false,
+    }
   } catch (error) {
-    logger.error('Image upload error:', error);
+    logger.error('Image upload error:', error)
     return {
       success: false,
-      error: error.message || 'Failed to upload image'
-    };
+      error: error.message || 'Failed to upload image',
+    }
   }
 }
 
@@ -180,27 +182,27 @@ export async function uploadMenuImage(file, dishName, metadata = {}) {
 // =====================================================
 
 export async function uploadMultipleImages(files) {
-  const results = [];
+  const results = []
 
   for (const file of files) {
-    const baseName = file.name.replace(/\.[^/.]+$/, '');
+    const baseName = file.name.replace(/\.[^/.]+$/, '')
     const autoMetadata = {
       title: baseName,
       altText: baseName,
       keywords: baseName.split(/[\s_-]+/).filter(Boolean),
       campaign: null,
-      usageRights: null
-    };
+      usageRights: null,
+    }
 
-    const result = await uploadMenuImage(file, file.name, autoMetadata);
+    const result = await uploadMenuImage(file, file.name, autoMetadata)
     results.push({
       fileName: file.name,
       duplicate: Boolean(result.duplicate),
-      ...result
-    });
+      ...result,
+    })
   }
 
-  return results;
+  return results
 }
 
 // =====================================================
@@ -210,30 +212,28 @@ export async function uploadMultipleImages(files) {
 export async function deleteMenuImage(imagePath) {
   try {
     // Extract path from URL if full URL provided
-    let path = imagePath;
+    let path = imagePath
     if (imagePath.includes('supabase')) {
-      const urlParts = imagePath.split('/');
-      const menuIndex = urlParts.findIndex(part => part === 'menu');
+      const urlParts = imagePath.split('/')
+      const menuIndex = urlParts.findIndex(part => part === 'menu')
       if (menuIndex !== -1) {
-        path = `menu/${urlParts.slice(menuIndex + 1).join('/')}`;
+        path = `menu/${urlParts.slice(menuIndex + 1).join('/')}`
       }
     }
 
-    const { error } = await supabase.storage
-      .from('product-images')
-      .remove([path]);
+    const { error } = await supabase.storage.from('product-images').remove([path])
 
     if (error) {
-      throw error;
+      throw error
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    logger.error('Image delete error:', error);
+    logger.error('Image delete error:', error)
     return {
       success: false,
-      error: error.message || 'Failed to delete image'
-    };
+      error: error.message || 'Failed to delete image',
+    }
   }
 }
 
@@ -244,57 +244,57 @@ export async function deleteMenuImage(imagePath) {
 export function generatePlaceholderImage(dishName, color = '#C59D5F') {
   try {
     // Create canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 300;
-    const ctx = canvas.getContext('2d');
+    const canvas = document.createElement('canvas')
+    canvas.width = 400
+    canvas.height = 300
+    const ctx = canvas.getContext('2d')
 
     if (!ctx) {
-      throw new Error('Could not create canvas context');
+      throw new Error('Could not create canvas context')
     }
 
     // Background gradient
-    const gradient = ctx.createLinearGradient(0, 0, 400, 300);
-    gradient.addColorStop(0, color);
-    gradient.addColorStop(1, adjustBrightness(color, -20));
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 400, 300);
+    const gradient = ctx.createLinearGradient(0, 0, 400, 300)
+    gradient.addColorStop(0, color)
+    gradient.addColorStop(1, adjustBrightness(color, -20))
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 400, 300)
 
     // Text
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#FFFFFF'
+    ctx.font = 'bold 24px Arial'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
 
     // Wrap text if too long
-    const maxWidth = 350;
-    const words = dishName.split(' ');
-    let line = '';
-    let y = 150;
+    const maxWidth = 350
+    const words = dishName.split(' ')
+    let line = ''
+    let y = 150
 
     for (let word of words) {
-      const testLine = line + word + ' ';
-      const metrics = ctx.measureText(testLine);
+      const testLine = line + word + ' '
+      const metrics = ctx.measureText(testLine)
 
       if (metrics.width > maxWidth && line !== '') {
-        ctx.fillText(line, 200, y);
-        line = word + ' ';
-        y += 30;
+        ctx.fillText(line, 200, y)
+        line = word + ' '
+        y += 30
       } else {
-        line = testLine;
+        line = testLine
       }
     }
-    ctx.fillText(line, 200, y);
+    ctx.fillText(line, 200, y)
 
     // Add subtle icon (fork & knife)
-    ctx.font = '48px Arial';
-    ctx.fillText('🍽️', 200, 100);
+    ctx.font = '48px Arial'
+    ctx.fillText('🍽️', 200, 100)
 
-    return canvas.toDataURL('image/png');
+    return canvas.toDataURL('image/png')
   } catch (error) {
-    logger.error('Error generating placeholder:', error);
+    logger.error('Error generating placeholder:', error)
     // Return fallback placeholder URL
-    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop';
+    return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'
   }
 }
 
@@ -303,24 +303,29 @@ function adjustBrightness(color, percent) {
   try {
     // Validate color format
     if (!color || typeof color !== 'string' || !color.match(/^#[0-9A-F]{6}$/i)) {
-      return '#C59D5F'; // Return default gold color
+      return '#C59D5F' // Return default gold color
     }
 
-    const num = parseInt(color.replace('#', ''), 16);
-    const amt = Math.round(2.55 * percent);
-    const R = (num >> 16) + amt;
-    const G = (num >> 8 & 0x00FF) + amt;
-    const B = (num & 0x0000FF) + amt;
+    const num = parseInt(color.replace('#', ''), 16)
+    const amt = Math.round(2.55 * percent)
+    const R = (num >> 16) + amt
+    const G = ((num >> 8) & 0x00ff) + amt
+    const B = (num & 0x0000ff) + amt
 
-    return '#' + (
-      0x1000000 +
-      (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-      (B < 255 ? B < 1 ? 0 : B : 255)
-    ).toString(16).slice(1);
+    return (
+      '#' +
+      (
+        0x1000000 +
+        (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+        (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+        (B < 255 ? (B < 1 ? 0 : B) : 255)
+      )
+        .toString(16)
+        .slice(1)
+    )
   } catch (error) {
-    logger.error('Error adjusting brightness:', error);
-    return color; // Return original color on error
+    logger.error('Error adjusting brightness:', error)
+    return color // Return original color on error
   }
 }
 
@@ -329,41 +334,42 @@ function adjustBrightness(color, percent) {
 // =====================================================
 
 export function autoMatchImages(uploadedFiles, menuItems) {
-  const matches = [];
-  const unmatched = [];
+  const matches = []
+  const unmatched = []
 
   uploadedFiles.forEach(file => {
-    const fileName = file.fileName.toLowerCase()
+    const fileName = file.fileName
+      .toLowerCase()
       .replace(/\.(jpg|jpeg|png|webp|gif)$/i, '')
       .replace(/[_-]/g, ' ')
-      .trim();
+      .trim()
 
     // Try to find matching menu item
     const matchedItem = menuItems.find(item => {
-      const itemName = item.name.toLowerCase().trim();
-      const itemSlug = itemName.replace(/\s+/g, '-');
-      const fileSlug = fileName.replace(/\s+/g, '-');
+      const itemName = item.name.toLowerCase().trim()
+      const itemSlug = itemName.replace(/\s+/g, '-')
+      const fileSlug = fileName.replace(/\s+/g, '-')
 
       return (
         itemName === fileName ||
         itemSlug === fileSlug ||
         itemName.includes(fileName) ||
         fileName.includes(itemName)
-      );
-    });
+      )
+    })
 
     if (matchedItem) {
       matches.push({
         file,
         menuItem: matchedItem,
-        confidence: 'high'
-      });
+        confidence: 'high',
+      })
     } else {
-      unmatched.push(file);
+      unmatched.push(file)
     }
-  });
+  })
 
-  return { matches, unmatched };
+  return { matches, unmatched }
 }
 
 // =====================================================
@@ -371,28 +377,28 @@ export function autoMatchImages(uploadedFiles, menuItems) {
 // =====================================================
 
 export function getImageUrl(imageUrl) {
-  if (!imageUrl) return null;
+  if (!imageUrl) return null
 
   try {
     // If already a full URL, return as-is
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
+      return imageUrl
     }
 
     // If relative path, assume it's in public folder
     if (imageUrl.startsWith('/')) {
-      return imageUrl;
+      return imageUrl
     }
 
     // Otherwise, assume it's a Supabase storage path
-    const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(imageUrl);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('product-images').getPublicUrl(imageUrl)
 
-    return publicUrl;
+    return publicUrl
   } catch (error) {
-    logger.error('Error getting image URL:', error);
-    return imageUrl; // Return original URL on error
+    logger.error('Error getting image URL:', error)
+    return imageUrl // Return original URL on error
   }
 }
 
@@ -402,10 +408,10 @@ export function getImageUrl(imageUrl) {
 
 export async function checkImageExists(url) {
   try {
-    const response = await fetch(url, { method: 'HEAD' });
-    return response.ok;
+    const response = await fetch(url, { method: 'HEAD' })
+    return response.ok
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -415,48 +421,50 @@ export async function checkImageExists(url) {
 
 export async function compressImage(file, maxWidth = 800, quality = 0.8) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+    const reader = new FileReader()
 
-    reader.onload = (e) => {
-      const img = new Image();
+    reader.onload = e => {
+      const img = new Image()
 
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
 
         if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
+          height = (height * maxWidth) / width
+          width = maxWidth
         }
 
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = width
+        canvas.height = height
 
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
 
         canvas.toBlob(
-          (blob) => {
+          blob => {
             if (!blob) {
-              reject(new Error('Failed to compress image'));
-              return;
+              reject(new Error('Failed to compress image'))
+              return
             }
-            resolve(new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now()
-            }));
+            resolve(
+              new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              })
+            )
           },
           'image/jpeg',
           quality
-        );
-      };
+        )
+      }
 
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
+      img.onerror = reject
+      img.src = e.target.result
+    }
 
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }

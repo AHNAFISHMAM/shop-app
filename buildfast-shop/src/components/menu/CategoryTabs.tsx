@@ -1,14 +1,14 @@
-import { useCallback, useState, useEffect, useMemo } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import { staggerContainer, fadeSlideUp, fadeSlideDown } from '../animations/menuAnimations';
+import { useCallback, useState, useEffect, useMemo } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
+import { staggerContainer, fadeSlideUp, fadeSlideDown } from '../animations/menuAnimations'
 
 /**
  * Category interface
  */
 interface Category {
-  id: string;
-  name: string;
-  [key: string]: unknown;
+  id: string
+  name: string
+  [key: string]: unknown
 }
 
 /**
@@ -16,17 +16,17 @@ interface Category {
  */
 interface CategoryTabsProps {
   /** Array of main categories */
-  categories: Category[];
+  categories: Category[]
   /** Array of filtered subcategories */
-  filteredSubcategories?: Category[];
+  filteredSubcategories?: Category[]
   /** Currently selected main category */
-  selectedMainCategory?: Category | null;
+  selectedMainCategory?: Category | null
   /** Currently selected subcategory */
-  selectedSubcategory?: Category | null;
+  selectedSubcategory?: Category | null
   /** Callback when main category is clicked */
-  onMainCategoryClick: (category: Category | null) => void;
+  onMainCategoryClick: (category: Category | null) => void
   /** Callback when subcategory is clicked */
-  onSubcategoryClick: (subcategory: Category | null) => void;
+  onSubcategoryClick: (subcategory: Category | null) => void
 }
 
 /**
@@ -53,79 +53,72 @@ const CategoryTabs = ({
 }: CategoryTabsProps) => {
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
+    if (typeof document === 'undefined') return undefined
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Memoized background colors
   const stickyBg = useMemo(() => {
-    return isLightTheme
-      ? 'rgba(var(--text-main-rgb), 0.98)'
-      : 'rgba(var(--bg-dark-rgb), 0.95)';
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--text-main-rgb), 0.98)' : 'rgba(var(--bg-dark-rgb), 0.95)'
+  }, [isLightTheme])
 
   const stickyBorder = useMemo(() => {
-    return isLightTheme
-      ? 'rgba(var(--bg-dark-rgb), 0.1)'
-      : undefined;
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.1)' : undefined
+  }, [isLightTheme])
 
   const hoverBg = useMemo(() => {
-    return isLightTheme
-      ? 'rgba(var(--bg-dark-rgb), 0.08)'
-      : 'rgba(var(--text-main-rgb), 0.1)';
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.08)' : 'rgba(var(--text-main-rgb), 0.1)'
+  }, [isLightTheme])
 
   const inactiveBg = useMemo(() => {
-    return isLightTheme
-      ? 'rgba(var(--bg-dark-rgb), 0.04)'
-      : 'rgba(var(--text-main-rgb), 0.05)';
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.04)' : 'rgba(var(--text-main-rgb), 0.05)'
+  }, [isLightTheme])
 
   // Handle main category click with useCallback
   const handleMainClick = useCallback(
     (category: Category | null) => {
-      onMainCategoryClick(category);
+      onMainCategoryClick(category)
     },
     [onMainCategoryClick]
-  );
+  )
 
   // Handle subcategory click with useCallback
   const handleSubClick = useCallback(
     (subcategory: Category | null) => {
-      onSubcategoryClick(subcategory);
+      onSubcategoryClick(subcategory)
     },
     [onSubcategoryClick]
-  );
+  )
 
   // Check for reduced motion preference
-  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReducedMotion =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   return (
     <m.nav
       className="sticky top-16 z-20 backdrop-blur-md border-b py-3 sm:py-4"
       style={{
         backgroundColor: stickyBg,
-        borderColor: stickyBorder
+        borderColor: stickyBorder,
       }}
       variants={prefersReducedMotion ? undefined : fadeSlideDown}
       initial={prefersReducedMotion ? undefined : 'hidden'}
@@ -150,14 +143,14 @@ const CategoryTabs = ({
                 ? 'bg-[var(--accent)] text-black shadow-lg'
                 : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
             }`}
-            onMouseEnter={(e) => {
+            onMouseEnter={e => {
               if (selectedMainCategory) {
-                e.currentTarget.style.backgroundColor = hoverBg;
+                e.currentTarget.style.backgroundColor = hoverBg
               }
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={e => {
               if (selectedMainCategory) {
-                e.currentTarget.style.backgroundColor = '';
+                e.currentTarget.style.backgroundColor = ''
               }
             }}
             variants={prefersReducedMotion ? undefined : fadeSlideUp}
@@ -180,14 +173,14 @@ const CategoryTabs = ({
                   ? 'bg-[var(--accent)] text-black shadow-lg'
                   : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
               }`}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 if (selectedMainCategory?.id !== category.id) {
-                  e.currentTarget.style.backgroundColor = hoverBg;
+                  e.currentTarget.style.backgroundColor = hoverBg
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={e => {
                 if (selectedMainCategory?.id !== category.id) {
-                  e.currentTarget.style.backgroundColor = '';
+                  e.currentTarget.style.backgroundColor = ''
                 }
               }}
               variants={prefersReducedMotion ? undefined : fadeSlideUp}
@@ -221,17 +214,21 @@ const CategoryTabs = ({
                     ? 'bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]'
                     : 'text-[var(--text-muted)]'
                 }`}
-                style={selectedSubcategory ? {
-                  backgroundColor: inactiveBg
-                } : undefined}
-                onMouseEnter={(e) => {
+                style={
+                  selectedSubcategory
+                    ? {
+                        backgroundColor: inactiveBg,
+                      }
+                    : undefined
+                }
+                onMouseEnter={e => {
                   if (selectedSubcategory) {
-                    e.currentTarget.style.backgroundColor = hoverBg;
+                    e.currentTarget.style.backgroundColor = hoverBg
                   }
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                   if (selectedSubcategory) {
-                    e.currentTarget.style.backgroundColor = inactiveBg;
+                    e.currentTarget.style.backgroundColor = inactiveBg
                   }
                 }}
                 variants={prefersReducedMotion ? undefined : fadeSlideUp}
@@ -254,17 +251,21 @@ const CategoryTabs = ({
                       ? 'bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]'
                       : 'text-[var(--text-muted)]'
                   }`}
-                  style={selectedSubcategory?.id !== subcategory.id ? {
-                    backgroundColor: inactiveBg
-                  } : undefined}
-                  onMouseEnter={(e) => {
+                  style={
+                    selectedSubcategory?.id !== subcategory.id
+                      ? {
+                          backgroundColor: inactiveBg,
+                        }
+                      : undefined
+                  }
+                  onMouseEnter={e => {
                     if (selectedSubcategory?.id !== subcategory.id) {
-                      e.currentTarget.style.backgroundColor = hoverBg;
+                      e.currentTarget.style.backgroundColor = hoverBg
                     }
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={e => {
                     if (selectedSubcategory?.id !== subcategory.id) {
-                      e.currentTarget.style.backgroundColor = inactiveBg;
+                      e.currentTarget.style.backgroundColor = inactiveBg
                     }
                   }}
                   variants={prefersReducedMotion ? undefined : fadeSlideUp}
@@ -283,8 +284,7 @@ const CategoryTabs = ({
         </AnimatePresence>
       </div>
     </m.nav>
-  );
-};
+  )
+}
 
-export default CategoryTabs;
-
+export default CategoryTabs

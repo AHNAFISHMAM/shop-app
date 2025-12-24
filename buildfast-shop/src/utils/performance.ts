@@ -46,10 +46,7 @@ export function measurePerformance<T>(fn: () => T, label?: string): T {
  * )
  * ```
  */
-export async function measureAsyncPerformance<T>(
-  fn: () => Promise<T>,
-  label?: string
-): Promise<T> {
+export async function measureAsyncPerformance<T>(fn: () => Promise<T>, label?: string): Promise<T> {
   const start = performance.now()
   const result = await fn()
   const end = performance.now()
@@ -125,7 +122,7 @@ export async function getCoreWebVitals(): Promise<{
   // Largest Contentful Paint (LCP)
   if ('PerformanceObserver' in window) {
     try {
-      const lcpObserver = new PerformanceObserver((list) => {
+      const lcpObserver = new PerformanceObserver(list => {
         const entries = list.getEntries()
         const lastEntry = entries[entries.length - 1] as PerformanceEntry & {
           renderTime?: number
@@ -140,9 +137,9 @@ export async function getCoreWebVitals(): Promise<{
 
     // First Input Delay (FID)
     try {
-      const fidObserver = new PerformanceObserver((list) => {
+      const fidObserver = new PerformanceObserver(list => {
         const entries = list.getEntries()
-        entries.forEach((entry) => {
+        entries.forEach(entry => {
           if (entry.entryType === 'first-input') {
             const fidEntry = entry as PerformanceEventTiming
             vitals.fid = fidEntry.processingStart - fidEntry.startTime
@@ -157,9 +154,9 @@ export async function getCoreWebVitals(): Promise<{
     // Cumulative Layout Shift (CLS)
     try {
       let clsValue = 0
-      const clsObserver = new PerformanceObserver((list) => {
+      const clsObserver = new PerformanceObserver(list => {
         const entries = list.getEntries()
-        entries.forEach((entry) => {
+        entries.forEach(entry => {
           if (!(entry as any).hadRecentInput) {
             clsValue += (entry as any).value
           }
@@ -180,11 +177,7 @@ export async function getCoreWebVitals(): Promise<{
  *
  * @param metrics - Metrics to log
  */
-export function logPerformanceMetrics(metrics: {
-  lcp?: number
-  fid?: number
-  cls?: number
-}): void {
+export function logPerformanceMetrics(metrics: { lcp?: number; fid?: number; cls?: number }): void {
   if (process.env.NODE_ENV === 'development') {
     logger.group('📊 Core Web Vitals', () => {
       if (metrics.lcp) {
@@ -202,4 +195,3 @@ export function logPerformanceMetrics(metrics: {
     })
   }
 }
-

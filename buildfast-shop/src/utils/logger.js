@@ -4,7 +4,7 @@
  * Prevents console statements from appearing in production builds
  */
 
-const isDevelopment = import.meta.env.DEV;
+const isDevelopment = import.meta.env.DEV
 
 /**
  * Log utility that only logs in development
@@ -16,7 +16,7 @@ export const logger = {
    */
   log: (...args) => {
     if (isDevelopment) {
-      console.log(...args);
+      console.log(...args)
     }
   },
 
@@ -26,7 +26,7 @@ export const logger = {
    */
   error: (...args) => {
     if (isDevelopment) {
-      console.error(...args);
+      console.error(...args)
     }
     // In production, could send to error tracking service
     // if (import.meta.env.PROD) {
@@ -40,7 +40,7 @@ export const logger = {
    */
   warn: (...args) => {
     if (isDevelopment) {
-      console.warn(...args);
+      console.warn(...args)
     }
   },
 
@@ -50,7 +50,7 @@ export const logger = {
    */
   info: (...args) => {
     if (isDevelopment) {
-      console.info(...args);
+      console.info(...args)
     }
   },
 
@@ -60,7 +60,7 @@ export const logger = {
    */
   debug: (...args) => {
     if (isDevelopment) {
-      console.debug(...args);
+      console.debug(...args)
     }
   },
 
@@ -70,7 +70,7 @@ export const logger = {
    */
   table: (...args) => {
     if (isDevelopment) {
-      console.table(...args);
+      console.table(...args)
     }
   },
 
@@ -81,12 +81,11 @@ export const logger = {
    */
   group: (label, fn) => {
     if (isDevelopment) {
-      console.group(label);
-      fn();
-      console.groupEnd();
+      console.group(label)
+      fn()
+      console.groupEnd()
     } else {
-      fn();
+      fn()
     }
-  }
-};
-
+  },
+}

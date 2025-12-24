@@ -55,7 +55,10 @@ export function FulfillmentSection({
       </div>
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="scheduledSlot" className="block text-sm font-medium text-[var(--text-main)] mb-2">
+          <label
+            htmlFor="scheduledSlot"
+            className="block text-sm font-medium text-[var(--text-main)] mb-2"
+          >
             {fulfillmentMode === 'delivery' ? 'Delivery window' : 'Pickup window'}
           </label>
           <CustomDropdown
@@ -63,7 +66,7 @@ export function FulfillmentSection({
             name="scheduledSlot"
             options={SCHEDULED_SLOTS.map(slot => ({ value: slot.value, label: slot.label }))}
             value={scheduledSlot}
-            onChange={(event) => onScheduledSlotChange(event.target.value as ScheduledSlot)}
+            onChange={event => onScheduledSlotChange(event.target.value as ScheduledSlot)}
             placeholder="Select time window"
             maxVisibleItems={5}
           />
@@ -71,11 +74,13 @@ export function FulfillmentSection({
         <div className="rounded-xl border border-theme bg-theme-elevated p-4 text-sm text-muted">
           {fulfillmentMode === 'delivery' ? (
             <p className="leading-snug">
-              Courier heads out once the kitchen marks your order ready. We&apos;ll text live tracking the moment it&apos;s on the road.
+              Courier heads out once the kitchen marks your order ready. We&apos;ll text live
+              tracking the moment it&apos;s on the road.
             </p>
           ) : (
             <p className="leading-snug">
-              Collect from the host desk at 61 Orchard Street. We&apos;ll ping you when the order is plated and ready to hand off.
+              Collect from the host desk at 61 Orchard Street. We&apos;ll ping you when the order is
+              plated and ready to hand off.
             </p>
           )}
         </div>
@@ -83,4 +88,3 @@ export function FulfillmentSection({
     </div>
   )
 }
-

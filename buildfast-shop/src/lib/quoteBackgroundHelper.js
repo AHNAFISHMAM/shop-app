@@ -5,7 +5,8 @@
  */
 
 // Default fallback image URL (local asset)
-const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80'
+const DEFAULT_BACKGROUND =
+  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80'
 
 /**
  * Get hero quote background image URL
@@ -17,7 +18,11 @@ const DEFAULT_BACKGROUND = 'https://images.unsplash.com/photo-1517248135467-4c7e
  */
 export function getQuoteBackgroundUrl(settings) {
   // Return uploaded URL if it exists and is valid
-  if (settings?.hero_quote_bg_url && typeof settings.hero_quote_bg_url === 'string' && settings.hero_quote_bg_url.trim() !== '') {
+  if (
+    settings?.hero_quote_bg_url &&
+    typeof settings.hero_quote_bg_url === 'string' &&
+    settings.hero_quote_bg_url.trim() !== ''
+  ) {
     return settings.hero_quote_bg_url
   }
 

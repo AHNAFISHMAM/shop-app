@@ -80,4 +80,3 @@ export function useWindowSize(throttleMs = 100): WindowSize {
     height: throttledHeight,
   }
 }
-

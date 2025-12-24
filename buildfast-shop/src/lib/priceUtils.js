@@ -13,13 +13,13 @@
  */
 export function getCurrencySymbol(currency) {
   const currencyMap = {
-    'BDT': '৳',
-    'USD': '$',
-    'EUR': '€',
-    'GBP': '£',
-    'INR': '₹',
-  };
-  return currencyMap[currency] || currency || '৳';
+    BDT: '৳',
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    INR: '₹',
+  }
+  return currencyMap[currency] || currency || '৳'
 }
 
 /**
@@ -61,7 +61,7 @@ export function formatPrice(price, decimals = 2) {
  * @returns {string} Complete formatted price with symbol (e.g., '৳350')
  */
 export function formatPriceWithCurrency(price, currency = 'BDT', decimals = 0) {
-  return `${getCurrencySymbol(currency)}${formatPrice(price, decimals)}`;
+  return `${getCurrencySymbol(currency)}${formatPrice(price, decimals)}`
 }
 
 /**
@@ -74,4 +74,3 @@ export function formatPriceWithCurrency(price, currency = 'BDT', decimals = 0) {
 export function formatPriceForDB(price) {
   return parseFloat(parsePrice(price).toFixed(2))
 }
-

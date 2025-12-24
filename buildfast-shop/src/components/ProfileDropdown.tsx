@@ -1,48 +1,48 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { useAuth } from '../contexts/AuthContext';
-import { useStoreSettings } from '../contexts/StoreSettingsContext';
-import { supabase } from '../lib/supabase';
-import { resolveReferralInfo } from '../lib/loyaltyUtils';
-import { logger } from '../utils/logger';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { useAuth } from '../contexts/AuthContext'
+import { useStoreSettings } from '../contexts/StoreSettingsContext'
+import { supabase } from '../lib/supabase'
+import { resolveReferralInfo } from '../lib/loyaltyUtils'
+import { logger } from '../utils/logger'
 
 /**
  * Profile data interface
  */
 interface Profile {
-  id: string;
-  full_name: string | null;
-  avatar_url?: string | null;
+  id: string
+  full_name: string | null
+  avatar_url?: string | null
 }
 
 /**
  * Dropdown position interface
  */
 interface DropdownPosition {
-  top: number;
-  right: number;
-  width: number;
+  top: number
+  right: number
+  width: number
 }
 
 /**
  * Menu item interface
  */
 interface MenuItem {
-  key: string;
-  label: string;
-  to?: string;
-  onClick?: () => void;
-  badge?: string;
+  key: string
+  label: string
+  to?: string
+  onClick?: () => void
+  badge?: string
 }
 
 /**
  * Referral info interface
  */
 interface ReferralInfo {
-  shareUrl: string;
-  code: string;
+  shareUrl: string
+  code: string
 }
 
 /**
@@ -59,194 +59,204 @@ interface ReferralInfo {
  * - Performance optimized (memoized callbacks, reduced motion support)
  */
 const ProfileDropdown = () => {
-  const { user, signOut, loading, isAdmin } = useAuth();
-  const { settings, loading: settingsLoading } = useStoreSettings();
+  const { user, signOut, loading, isAdmin } = useAuth()
+  const { settings, loading: settingsLoading } = useStoreSettings()
 
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   // Check for reduced motion preference
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
 
-  const [open, setOpen] = useState<boolean>(false);
-  const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [mounted, setMounted] = useState<boolean>(false);
-  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, right: 0, width: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuItemRefs = useRef<(HTMLButtonElement | HTMLAnchorElement | null)[]>([]);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const buttonId = useMemo(() => user?.id ? `profile-menu-button-${user.id}` : 'profile-menu-button', [user?.id]);
-  const menuId = useMemo(() => user?.id ? `profile-menu-${user.id}` : 'profile-menu', [user?.id]);
+  const [open, setOpen] = useState<boolean>(false)
+  const [isAnimating, setIsAnimating] = useState<boolean>(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [mounted, setMounted] = useState<boolean>(false)
+  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({
+    top: 0,
+    right: 0,
+    width: 0,
+  })
+  const containerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const menuItemRefs = useRef<(HTMLButtonElement | HTMLAnchorElement | null)[]>([])
+  const navigate = useNavigate()
+  const location = useLocation()
+  const buttonId = useMemo(
+    () => (user?.id ? `profile-menu-button-${user.id}` : 'profile-menu-button'),
+    [user?.id]
+  )
+  const menuId = useMemo(() => (user?.id ? `profile-menu-${user.id}` : 'profile-menu'), [user?.id])
 
   // Feature flags
   const enableLoyalty = useMemo(() => {
-    return settingsLoading ? false : (settings?.enable_loyalty_program ?? true);
-  }, [settings, settingsLoading]);
+    return settingsLoading ? false : (settings?.enable_loyalty_program ?? true)
+  }, [settings, settingsLoading])
 
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Watch for reduced motion preference
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mediaQuery.matches)
 
     const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
+      setPrefersReducedMotion(e.matches)
+    }
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   // Handle animation state for smooth enter/exit
   useEffect(() => {
     if (open) {
       // Start with hidden state, then animate in
-      setIsAnimating(false);
-      const timer = setTimeout(() => {
-        setIsAnimating(true);
-      }, prefersReducedMotion ? 0 : 10);
-      return () => clearTimeout(timer);
+      setIsAnimating(false)
+      const timer = setTimeout(
+        () => {
+          setIsAnimating(true)
+        },
+        prefersReducedMotion ? 0 : 10
+      )
+      return () => clearTimeout(timer)
     }
-    setIsAnimating(false);
-    return undefined;
-  }, [open, prefersReducedMotion]);
+    setIsAnimating(false)
+    return undefined
+  }, [open, prefersReducedMotion])
 
   // Calculate dropdown position
   useEffect(() => {
-    if (!open || !buttonRef.current) return;
+    if (!open || !buttonRef.current) return
 
     const updatePosition = () => {
-      if (!buttonRef.current) return;
+      if (!buttonRef.current) return
 
-      const rect = buttonRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const dropdownWidth = 256; // w-64 = 16rem = 256px
-      const dropdownHeight = 300; // approximate max height
-      const gap = 12; // mt-3 = 12px
+      const rect = buttonRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      const dropdownWidth = 256 // w-64 = 16rem = 256px
+      const dropdownHeight = 300 // approximate max height
+      const gap = 12 // mt-3 = 12px
 
-      let right = viewportWidth - rect.right;
-      let top = rect.bottom + gap;
+      let right = viewportWidth - rect.right
+      let top = rect.bottom + gap
 
       // Adjust if dropdown would overflow right
       if (right < 16) {
-        right = Math.max(16, viewportWidth - rect.right - (rect.right - rect.left) / 2);
+        right = Math.max(16, viewportWidth - rect.right - (rect.right - rect.left) / 2)
       }
 
       // Adjust if dropdown would overflow bottom
       if (top + dropdownHeight > viewportHeight - 16) {
-        top = rect.top - dropdownHeight - gap;
+        top = rect.top - dropdownHeight - gap
         // If still doesn't fit, position below but allow scrolling
         if (top < 16) {
-          top = rect.bottom + gap;
+          top = rect.bottom + gap
         }
       }
 
       setDropdownPosition({
         top,
         right: Math.max(12, right),
-        width: Math.min(dropdownWidth, viewportWidth - 32)
-      });
-    };
+        width: Math.min(dropdownWidth, viewportWidth - 32),
+      })
+    }
 
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
 
     return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
-  }, [open]);
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open])
 
   // Handle click outside and escape key
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open) return undefined
 
     const handleClick = (event: MouseEvent) => {
-      const target = event.target as Node;
-      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(target);
-      const isOutsideMenu = menuRef.current && !menuRef.current.contains(target);
+      const target = event.target as Node
+      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(target)
+      const isOutsideMenu = menuRef.current && !menuRef.current.contains(target)
 
       if (isOutsideButton && isOutsideMenu) {
-        setOpen(false);
+        setOpen(false)
       }
-    };
+    }
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setOpen(false);
-        buttonRef.current?.focus();
+        setOpen(false)
+        buttonRef.current?.focus()
       }
-    };
+    }
 
     // Use capture phase to catch clicks before they bubble
-    document.addEventListener('mousedown', handleClick, true);
-    document.addEventListener('keydown', handleEscape, true);
+    document.addEventListener('mousedown', handleClick, true)
+    document.addEventListener('keydown', handleEscape, true)
 
     return () => {
-      document.removeEventListener('mousedown', handleClick, true);
-      document.removeEventListener('keydown', handleEscape, true);
-    };
-  }, [open]);
+      document.removeEventListener('mousedown', handleClick, true)
+      document.removeEventListener('keydown', handleEscape, true)
+    }
+  }, [open])
 
   // Set mounted state for portal
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   // Close dropdown on user change or navigation
   useEffect(() => {
-    setOpen(false);
-  }, [user?.id, location.pathname]);
+    setOpen(false)
+  }, [user?.id, location.pathname])
 
   useEffect(() => {
     if (!open) {
-      menuItemRefs.current = [];
-      return;
+      menuItemRefs.current = []
+      return
     }
 
     const focusTimer = setTimeout(() => {
-      const items = menuItemRefs.current.filter(Boolean);
-      items[0]?.focus();
-    }, 0);
+      const items = menuItemRefs.current.filter(Boolean)
+      items[0]?.focus()
+    }, 0)
 
-    return () => clearTimeout(focusTimer);
-  }, [open]);
+    return () => clearTimeout(focusTimer)
+  }, [open])
 
   useEffect(() => {
     if (!user?.id) {
-      setProfile(null);
-      return;
+      setProfile(null)
+      return
     }
 
-    let isMounted = true;
+    let isMounted = true
 
     const fetchProfile = async () => {
       try {
@@ -254,24 +264,24 @@ const ProfileDropdown = () => {
           .from('customers')
           .select('id, full_name')
           .eq('id', user.id)
-          .maybeSingle();
+          .maybeSingle()
 
         if (error) {
-          logger.error('Error fetching profile:', error);
+          logger.error('Error fetching profile:', error)
         }
 
         if (isMounted) {
-          setProfile(data || null);
+          setProfile(data || null)
         }
       } catch (error) {
-        logger.error('Error in fetchProfile:', error);
+        logger.error('Error in fetchProfile:', error)
         if (isMounted) {
-          setProfile(null);
+          setProfile(null)
         }
       }
-    };
+    }
 
-    fetchProfile();
+    fetchProfile()
 
     const channel = supabase
       .channel(`profile-dropdown-${user.id}`)
@@ -281,121 +291,124 @@ const ProfileDropdown = () => {
           event: '*',
           schema: 'public',
           table: 'customers',
-          filter: `id=eq.${user.id}`
+          filter: `id=eq.${user.id}`,
         },
-        (payload) => {
-          setProfile((payload.new || payload.old) as Profile | null);
+        payload => {
+          setProfile((payload.new || payload.old) as Profile | null)
         }
       )
-      .subscribe();
+      .subscribe()
 
     return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
+      isMounted = false
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id])
 
   const displayName = useMemo(() => {
-    if (!user) return '';
-    const profileName = profile?.full_name?.trim();
-    if (profileName) return profileName;
+    if (!user) return ''
+    const profileName = profile?.full_name?.trim()
+    if (profileName) return profileName
 
-    const metadataName = user.user_metadata?.full_name?.trim();
-    if (metadataName) return metadataName;
+    const metadataName = user.user_metadata?.full_name?.trim()
+    if (metadataName) return metadataName
 
     if (user.email) {
-      const [emailName] = user.email.split('@');
+      const [emailName] = user.email.split('@')
       if (emailName) {
-        return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+        return emailName.charAt(0).toUpperCase() + emailName.slice(1)
       }
     }
 
-    return 'Guest';
-  }, [user, profile]);
+    return 'Guest'
+  }, [user, profile])
 
   const initials = useMemo(() => {
-    if (!user) return 'GU';
+    if (!user) return 'GU'
 
-    const profileName = profile?.full_name?.trim();
+    const profileName = profile?.full_name?.trim()
     if (profileName) {
-      const parts = profileName.split(/\s+/).filter(Boolean);
-      if (parts.length === 1 && parts[0]) return parts[0].slice(0, 2).toUpperCase();
-      const firstPart = parts[0];
-      const lastPart = parts[parts.length - 1];
+      const parts = profileName.split(/\s+/).filter(Boolean)
+      if (parts.length === 1 && parts[0]) return parts[0].slice(0, 2).toUpperCase()
+      const firstPart = parts[0]
+      const lastPart = parts[parts.length - 1]
       if (firstPart && lastPart) {
-        return `${firstPart[0] ?? ''}${lastPart[0] ?? ''}`.toUpperCase();
+        return `${firstPart[0] ?? ''}${lastPart[0] ?? ''}`.toUpperCase()
       }
     }
 
-    const metadataName = user.user_metadata?.full_name?.trim();
+    const metadataName = user.user_metadata?.full_name?.trim()
     if (metadataName) {
-      const parts = metadataName.split(/\s+/).filter(Boolean);
+      const parts = metadataName.split(/\s+/).filter(Boolean)
       if (parts.length === 1 && parts[0]) {
-        return parts[0].slice(0, 2).toUpperCase();
+        return parts[0].slice(0, 2).toUpperCase()
       }
       if (parts[0] && parts[parts.length - 1]) {
-        return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+        return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase()
       }
     }
 
     if (user.email) {
-      const [emailName] = user.email.split('@');
+      const [emailName] = user.email.split('@')
       if (emailName) {
-        return emailName.slice(0, 2).toUpperCase();
+        return emailName.slice(0, 2).toUpperCase()
       }
     }
 
-    return 'GU';
-  }, [user, profile]);
+    return 'GU'
+  }, [user, profile])
 
   const handleLogout = useCallback(async () => {
     try {
-      await signOut();
+      await signOut()
     } finally {
-      setOpen(false);
-      navigate('/');
+      setOpen(false)
+      navigate('/')
     }
-  }, [signOut, navigate]);
+  }, [signOut, navigate])
 
   const handleMenuKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
 
-    const items = menuItemRefs.current.filter(Boolean);
-    if (!items.length) return;
+    const items = menuItemRefs.current.filter(Boolean)
+    if (!items.length) return
 
-    event.preventDefault();
-    const activeElement = document.activeElement as HTMLButtonElement | HTMLAnchorElement | null;
-    const currentIndex = activeElement ? items.indexOf(activeElement) : -1;
+    event.preventDefault()
+    const activeElement = document.activeElement as HTMLButtonElement | HTMLAnchorElement | null
+    const currentIndex = activeElement ? items.indexOf(activeElement) : -1
 
     if (event.key === 'ArrowDown') {
-      const next = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length;
-      items[next]?.focus();
+      const next = currentIndex === -1 ? 0 : (currentIndex + 1) % items.length
+      items[next]?.focus()
     } else if (event.key === 'ArrowUp') {
-      const prev = currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
-      items[prev]?.focus();
+      const prev = currentIndex <= 0 ? items.length - 1 : currentIndex - 1
+      items[prev]?.focus()
     } else if (event.key === 'Home') {
-      items[0]?.focus();
+      items[0]?.focus()
     } else if (event.key === 'End') {
-      items[items.length - 1]?.focus();
+      items[items.length - 1]?.focus()
     }
-  }, []);
+  }, [])
 
-  const assignMenuItemRef = useCallback((index: number) => (element: HTMLButtonElement | HTMLAnchorElement | null) => {
-    menuItemRefs.current[index] = element;
-  }, []);
+  const assignMenuItemRef = useCallback(
+    (index: number) => (element: HTMLButtonElement | HTMLAnchorElement | null) => {
+      menuItemRefs.current[index] = element
+    },
+    []
+  )
 
   const referral = useMemo(() => {
-    if (!enableLoyalty || !user) return null;
-    return resolveReferralInfo(user) as ReferralInfo | null;
-  }, [user, enableLoyalty]);
+    if (!enableLoyalty || !user) return null
+    return resolveReferralInfo(user) as ReferralInfo | null
+  }, [user, enableLoyalty])
 
   const handleReferralShare = useCallback(async () => {
     if (!user || !enableLoyalty) {
-      toast.error('Sign in to share your referral link.');
-      return;
+      toast.error('Sign in to share your referral link.')
+      return
     }
 
-    const { shareUrl, code } = resolveReferralInfo(user) as ReferralInfo;
+    const { shareUrl, code } = resolveReferralInfo(user) as ReferralInfo
 
     try {
       if (navigator.share) {
@@ -403,71 +416,76 @@ const ProfileDropdown = () => {
           title: 'Star Café Invite',
           text: 'Use my Star Café invite link to unlock bonus treats on your first visit.',
           url: shareUrl,
-        });
-        return;
+        })
+        return
       }
 
-      await navigator.clipboard?.writeText(shareUrl);
-      toast.success('Referral link copied!');
+      await navigator.clipboard?.writeText(shareUrl)
+      toast.success('Referral link copied!')
     } catch (error) {
-      logger.error('Failed to share referral link:', error);
+      logger.error('Failed to share referral link:', error)
       try {
-        await navigator.clipboard?.writeText(`${shareUrl} (Code: ${code})`);
-        toast.success('Copied invite link.');
+        await navigator.clipboard?.writeText(`${shareUrl} (Code: ${code})`)
+        toast.success('Copied invite link.')
       } catch (clipboardError) {
-        logger.error('Clipboard write failed:', clipboardError);
-        toast.error('Unable to copy invite link right now.');
+        logger.error('Clipboard write failed:', clipboardError)
+        toast.error('Unable to copy invite link right now.')
       }
     }
-  }, [user, enableLoyalty]);
+  }, [user, enableLoyalty])
 
   const menuItems = useMemo(() => {
-    if (!user) return [];
+    if (!user) return []
 
     const items: MenuItem[] = [
       { key: 'home', label: 'Home', to: '/' },
       { key: 'orders', label: 'Order History', to: '/order-history' },
       { key: 'addresses', label: 'Saved Addresses', to: '/addresses' },
-    ];
+    ]
 
     if (enableLoyalty && referral) {
-      items.push({ key: 'referral', label: 'Share Referral', onClick: handleReferralShare, badge: referral.code });
+      items.push({
+        key: 'referral',
+        label: 'Share Referral',
+        onClick: handleReferralShare,
+        badge: referral.code,
+      })
     }
 
     // Check both context isAdmin AND persisted sessionStorage status as fallback
     // This ensures button shows even if context hasn't updated yet
     const getPersistedAdminStatus = (): boolean => {
-      if (typeof window === 'undefined' || !user?.id) return false;
+      if (typeof window === 'undefined' || !user?.id) return false
       try {
-        const stored = sessionStorage.getItem(`admin_status_${user.id}`);
-        return stored === 'true';
+        const stored = sessionStorage.getItem(`admin_status_${user.id}`)
+        return stored === 'true'
       } catch {
-        return false;
+        return false
       }
-    };
+    }
 
-    const persistedAdminStatus = getPersistedAdminStatus();
-    const shouldShowAdmin = isAdmin || persistedAdminStatus;
+    const persistedAdminStatus = getPersistedAdminStatus()
+    const shouldShowAdmin = isAdmin || persistedAdminStatus
 
     // Only log admin check in development and only once per session
-    const isDev = import.meta.env?.DEV || import.meta.env?.MODE === 'development';
+    const isDev = import.meta.env?.DEV || import.meta.env?.MODE === 'development'
     if (user?.id && isDev && !sessionStorage.getItem('admin_check_logged')) {
       logger.log('ProfileDropdown Admin Check:', {
         userId: user.id,
         isAdminFromContext: isAdmin,
         persistedAdminStatus,
         shouldShowAdmin,
-        sessionStorageKey: `admin_status_${user.id}`
-      });
-      sessionStorage.setItem('admin_check_logged', 'true');
+        sessionStorageKey: `admin_status_${user.id}`,
+      })
+      sessionStorage.setItem('admin_check_logged', 'true')
     }
 
     if (shouldShowAdmin) {
-      items.push({ key: 'admin', label: 'Admin Dashboard', to: '/admin' });
+      items.push({ key: 'admin', label: 'Admin Dashboard', to: '/admin' })
     }
 
-    return items;
-  }, [user, isAdmin, enableLoyalty, referral, handleReferralShare]);
+    return items
+  }, [user, isAdmin, enableLoyalty, referral, handleReferralShare])
 
   if (loading) {
     return (
@@ -476,16 +494,23 @@ const ProfileDropdown = () => {
         style={{
           backgroundColor: isLightTheme
             ? 'rgba(var(--bg-dark-rgb), 0.04)'
-            : 'rgba(var(--text-main-rgb), 0.05)'
+            : 'rgba(var(--text-main-rgb), 0.05)',
         }}
         aria-label="Loading profile"
         aria-busy="true"
       >
-        <svg className="w-4 h-4 text-[var(--text-main)]/50 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+        <svg
+          className="w-4 h-4 text-[var(--text-main)]/50 animate-spin"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden="true"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 018-8" />
         </svg>
       </div>
-    );
+    )
   }
 
   if (!user) {
@@ -506,11 +531,11 @@ const ProfileDropdown = () => {
           Sign Up
         </Link>
       </div>
-    );
+    )
   }
 
   const renderDropdown = () => {
-    if (!open || !mounted) return null;
+    if (!open || !mounted) return null
 
     const dropdownContent = (
       <>
@@ -521,7 +546,7 @@ const ProfileDropdown = () => {
           aria-hidden="true"
           style={{
             opacity: isAnimating ? 1 : 0,
-            transitionDuration: prefersReducedMotion ? '0ms' : '200ms'
+            transitionDuration: prefersReducedMotion ? '0ms' : '200ms',
           }}
         />
 
@@ -556,7 +581,7 @@ const ProfileDropdown = () => {
             boxShadow: isLightTheme
               ? '0 8px 32px rgba(var(--bg-dark-rgb), 0.12), 0 0 0 1px rgba(var(--bg-dark-rgb), 0.05), inset 0 1px 0 rgba(var(--text-main-rgb), 0.9)'
               : '0 8px 32px rgba(var(--bg-dark-rgb), 0.5), 0 0 0 1px rgba(var(--text-main-rgb), 0.08), inset 0 1px 0 rgba(var(--text-main-rgb), 0.05)',
-            transitionDuration: prefersReducedMotion ? '0ms' : '200ms'
+            transitionDuration: prefersReducedMotion ? '0ms' : '200ms',
           }}
           onKeyDown={handleMenuKeyDown}
         >
@@ -566,7 +591,7 @@ const ProfileDropdown = () => {
             style={{
               borderColor: isLightTheme
                 ? 'rgba(var(--bg-dark-rgb), 0.06)'
-                : 'rgba(var(--text-main-rgb), 0.08)'
+                : 'rgba(var(--text-main-rgb), 0.08)',
             }}
           >
             <p className="text-sm font-semibold text-[var(--text-main)] truncate leading-tight">
@@ -589,21 +614,21 @@ const ProfileDropdown = () => {
                 className:
                   'mx-2 flex items-center justify-between rounded-xl px-3 py-2.5 min-h-[44px] text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50',
                 style: {
-                  color: 'var(--text-main)'
+                  color: 'var(--text-main)',
                 } as React.CSSProperties,
                 onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
                   e.currentTarget.style.backgroundColor = isLightTheme
                     ? 'rgba(var(--bg-dark-rgb), 0.05)'
-                    : 'rgba(var(--text-main-rgb), 0.1)';
+                    : 'rgba(var(--text-main-rgb), 0.1)'
                   if (!prefersReducedMotion) {
-                    e.currentTarget.style.transform = 'translateX(2px)';
+                    e.currentTarget.style.transform = 'translateX(2px)'
                   }
                 },
                 onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.transform = 'translateX(0)';
-                }
-              };
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.transform = 'translateX(0)'
+                },
+              }
 
               if (item.onClick) {
                 return (
@@ -611,10 +636,10 @@ const ProfileDropdown = () => {
                     key={item.key}
                     type="button"
                     {...commonProps}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setOpen(false);
-                      item.onClick?.();
+                    onClick={e => {
+                      e.preventDefault()
+                      setOpen(false)
+                      item.onClick?.()
                     }}
                   >
                     <span className="font-medium">{item.label}</span>
@@ -633,16 +658,11 @@ const ProfileDropdown = () => {
                       </span>
                     )}
                   </button>
-                );
+                )
               }
 
               return (
-                <Link
-                  key={item.key}
-                  to={item.to!}
-                  {...commonProps}
-                  onClick={() => setOpen(false)}
-                >
+                <Link key={item.key} to={item.to!} {...commonProps} onClick={() => setOpen(false)}>
                   <span className="font-medium">{item.label}</span>
                   <svg
                     className="w-4 h-4 text-[var(--text-main)]/30 transition-transform duration-150 group-hover:translate-x-0.5"
@@ -655,7 +675,7 @@ const ProfileDropdown = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
-              );
+              )
             })}
 
             {/* Divider */}
@@ -664,7 +684,7 @@ const ProfileDropdown = () => {
               style={{
                 backgroundColor: isLightTheme
                   ? 'rgba(var(--bg-dark-rgb), 0.06)'
-                  : 'rgba(var(--text-main-rgb), 0.08)'
+                  : 'rgba(var(--text-main-rgb), 0.08)',
               }}
               role="separator"
               aria-hidden="true"
@@ -679,19 +699,19 @@ const ProfileDropdown = () => {
               onClick={handleLogout}
               className="mx-2 flex items-center gap-2 rounded-xl px-3 py-2.5 min-h-[44px] text-sm font-medium text-[var(--color-red)] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)]/50"
               style={{
-                color: isLightTheme ? '#dc2626' : '#f87171'
+                color: isLightTheme ? '#dc2626' : '#f87171',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 e.currentTarget.style.backgroundColor = isLightTheme
                   ? 'rgba(220, 38, 38, 0.08)'
-                  : 'rgba(248, 113, 113, 0.12)';
+                  : 'rgba(248, 113, 113, 0.12)'
                 if (!prefersReducedMotion) {
-                  e.currentTarget.style.transform = 'translateX(2px)';
+                  e.currentTarget.style.transform = 'translateX(2px)'
                 }
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.transform = 'translateX(0)';
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.transform = 'translateX(0)'
               }}
             >
               <span>Sign Out</span>
@@ -703,16 +723,20 @@ const ProfileDropdown = () => {
                 strokeWidth={2}
                 aria-hidden="true"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
               </svg>
             </button>
           </div>
         </div>
       </>
-    );
+    )
 
-    return createPortal(dropdownContent, document.body);
-  };
+    return createPortal(dropdownContent, document.body)
+  }
 
   return (
     <div className="relative" ref={containerRef}>
@@ -723,33 +747,39 @@ const ProfileDropdown = () => {
         aria-controls={menuId}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => setOpen(prev => !prev)}
         className="relative flex items-center justify-center w-10 h-10 min-h-[44px] min-w-[44px] rounded-full text-[var(--text-main)] font-semibold uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-main)] transition-all duration-200"
         style={{
           backgroundColor: open
-            ? (isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.12)' : 'rgba(var(--text-main-rgb), 0.2)')
-            : (isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.08)' : 'rgba(var(--text-main-rgb), 0.1)'),
+            ? isLightTheme
+              ? 'rgba(var(--bg-dark-rgb), 0.12)'
+              : 'rgba(var(--text-main-rgb), 0.2)'
+            : isLightTheme
+              ? 'rgba(var(--bg-dark-rgb), 0.08)'
+              : 'rgba(var(--text-main-rgb), 0.1)',
           transform: open && !prefersReducedMotion ? 'scale(0.95)' : 'scale(1)',
         }}
-        onMouseEnter={(e) => {
+        onMouseEnter={e => {
           if (!open) {
             e.currentTarget.style.backgroundColor = isLightTheme
               ? 'rgba(var(--bg-dark-rgb), 0.12)'
-              : 'rgba(var(--text-main-rgb), 0.15)';
+              : 'rgba(var(--text-main-rgb), 0.15)'
           }
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={e => {
           if (!open) {
             e.currentTarget.style.backgroundColor = isLightTheme
               ? 'rgba(var(--bg-dark-rgb), 0.08)'
-              : 'rgba(var(--text-main-rgb), 0.1)';
+              : 'rgba(var(--text-main-rgb), 0.1)'
           }
         }}
       >
         {profile?.avatar_url ? (
-          <span className={`absolute inset-0 overflow-hidden rounded-full ring-2 transition-all duration-200 ${
-            open ? 'ring-[var(--accent)]/50' : 'ring-transparent'
-          }`}>
+          <span
+            className={`absolute inset-0 overflow-hidden rounded-full ring-2 transition-all duration-200 ${
+              open ? 'ring-[var(--accent)]/50' : 'ring-transparent'
+            }`}
+          >
             <img
               src={profile.avatar_url}
               alt={displayName || 'User avatar'}
@@ -764,8 +794,7 @@ const ProfileDropdown = () => {
 
       {renderDropdown()}
     </div>
-  );
-};
+  )
+}
 
-export default ProfileDropdown;
-
+export default ProfileDropdown

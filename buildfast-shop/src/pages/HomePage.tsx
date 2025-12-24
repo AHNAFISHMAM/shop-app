@@ -1,42 +1,42 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react';
-import { Link } from 'react-router-dom';
-import { m, type Variants } from 'framer-motion';
-import toast from 'react-hot-toast';
-import Hero from '../components/Hero';
-import Testimonials from '../components/Testimonials';
-import AmbienceUploader from '../components/AmbienceUploader';
-import SectionTitle from '../components/SectionTitle';
-import { supabase } from '../lib/supabase';
-import { getQuoteBackgroundUrl } from '../lib/quoteBackgroundHelper';
-import { useAuth } from '../contexts/AuthContext';
-import { useStoreSettings } from '../contexts/StoreSettingsContext';
-import { getBackgroundStyle } from '../utils/backgroundUtils';
-import ExperiencePulse from '../components/ExperiencePulse';
-import { pageFade } from '../components/animations/menuAnimations';
-import { resolveLoyaltyState, resolveReferralInfo } from '../lib/loyaltyUtils';
-import { useTheme } from '../shared/hooks/use-theme';
-import { logger } from '../utils/logger';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
+import { Link } from 'react-router-dom'
+import { m, type Variants } from 'framer-motion'
+import toast from 'react-hot-toast'
+import Hero from '../components/Hero'
+import Testimonials from '../components/Testimonials'
+import AmbienceUploader from '../components/AmbienceUploader'
+import SectionTitle from '../components/SectionTitle'
+import { supabase } from '../lib/supabase'
+import { getQuoteBackgroundUrl } from '../lib/quoteBackgroundHelper'
+import { useAuth } from '../contexts/AuthContext'
+import { useStoreSettings } from '../contexts/StoreSettingsContext'
+import { getBackgroundStyle } from '../utils/backgroundUtils'
+import ExperiencePulse from '../components/ExperiencePulse'
+import { pageFade } from '../components/animations/menuAnimations'
+import { resolveLoyaltyState, resolveReferralInfo } from '../lib/loyaltyUtils'
+import { useTheme } from '../shared/hooks/use-theme'
+import { logger } from '../utils/logger'
 
 /**
  * Highlight Feature Interface
  */
 interface HighlightFeature {
-  title: string;
-  tagline: string;
-  description: string;
-  statLabel: string;
-  statValue: string;
-  icon: string;
-  gradient: string; // CSS gradient string
-  image: string;
+  title: string
+  tagline: string
+  description: string
+  statLabel: string
+  statValue: string
+  icon: string
+  gradient: string // CSS gradient string
+  image: string
 }
 
 /**
  * Hero Image Interface
  */
 interface HeroImage {
-  src: string;
-  alt: string;
+  src: string
+  alt: string
 }
 
 const HIGHLIGHT_FEATURES: HighlightFeature[] = [
@@ -47,37 +47,42 @@ const HIGHLIGHT_FEATURES: HighlightFeature[] = [
     statLabel: 'Guest favorites',
     statValue: '1,200+ orders',
     icon: '🍛',
-    gradient: 'linear-gradient(to bottom right, rgba(var(--color-amber-rgb), 0.9), rgba(var(--color-rose-rgb), 0.9))',
+    gradient:
+      'linear-gradient(to bottom right, rgba(var(--color-amber-rgb), 0.9), rgba(var(--color-rose-rgb), 0.9))',
     image: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=900',
   },
   {
     title: 'Family Set Menus',
     tagline: 'Balanced & Generous',
-    description: 'Curated multi-course spreads that make celebrations effortless for every table size.',
+    description:
+      'Curated multi-course spreads that make celebrations effortless for every table size.',
     statLabel: 'Sharing platters served',
     statValue: '3.5k this year',
     icon: '👨‍👩‍👧‍👦',
-    gradient: 'linear-gradient(to bottom right, rgba(var(--color-emerald-rgb), 0.9), rgba(var(--color-blue-rgb), 0.9))',
+    gradient:
+      'linear-gradient(to bottom right, rgba(var(--color-emerald-rgb), 0.9), rgba(var(--color-blue-rgb), 0.9))',
     image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900',
   },
   {
     title: 'Cozy Café Vibes',
     tagline: 'Designed for Conversation',
-    description: 'Warm lighting, modern textures, and acoustic zoning keep every visit relaxed and memorable.',
+    description:
+      'Warm lighting, modern textures, and acoustic zoning keep every visit relaxed and memorable.',
     statLabel: 'Average dwell time',
     statValue: '78 mins',
     icon: '☕',
-    gradient: 'linear-gradient(to bottom right, rgba(var(--color-blue-rgb), 0.9), rgba(var(--color-purple-rgb), 0.9))',
+    gradient:
+      'linear-gradient(to bottom right, rgba(var(--color-blue-rgb), 0.9), rgba(var(--color-purple-rgb), 0.9))',
     image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900',
   },
-];
+]
 
 /**
  * HomePage Component
- * 
+ *
  * Main landing page featuring hero section, loyalty program, highlights,
  * testimonials, and reservation CTA. Fully accessible and WCAG 2.1 AA compliant.
- * 
+ *
  * @remarks
  * - Uses design system CSS variables
  * - Mobile-first responsive design
@@ -85,59 +90,71 @@ const HIGHLIGHT_FEATURES: HighlightFeature[] = [
  * - All touch targets meet 44px minimum
  */
 const HomePage = memo(() => {
-  const { user, isAdmin } = useAuth();
-  const { settings, loading: settingsLoading } = useStoreSettings();
-  const isLightTheme = useTheme();
+  const { user, isAdmin } = useAuth()
+  const { settings, loading: settingsLoading } = useStoreSettings()
+  const _isLightTheme = useTheme()
 
   const reviewsEnabled = useMemo(
     () => settings?.show_public_reviews ?? false,
     [settings?.show_public_reviews]
-  );
+  )
   const testimonialsEnabled = useMemo(
     () => settings?.show_home_testimonials ?? false,
     [settings?.show_home_testimonials]
-  );
+  )
   const showTestimonialsSection = useMemo(
     () => reviewsEnabled && testimonialsEnabled,
     [reviewsEnabled, testimonialsEnabled]
-  );
+  )
   const enableLoyalty = useMemo(
-    () => settingsLoading ? false : (settings?.enable_loyalty_program ?? true),
+    () => (settingsLoading ? false : (settings?.enable_loyalty_program ?? true)),
     [settingsLoading, settings?.enable_loyalty_program]
-  );
+  )
 
   // State for quote background
-  const [quoteBackground, setQuoteBackground] = useState<string>('');
+  const [quoteBackground, setQuoteBackground] = useState<string>('')
 
   // Reduced motion preference
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  })
 
   // Hero images
-  const heroImages: HeroImage[] = useMemo(() => [
-    { src: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800', alt: 'Biryani dish' },
-    { src: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400', alt: 'Grilled meat' },
-    { src: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400', alt: 'Café ambience' },
-  ], []);
+  const heroImages: HeroImage[] = useMemo(
+    () => [
+      {
+        src: 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800',
+        alt: 'Biryani dish',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400',
+        alt: 'Grilled meat',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400',
+        alt: 'Café ambience',
+      },
+    ],
+    []
+  )
 
   // Reduced motion observer
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return
 
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    
-    setPrefersReducedMotion(mediaQuery.matches);
-    mediaQuery.addEventListener('change', handleChange);
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
 
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+    setPrefersReducedMotion(mediaQuery.matches)
+    mediaQuery.addEventListener('change', handleChange)
+
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   // Fetch store settings for quote background
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     const fetchStoreSettings = async () => {
       try {
@@ -145,47 +162,47 @@ const HomePage = memo(() => {
           .from('store_settings')
           .select('hero_quote_bg_url')
           .eq('singleton_guard', true)
-          .single();
+          .single()
 
         if (error) {
-          logger.error('Error fetching store settings:', error);
+          logger.error('Error fetching store settings:', error)
           if (isMounted) {
-            setQuoteBackground(getQuoteBackgroundUrl(null));
+            setQuoteBackground(getQuoteBackgroundUrl(null))
           }
-          return;
+          return
         }
 
         if (isMounted) {
-          setQuoteBackground(getQuoteBackgroundUrl(data));
+          setQuoteBackground(getQuoteBackgroundUrl(data))
         }
       } catch (error) {
-        logger.error('Error in fetchStoreSettings:', error);
+        logger.error('Error in fetchStoreSettings:', error)
         if (isMounted) {
-          setQuoteBackground(getQuoteBackgroundUrl(null));
+          setQuoteBackground(getQuoteBackgroundUrl(null))
         }
       }
-    };
+    }
 
-    fetchStoreSettings();
+    fetchStoreSettings()
 
     return () => {
-      isMounted = false;
-    };
-  }, []);
+      isMounted = false
+    }
+  }, [])
 
   // Handle upload success - refresh background
   const handleUploadSuccess = useCallback((newUrl: string) => {
-    setQuoteBackground(newUrl);
-  }, []);
+    setQuoteBackground(newUrl)
+  }, [])
 
-  const loyalty = useMemo(() => resolveLoyaltyState(), []);
-  const referral = useMemo(() => resolveReferralInfo(user), [user]);
+  const loyalty = useMemo(() => resolveLoyaltyState(), [])
+  const referral = useMemo(() => resolveReferralInfo(user), [user])
 
   const handleReferralShare = useCallback(async () => {
     if (!user) {
-      return;
+      return
     }
-    const { shareUrl, code } = resolveReferralInfo(user);
+    const { shareUrl, code } = resolveReferralInfo(user)
 
     try {
       if (navigator.share) {
@@ -193,23 +210,23 @@ const HomePage = memo(() => {
           title: 'Star Café Invite',
           text: 'Use my Star Café invite link to unlock bonus treats on your first visit.',
           url: shareUrl,
-        });
-        return;
+        })
+        return
       }
 
-      await navigator.clipboard?.writeText(shareUrl);
-      toast.success('Referral link copied!');
+      await navigator.clipboard?.writeText(shareUrl)
+      toast.success('Referral link copied!')
     } catch (error) {
-      logger.error('Failed to share referral link:', error);
+      logger.error('Failed to share referral link:', error)
       try {
-        await navigator.clipboard?.writeText(`${shareUrl} (Code: ${code})`);
-        toast.success('Copied invite link.');
+        await navigator.clipboard?.writeText(`${shareUrl} (Code: ${code})`)
+        toast.success('Copied invite link.')
       } catch (clipboardError) {
-        logger.error('Clipboard write failed:', clipboardError);
-        toast.error('Unable to copy invite link right now.');
+        logger.error('Clipboard write failed:', clipboardError)
+        toast.error('Unable to copy invite link right now.')
       }
     }
-  }, [user]);
+  }, [user])
 
   // Animation variants with reduced motion support
   const animationVariants: Variants = useMemo(() => {
@@ -217,11 +234,11 @@ const HomePage = memo(() => {
       return {
         hidden: { opacity: 0 },
         visible: { opacity: 1 },
-        exit: { opacity: 0 }
-      };
+        exit: { opacity: 0 },
+      }
     }
-    return pageFade;
-  }, [prefersReducedMotion]);
+    return pageFade
+  }, [prefersReducedMotion])
 
   return (
     <m.main
@@ -229,7 +246,7 @@ const HomePage = memo(() => {
       animate="visible"
       variants={animationVariants}
       className="flex flex-col gap-6 md:gap-8 lg:gap-10"
-      style={{ 
+      style={{
         pointerEvents: 'auto',
         // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
         paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -237,7 +254,7 @@ const HomePage = memo(() => {
         // Ensure no overflow constraints that break positioning
         overflow: 'visible',
         overflowX: 'visible',
-        overflowY: 'visible'
+        overflowY: 'visible',
       }}
       role="main"
       aria-label="Home page"
@@ -256,25 +273,27 @@ const HomePage = memo(() => {
 
       {/* Loyalty Snapshot */}
       {enableLoyalty && (
-        <section
-          id="loyalty"
-          aria-labelledby="loyalty-heading"
-        >
+        <section id="loyalty" aria-labelledby="loyalty-heading">
           <div className="glow-surface glow-strong relative overflow-hidden rounded-2xl sm:rounded-3xl border border-[var(--border-default)] bg-[var(--bg-main)] px-4 py-6 sm:px-6 sm:py-7 md:px-10 md:py-9">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(var(--accent-rgb),0.25),transparent_60%)]" />
             <div className="pointer-events-none absolute bottom-0 right-0 h-52 w-52 translate-x-1/3 translate-y-1/4 rounded-full bg-[var(--accent)]/25 blur-3xl" />
 
             <div className="relative z-10 flex flex-col gap-6 md:gap-8 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-3 max-w-2xl">
-                <span 
+                <span
                   className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/40 bg-[var(--accent)]/15 px-3 py-1 text-sm font-semibold uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[var(--accent)]/90 min-h-[44px]"
                   role="status"
                   aria-label="Star Rewards badge"
                 >
                   Star Rewards
                 </span>
-                <h2 id="loyalty-heading" className="text-xl sm:text-2xl md:text-3xl font-semibold text-[var(--text-main)] leading-tight">
-                  {user ? `Hey ${user.email?.split('@')[0] ?? 'there'}, you're already ${loyalty.tier}.` : 'Join Star Rewards, earn treats faster.'}
+                <h2
+                  id="loyalty-heading"
+                  className="text-xl sm:text-2xl md:text-3xl font-semibold text-[var(--text-main)] leading-tight"
+                >
+                  {user
+                    ? `Hey ${user.email?.split('@')[0] ?? 'there'}, you're already ${loyalty.tier}.`
+                    : 'Join Star Rewards, earn treats faster.'}
                 </h2>
                 <p className="text-sm md:text-base text-[var(--text-main)]/70 max-w-xl leading-relaxed">
                   {user
@@ -284,12 +303,19 @@ const HomePage = memo(() => {
                 {user ? (
                   <div>
                     <div className="flex items-center gap-3">
-                      <div className="relative h-2.5 flex-1 rounded-full bg-white/10 overflow-hidden" role="progressbar" aria-valuenow={loyalty.progressPercent} aria-valuemin={0} aria-valuemax={100} aria-label="Loyalty progress">
+                      <div
+                        className="relative h-2.5 flex-1 rounded-full bg-white/10 overflow-hidden"
+                        role="progressbar"
+                        aria-valuenow={loyalty.progressPercent}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label="Loyalty progress"
+                      >
                         <div
                           className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                          style={{ 
+                          style={{
                             width: `${Math.min(100, Math.max(loyalty.progressPercent, 4))}%`,
-                            background: `linear-gradient(to right, var(--color-amber), var(--color-orange), var(--color-amber))`
+                            background: `linear-gradient(to right, var(--color-amber), var(--color-orange), var(--color-amber))`,
                           }}
                         />
                       </div>
@@ -298,7 +324,8 @@ const HomePage = memo(() => {
                       </span>
                     </div>
                     <p className="mt-2 text-sm text-[var(--text-main)]/60">
-                      +{loyalty.pointsEarnedThisOrder} projected on your next checkout · {loyalty.redeemableRewards.length} rewards ready now
+                      +{loyalty.pointsEarnedThisOrder} projected on your next checkout ·{' '}
+                      {loyalty.redeemableRewards.length} rewards ready now
                     </p>
                   </div>
                 ) : null}
@@ -306,16 +333,20 @@ const HomePage = memo(() => {
 
               <div className="glow-surface glow-strong flex w-full max-w-sm flex-col gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)] p-4 sm:p-5 backdrop-blur-sm">
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-[var(--text-main)]">{referral.headline}</p>
-                  <p className="text-sm text-[var(--text-main)]/70">
-                    {referral.subcopy}
+                  <p className="text-sm font-semibold text-[var(--text-main)]">
+                    {referral.headline}
                   </p>
+                  <p className="text-sm text-[var(--text-main)]/70">{referral.subcopy}</p>
                 </div>
                 {user ? (
                   <div>
                     <div className="flex items-center justify-between rounded-xl border border-[var(--border-default)] bg-[var(--bg-main)]/30 px-3 py-2">
-                      <span className="text-sm uppercase tracking-[0.2em] text-[var(--text-main)]/60">Your code</span>
-                      <span className="font-semibold text-[var(--accent)] text-sm">{referral.code}</span>
+                      <span className="text-sm uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                        Your code
+                      </span>
+                      <span className="font-semibold text-[var(--accent)] text-sm">
+                        {referral.code}
+                      </span>
                     </div>
                     <button
                       type="button"
@@ -357,30 +388,29 @@ const HomePage = memo(() => {
       )}
 
       {/* Highlights */}
-      <section
-        id="highlights"
-        aria-labelledby="highlights-heading"
-      >
-        <div
-          className="glow-surface glow-strong relative overflow-hidden rounded-2xl sm:rounded-3xl border border-[var(--border-default)] bg-[var(--bg-main)] p-6 sm:p-8 md:p-12"
-        >
+      <section id="highlights" aria-labelledby="highlights-heading">
+        <div className="glow-surface glow-strong relative overflow-hidden rounded-2xl sm:rounded-3xl border border-[var(--border-default)] bg-[var(--bg-main)] p-6 sm:p-8 md:p-12">
           <div className="pointer-events-none absolute -top-32 -right-24 h-72 w-72 rounded-full bg-[var(--accent)]/20 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 left-6 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
 
           <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div className="space-y-3 text-center md:text-left">
-              <span 
+              <span
                 className="inline-flex items-center justify-center rounded-full border border-[var(--accent)]/40 bg-[var(--accent)]/10 px-3 py-1 text-sm font-medium tracking-[0.25em] sm:tracking-[0.3em] uppercase text-[var(--accent)] min-h-[44px]"
                 role="status"
                 aria-label="Highlights badge"
               >
                 Highlights
               </span>
-              <h2 id="highlights-heading" className="text-2xl font-semibold sm:text-3xl md:text-4xl lg:text-5xl text-[var(--text-main)] leading-tight">
+              <h2
+                id="highlights-heading"
+                className="text-2xl font-semibold sm:text-3xl md:text-4xl lg:text-5xl text-[var(--text-main)] leading-tight"
+              >
                 Why Star Café Feels Instantly Memorable
               </h2>
               <p className="text-sm text-[var(--text-secondary)] md:text-base max-w-2xl leading-relaxed">
-                Signature dishes, generous sharing menus, and a lounge-inspired ambience — all fine-tuned for modern dining without losing the heart of Jessore hospitality.
+                Signature dishes, generous sharing menus, and a lounge-inspired ambience — all
+                fine-tuned for modern dining without losing the heart of Jessore hospitality.
               </p>
             </div>
             <div className="hidden shrink-0 rounded-full border border-[var(--border-default)] bg-[var(--bg-elevated)] px-4 py-3 text-sm uppercase tracking-[0.4em] text-[var(--text-main)]/70 md:flex min-h-[44px]">
@@ -389,7 +419,7 @@ const HomePage = memo(() => {
           </div>
 
           <div className="relative z-10 mt-6 grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {HIGHLIGHT_FEATURES.map((card) => (
+            {HIGHLIGHT_FEATURES.map(card => (
               <article
                 key={card.title}
                 className="group glass-panel relative flex flex-col justify-between overflow-hidden p-5 sm:p-6"
@@ -400,14 +430,14 @@ const HomePage = memo(() => {
                   style={{
                     backgroundImage: `linear-gradient(135deg, rgba(var(--bg-main-rgb),0.85), rgba(var(--bg-main-rgb),0.55)), url(${card.image})`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center'
+                    backgroundPosition: 'center',
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-[var(--bg-main)]/60 opacity-70" />
 
                 <div className="relative z-10 space-y-3 sm:space-y-4">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <span 
+                    <span
                       className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full text-xl sm:text-2xl shadow-lg shadow-black/40"
                       style={{ background: card.gradient }}
                       aria-hidden="true"
@@ -445,13 +475,15 @@ const HomePage = memo(() => {
         id="quote"
         className="relative overflow-hidden min-h-[280px] sm:min-h-[360px] md:min-h-[440px] flex items-center justify-center py-10 sm:py-12 md:py-14 lg:py-16"
         style={
-          settings ? getBackgroundStyle(settings, 'hero_quote') : {
-            backgroundImage: quoteBackground ? `url(${quoteBackground})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'scroll'
-          }
+          settings
+            ? getBackgroundStyle(settings, 'hero_quote')
+            : {
+                backgroundImage: quoteBackground ? `url(${quoteBackground})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundAttachment: 'scroll',
+              }
         }
         aria-labelledby="quote-heading"
       >
@@ -459,16 +491,20 @@ const HomePage = memo(() => {
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(to bottom, rgba(var(--bg-main-rgb), 0.5), rgba(var(--bg-main-rgb), 0.65))`
+            background: `linear-gradient(to bottom, rgba(var(--bg-main-rgb), 0.5), rgba(var(--bg-main-rgb), 0.65))`,
           }}
         />
 
         {/* Content */}
-        <div
-          className="relative z-10 max-w-4xl mx-auto text-center space-y-3 sm:space-y-4 px-4"
-        >
-          <div className="text-[var(--accent)] text-5xl sm:text-6xl md:text-7xl" aria-hidden="true">&quot;</div>
-          <p id="quote-heading" className="text-xl sm:text-2xl md:text-4xl font-semibold italic leading-relaxed" style={{ color: 'var(--text-main)' }}>
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-3 sm:space-y-4 px-4">
+          <div className="text-[var(--accent)] text-5xl sm:text-6xl md:text-7xl" aria-hidden="true">
+            &quot;
+          </div>
+          <p
+            id="quote-heading"
+            className="text-xl sm:text-2xl md:text-4xl font-semibold italic leading-relaxed"
+            style={{ color: 'var(--text-main)' }}
+          >
             Cozy modern ambience in the heart of Jessore.
           </p>
           <p className="text-sm sm:text-base md:text-lg text-[var(--text-secondary)]">
@@ -484,7 +520,9 @@ const HomePage = memo(() => {
           className="py-8"
           aria-labelledby="ambience-uploader-heading"
         >
-          <h2 id="ambience-uploader-heading" className="sr-only">Ambience Uploader</h2>
+          <h2 id="ambience-uploader-heading" className="sr-only">
+            Ambience Uploader
+          </h2>
           <AmbienceUploader onUploadSuccess={handleUploadSuccess} />
         </section>
       )}
@@ -513,14 +551,17 @@ const HomePage = memo(() => {
 
         <div className="relative z-10 flex flex-col gap-6 md:gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl space-y-3 sm:space-y-4">
-            <span 
+            <span
               className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/40 bg-[var(--accent)]/10 px-3 py-1 text-sm font-semibold uppercase tracking-[0.3em] sm:tracking-[0.35em] text-[var(--accent)] min-h-[44px]"
               role="status"
               aria-label="Reserve Your Table badge"
             >
               Reserve Your Table
             </span>
-            <h3 id="cta-heading" className="text-xl sm:text-2xl font-semibold text-[var(--text-main)] md:text-3xl leading-tight">
+            <h3
+              id="cta-heading"
+              className="text-xl sm:text-2xl font-semibold text-[var(--text-main)] md:text-3xl leading-tight"
+            >
               Planning a family dinner or small event? Book your table in a few seconds.
             </h3>
             <p className="text-sm text-[var(--text-main)]/70 leading-relaxed">
@@ -543,10 +584,9 @@ const HomePage = memo(() => {
         </div>
       </section>
     </m.main>
-  );
-});
+  )
+})
 
-HomePage.displayName = 'HomePage';
+HomePage.displayName = 'HomePage'
 
-export default HomePage;
-
+export default HomePage

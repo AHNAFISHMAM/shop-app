@@ -1,33 +1,36 @@
-import React, { memo, useMemo } from 'react';
-import { m } from 'framer-motion';
-import { staggerContainer, fadeSlideUp, gridReveal, batchFadeSlideUp } from '../animations/menuAnimations';
+import { memo, useMemo } from 'react'
+import { m } from 'framer-motion'
+import {
+  staggerContainer,
+  fadeSlideUp,
+  gridReveal,
+  batchFadeSlideUp,
+} from '../animations/menuAnimations'
 
 interface MenuPageSkeletonProps {
-  isLightTheme: boolean;
-  prefersReducedMotion: boolean;
+  isLightTheme: boolean
+  prefersReducedMotion: boolean
 }
 
 const MenuPageSkeleton = memo(({ isLightTheme, prefersReducedMotion }: MenuPageSkeletonProps) => {
   const skeletonBgColor = useMemo(() => {
-    return isLightTheme 
-      ? 'var(--bg-hover)' 
-      : 'rgba(255, 255, 255, 0.05)'; // Fixed: Different colors for light/dark
-  }, [isLightTheme]);
+    return isLightTheme ? 'var(--bg-hover)' : 'rgba(255, 255, 255, 0.05)' // Fixed: Different colors for light/dark
+  }, [isLightTheme])
 
   const animationVariants = useMemo(() => {
     if (prefersReducedMotion) {
       return {
         hidden: { opacity: 0 },
         visible: { opacity: 1 },
-        exit: { opacity: 0 }
-      };
+        exit: { opacity: 0 },
+      }
     }
     return {
       hidden: { opacity: 0 },
       visible: { opacity: 1 },
-      exit: { opacity: 0 }
-    };
-  }, [prefersReducedMotion]);
+      exit: { opacity: 0 },
+    }
+  }, [prefersReducedMotion])
 
   return (
     <m.main
@@ -75,36 +78,23 @@ const MenuPageSkeleton = memo(({ isLightTheme, prefersReducedMotion }: MenuPageS
             variants={prefersReducedMotion ? {} : batchFadeSlideUp}
             style={{
               backgroundColor: 'var(--bg-elevated)',
-              borderColor: 'var(--border-default)'
+              borderColor: 'var(--border-default)',
             }}
             aria-hidden="true"
           >
-            <div 
-              className="h-48"
-              style={{ backgroundColor: skeletonBgColor }}
-            />
+            <div className="h-48" style={{ backgroundColor: skeletonBgColor }} />
             <div className="p-4 space-y-3">
-              <div 
-                className="h-4 rounded w-3/4"
-                style={{ backgroundColor: skeletonBgColor }}
-              />
-              <div 
-                className="h-3 rounded w-full"
-                style={{ backgroundColor: skeletonBgColor }}
-              />
-              <div 
-                className="h-10 rounded-full"
-                style={{ backgroundColor: skeletonBgColor }}
-              />
+              <div className="h-4 rounded w-3/4" style={{ backgroundColor: skeletonBgColor }} />
+              <div className="h-3 rounded w-full" style={{ backgroundColor: skeletonBgColor }} />
+              <div className="h-10 rounded-full" style={{ backgroundColor: skeletonBgColor }} />
             </div>
           </m.div>
         ))}
       </m.div>
     </m.main>
-  );
-});
+  )
+})
 
-MenuPageSkeleton.displayName = 'MenuPageSkeleton';
+MenuPageSkeleton.displayName = 'MenuPageSkeleton'
 
-export default MenuPageSkeleton;
-
+export default MenuPageSkeleton

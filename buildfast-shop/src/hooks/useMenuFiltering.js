@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo } from 'react'
 
 /**
  * Custom hook for filtering menu products
@@ -17,39 +17,39 @@ export const useMenuFiltering = (
   selectedSubcategory
 ) => {
   return useMemo(() => {
-    let results = products;
+    let results = products
 
     // Apply search filter
     if (searchQuery && searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       results = results.filter(
-        (p) =>
+        p =>
           p.name.toLowerCase().includes(query) ||
           p.description?.toLowerCase().includes(query) ||
           p.subcategories?.name?.toLowerCase().includes(query)
-      );
+      )
     }
 
     // Apply subcategory filter (most specific)
     if (selectedSubcategory) {
-      results = results.filter((p) => p.subcategory_id === selectedSubcategory.id);
+      results = results.filter(p => p.subcategory_id === selectedSubcategory.id)
     }
     // Apply main category filter
     // FIXED: Handles products without subcategories
     else if (selectedMainCategory) {
-      results = results.filter((p) => {
+      results = results.filter(p => {
         // Products with subcategories: check nested relation
         if (p.subcategory_id && p.subcategories?.categories?.id) {
-          return p.subcategories.categories.id === selectedMainCategory.id;
+          return p.subcategories.categories.id === selectedMainCategory.id
         }
         // Products without subcategories: check direct category_id
-        return p.category_id === selectedMainCategory.id;
-      });
+        return p.category_id === selectedMainCategory.id
+      })
     }
 
-    return results;
-  }, [products, searchQuery, selectedMainCategory, selectedSubcategory]);
-};
+    return results
+  }, [products, searchQuery, selectedMainCategory, selectedSubcategory])
+}
 
 /**
  * Get chef's picks from products
@@ -59,9 +59,9 @@ export const useMenuFiltering = (
  */
 export const useChefsPicks = (products, limit = 4) => {
   return useMemo(() => {
-    return products.filter((p) => p.chef_special).slice(0, limit);
-  }, [products, limit]);
-};
+    return products.filter(p => p.chef_special).slice(0, limit)
+  }, [products, limit])
+}
 
 /**
  * Get filtered subcategories for selected category
@@ -71,9 +71,7 @@ export const useChefsPicks = (products, limit = 4) => {
  */
 export const useFilteredSubcategories = (subcategories, selectedMainCategory) => {
   return useMemo(() => {
-    if (!selectedMainCategory) return [];
-    return subcategories.filter(
-      (sub) => sub.categories?.id === selectedMainCategory.id
-    );
-  }, [subcategories, selectedMainCategory]);
-};
+    if (!selectedMainCategory) return []
+    return subcategories.filter(sub => sub.categories?.id === selectedMainCategory.id)
+  }, [subcategories, selectedMainCategory])
+}

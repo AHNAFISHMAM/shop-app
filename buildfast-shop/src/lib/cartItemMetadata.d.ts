@@ -1,46 +1,21 @@
-export declare const getCartItemNotes: () => Record<string, string>;
-export declare const saveCartItemNote: (itemId: string, note: string) => {
-    success: boolean;
-    error?: undefined;
-} | {
-    success: boolean;
-    error: any;
-};
-export declare const getCartItemNote: (itemId: string) => string | null;
-export declare const removeCartItemNote: (itemId: string) => {
-    success: boolean;
-    error?: undefined;
-} | {
-    success: boolean;
-    error: any;
-};
-export declare const getSavedForLaterItems: () => any[];
-export declare const saveForLater: (item: any) => {
-    success: boolean;
-    error?: undefined;
-} | {
-    success: boolean;
-    error: any;
-};
-export declare const moveToCart: (itemId: string) => {
-    success: boolean;
-    error?: undefined;
-} | {
-    success: boolean;
-    error: any;
-};
-export declare const removeFromSavedForLater: (itemId: string) => {
-    success: boolean;
-    error?: undefined;
-} | {
-    success: boolean;
-    error: any;
-};
-export declare const saveItemForLater: (item: any) => {
-    success: boolean;
-    error?: any;
-};
-export declare const saveSelectedReward: (reward: any) => {
-    success: boolean;
-    error?: any;
-};
+export interface CartItemNote {
+  [itemId: string]: string;
+}
+
+export interface SavedForLaterItem {
+  id: string;
+  [key: string]: unknown;
+}
+
+export function getCartItemNotes(): CartItemNote;
+export function getCartItemNote(itemId: string): string | null;
+export function saveCartItemNote(itemId: string, note: string): { success: boolean; error?: unknown };
+export function removeCartItemNote(itemId: string): { success: boolean; error?: unknown };
+export function getSavedForLaterItems(): SavedForLaterItem[];
+export function saveItemForLater(item: SavedForLaterItem): { success: boolean; error?: unknown };
+export function removeFromSavedForLater(itemId: string): { success: boolean; error?: unknown };
+export function isItemSavedForLater(itemId: string): boolean;
+export function getSelectedReward(): { id: string; label?: string; cost?: number; [key: string]: unknown } | null;
+export function saveSelectedReward(reward: { id: string; label?: string; cost?: number; [key: string]: unknown } | null): { success: boolean; error?: unknown };
+export function clearCartMetadata(): { success: boolean; error?: unknown };
+

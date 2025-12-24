@@ -9,6 +9,7 @@ import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTri
 import { pageFade } from '../../components/animations/menuAnimations'
 import { logger } from '../../utils/logger'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
+import { asUpdate, asInsert } from '@/lib/supabase-helpers'
 
 interface CropArea {
   x: number;
@@ -144,7 +145,7 @@ export default function AdminMenuItems() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
   const [currentItemForImage, setCurrentItemForImage] = useState<MenuItem | null>(null);
-  const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
+  const [imageRefreshKey, _setImageRefreshKey] = useState(Date.now());
   const [selectedItemsForBulk, setSelectedItemsForBulk] = useState<Set<string>>(new Set());
   const [bulkToggleLoading, setBulkToggleLoading] = useState(false);
   const [modalSearchTerm, setModalSearchTerm] = useState('');
@@ -171,14 +172,30 @@ export default function AdminMenuItems() {
   const formSpiceDropdownRef = useRef(null);
   const editFormSpiceDropdownRef = useRef(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    category_id: string;
+    name: string;
+    description: string;
+    price: string;
+    image_url: string;
+    dietary_tags: string[];
+    spice_level: number | null;
+    prep_time: string;
+    is_available: boolean;
+    is_featured: boolean;
+    is_todays_menu: boolean;
+    is_daily_special: boolean;
+    is_new_dish: boolean;
+    is_discount_combo: boolean;
+    [key: string]: string | string[] | number | null | boolean;
+  }>({
     category_id: '',
     name: '',
     description: '',
     price: '',
     image_url: '',
     dietary_tags: [],
-    spice_level: 0,
+    spice_level: null,
     prep_time: '',
     is_available: true,
     is_featured: false,
@@ -290,8 +307,10 @@ export default function AdminMenuItems() {
   });
 
   // Handle form input
-  function handleInputChange(e) {
-    const { name, value, type, checked } = e.target;
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    const target = e.target;
+    const { name, value, type } = target;
+    const checked = target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : undefined;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -299,7 +318,7 @@ export default function AdminMenuItems() {
   }
 
   // Handle dietary tags
-  function toggleDietaryTag(tag) {
+  function toggleDietaryTag(tag: string) {
     setFormData(prev => ({
       ...prev,
       dietary_tags: prev.dietary_tags.includes(tag)
@@ -309,12 +328,12 @@ export default function AdminMenuItems() {
   }
 
   // Validate dietary tags
-  function validateDietaryTags(dietaryTags) {
+  function validateDietaryTags(dietaryTags: any) {
     if (dietaryTags && !Array.isArray(dietaryTags)) {
       toast.error('Invalid dietary tags format');
       return false;
     }
-    const invalidTags = (dietaryTags || []).filter(tag => !VALID_DIETARY_TAGS.includes(tag));
+    const invalidTags = (dietaryTags || []).filter((tag: string) => !VALID_DIETARY_TAGS.includes(tag));
     if (invalidTags.length > 0) {
       toast.error(`Invalid dietary tags: ${invalidTags.join(', ')}`);
       return false;
@@ -323,7 +342,7 @@ export default function AdminMenuItems() {
   }
 
   // Add menu item
-  async function handleAddItem(e) {
+  async function handleAddItem(e: React.FormEvent) {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.category_id || !formData.price) {
@@ -338,14 +357,14 @@ export default function AdminMenuItems() {
     try {
       const { error } = await supabase
         .from('menu_items')
-        .insert([{
+        .insert([asInsert('menu_items', {
           category_id: formData.category_id,
           name: formData.name.trim(),
           description: formData.description.trim() || null,
           price: parseFloat(formData.price),
           image_url: formData.image_url || null,
           dietary_tags: formData.dietary_tags,
-          spice_level: parseInt(formData.spice_level),
+          spice_level: formData.spice_level === null || formData.spice_level === undefined ? 0 : (typeof formData.spice_level === 'number' ? formData.spice_level : parseInt(String(formData.spice_level))),
           prep_time: formData.prep_time && formData.prep_time.trim() !== '' ? parseInt(formData.prep_time) : null,
           is_available: formData.is_available,
           is_featured: formData.is_featured,
@@ -353,7 +372,7 @@ export default function AdminMenuItems() {
           is_daily_special: formData.is_daily_special,
           is_new_dish: formData.is_new_dish,
           is_discount_combo: formData.is_discount_combo
-        }]);
+        })]);
 
       if (error) throw error;
 
@@ -365,12 +384,12 @@ export default function AdminMenuItems() {
       fetchMenuItems(1, true);
     } catch (error) {
       logger.error('Error adding item:', error);
-      toast.error(error.message || 'Failed to add item');
+      toast.error(error instanceof Error ? error.message : String(error) || 'Failed to add item');
     }
   }
 
   // Update menu item
-  async function handleUpdateItem(e) {
+  async function handleUpdateItem(e: React.FormEvent) {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.category_id || !formData.price) {
@@ -383,16 +402,21 @@ export default function AdminMenuItems() {
     }
 
     try {
+      if (!editingItem) {
+        toast.error('No item selected for editing');
+        return;
+      }
+
       const { error } = await supabase
         .from('menu_items')
-        .update({
+        .update(asUpdate('menu_items', {
           category_id: formData.category_id,
           name: formData.name.trim(),
           description: formData.description.trim() || null,
           price: parseFloat(formData.price),
           image_url: formData.image_url || null,
           dietary_tags: formData.dietary_tags,
-          spice_level: parseInt(formData.spice_level),
+          spice_level: formData.spice_level === null || formData.spice_level === undefined ? 0 : (typeof formData.spice_level === 'number' ? formData.spice_level : parseInt(String(formData.spice_level))),
           prep_time: formData.prep_time && formData.prep_time.trim() !== '' ? parseInt(formData.prep_time) : null,
           is_available: formData.is_available,
           is_featured: formData.is_featured,
@@ -401,7 +425,7 @@ export default function AdminMenuItems() {
           is_new_dish: formData.is_new_dish,
           is_discount_combo: formData.is_discount_combo,
           updated_at: new Date().toISOString()
-        })
+        }))
         .eq('id', editingItem.id);
 
       if (error) throw error;
@@ -413,12 +437,12 @@ export default function AdminMenuItems() {
       fetchMenuItems(1, true);
     } catch (error) {
       logger.error('Error updating item:', error);
-      toast.error(error.message || 'Failed to update item');
+      toast.error(error instanceof Error ? error.message : String(error) || 'Failed to update item');
     }
   }
 
   // Open delete confirmation
-  function openDeleteConfirm(id, name) {
+  function openDeleteConfirm(id: string, name: string) {
     setItemToDelete({ id, name });
     setShowDeleteConfirm(true);
   }
@@ -448,11 +472,11 @@ export default function AdminMenuItems() {
   }
 
   // Toggle availability
-  async function toggleAvailability(item) {
+  async function toggleAvailability(item: any) {
     try {
       const { error } = await supabase
         .from('menu_items')
-        .update({ is_available: !item.is_available })
+        .update(asUpdate('menu_items', { is_available: !item.is_available }))
         .eq('id', item.id);
 
       if (error) throw error;
@@ -489,7 +513,7 @@ export default function AdminMenuItems() {
         updates.push(
           supabase
             .from('menu_items')
-            .update({ is_available: true })
+            .update(asUpdate('menu_items', { is_available: true }))
             .in('id', toMakeAvailable)
         );
       }
@@ -497,7 +521,7 @@ export default function AdminMenuItems() {
         updates.push(
           supabase
             .from('menu_items')
-            .update({ is_available: false })
+            .update(asUpdate('menu_items', { is_available: false }))
             .in('id', toMakeUnavailable)
         );
       }
@@ -521,7 +545,7 @@ export default function AdminMenuItems() {
   }
 
   // Toggle item selection for bulk actions
-  function toggleItemSelection(itemId) {
+  function toggleItemSelection(itemId: string) {
     setSelectedItemsForBulk(prev => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
@@ -534,8 +558,8 @@ export default function AdminMenuItems() {
   }
 
   // Select all items in current view
-  function selectAllItems(items) {
-    setSelectedItemsForBulk(new Set(items.map(item => item.id)));
+  function selectAllItems(items: any[]) {
+    setSelectedItemsForBulk(new Set(items.map((item: any) => item.id)));
   }
 
   // Deselect all items
@@ -544,7 +568,7 @@ export default function AdminMenuItems() {
   }
 
   // Edit item - Opens modal
-  function startEdit(item) {
+  function startEdit(item: any) {
     setEditingItem(item);
     setFormData({
       category_id: item.category_id,
@@ -578,7 +602,7 @@ export default function AdminMenuItems() {
   }
 
   // Handle image file selection
-  function handleImageSelect(e) {
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -596,9 +620,11 @@ export default function AdminMenuItems() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
+      if (!event.target || typeof event.target.result !== 'string') return;
+      const result = event.target.result;
       const img = new Image();
       img.onload = () => {
-        setUploadedImage(event.target.result);
+        setUploadedImage(result);
         // Initialize crop area to center, aspect ratio matching card (approximately 16:9)
         const minSize = Math.min(img.width, img.height);
         const cropSize = Math.min(minSize, 400);
@@ -608,20 +634,20 @@ export default function AdminMenuItems() {
           width: cropSize,
           height: cropSize
         });
-        updateCroppedPreview(event.target.result, {
+        updateCroppedPreview(result, {
           x: (img.width - cropSize) / 2,
           y: (img.height - cropSize) / 2,
           width: cropSize,
           height: cropSize
         });
       };
-      img.src = event.target.result;
+      img.src = result;
     };
     reader.readAsDataURL(file);
   }
 
   // Update cropped preview
-  function updateCroppedPreview(imageSrc, area) {
+  function updateCroppedPreview(imageSrc: string, area: any) {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -647,7 +673,7 @@ export default function AdminMenuItems() {
   }
 
   // Handle crop area drag
-  function handleCropMouseDown(e) {
+  function handleCropMouseDown(e: React.MouseEvent) {
     e.preventDefault();
     if (!imageRef.current) return;
     
@@ -668,7 +694,7 @@ export default function AdminMenuItems() {
   }
 
   // Handle crop area resize
-  function handleResizeMouseDown(e, handle) {
+  function handleResizeMouseDown(e: React.MouseEvent, handle: string) {
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
@@ -683,7 +709,7 @@ export default function AdminMenuItems() {
   useEffect(() => {
     if (!uploadedImage || (!isDragging && !isResizing) || !imageRef.current) return;
 
-    function handleMouseMove(e) {
+    function handleMouseMove(e: MouseEvent) {
       const rect = imageRef.current.getBoundingClientRect();
       const naturalWidth = imageRef.current.naturalWidth;
       const naturalHeight = imageRef.current.naturalHeight;
@@ -850,7 +876,7 @@ export default function AdminMenuItems() {
   useEffect(() => {
     if (!showEditModal) return;
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeEditModal();
       }
@@ -892,7 +918,7 @@ export default function AdminMenuItems() {
   useEffect(() => {
     if (!showAvailabilityModal) return;
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowAvailabilityModal(false);
         setModalSearchTerm('');
@@ -906,7 +932,7 @@ export default function AdminMenuItems() {
 
   // Close category dropdown when clicking outside (but not on tab buttons)
   useEffect(() => {
-    function handleClickOutside(event) {
+    function handleClickOutside(event: MouseEvent) {
       // Don't close if clicking inside the dropdown menu (for tab-like behavior)
       const dropdownMenu = document.querySelector('[role="tab"]')?.closest('.fixed');
       if (dropdownMenu && dropdownMenu.contains(event.target)) {
@@ -925,19 +951,19 @@ export default function AdminMenuItems() {
   }, [showCategoryDropdown]);
 
   // Open image modal for item
-  function openImageModal(item) {
+  function openImageModal(item: any) {
     setCurrentItemForImage(item);
     setShowImageModal(true);
   }
 
   // Handle image uploaded
-  async function handleImageUploaded(url) {
+  async function handleImageUploaded(url: string) {
     if (!currentItemForImage) return;
 
     try {
       const { error } = await supabase
         .from('menu_items')
-        .update({ image_url: url })
+        .update(asUpdate('menu_items', { image_url: url }))
         .eq('id', currentItemForImage.id);
 
       if (error) throw error;
@@ -954,7 +980,7 @@ export default function AdminMenuItems() {
 
 
   // Get image display with proper validation
-  function getImageDisplay(item) {
+  function getImageDisplay(item: any) {
     if (item.image_url && item.image_url.trim() !== '') {
       // Add cache-busting timestamp to FORCE browser reload
       const url = item.image_url.trim();
@@ -1425,7 +1451,7 @@ export default function AdminMenuItems() {
                   onChange={handleInputChange}
                   className="w-full px-5 py-4 sm:py-5 min-h-[120px] sm:min-h-[140px] bg-[rgba(255,255,255,0.05)] border-0 focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] placeholder-[var(--text-muted)] transition-all duration-300 backdrop-blur-sm resize-none"
                   placeholder="Brief description of the dish"
-                  rows="4"
+                  rows={4}
                 />
               </div>
 
@@ -1469,7 +1495,7 @@ export default function AdminMenuItems() {
                     type="button"
                     onClick={() => setShowFormSpiceDropdown(!showFormSpiceDropdown)}
                     className={`w-full px-5 py-3.5 sm:py-4 min-h-[52px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] transition-all duration-300 cursor-pointer backdrop-blur-sm flex items-center justify-between ${
-                      formData.spice_level === undefined || formData.spice_level === '' ? 'text-[var(--text-muted)]' : ''
+                      formData.spice_level === undefined || formData.spice_level === null ? 'text-[var(--text-muted)]' : ''
                     }`}
                     aria-label="Select spice level"
                     aria-expanded={showFormSpiceDropdown}
@@ -2058,7 +2084,7 @@ export default function AdminMenuItems() {
                         onChange={handleInputChange}
                         className="w-full px-5 py-4 sm:py-5 min-h-[120px] sm:min-h-[140px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-xl text-sm sm:text-base text-[var(--text-main)] placeholder-[var(--text-muted)] transition-all duration-300 backdrop-blur-sm resize-none"
                         placeholder="Brief description of the dish"
-                        rows="4"
+                        rows={4}
                       />
                     </div>
 
@@ -2189,7 +2215,7 @@ export default function AdminMenuItems() {
                           type="button"
                           onClick={() => setShowEditFormSpiceDropdown(!showEditFormSpiceDropdown)}
                           className={`w-full px-5 py-3.5 sm:py-4 min-h-[52px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] transition-all duration-300 cursor-pointer backdrop-blur-sm flex items-center justify-between ${
-                            formData.spice_level === undefined || formData.spice_level === '' ? 'text-[var(--text-muted)]' : ''
+                            formData.spice_level === undefined || formData.spice_level === null ? 'text-[var(--text-muted)]' : ''
                           }`}
                           aria-label="Select spice level"
                           aria-expanded={showEditFormSpiceDropdown}
@@ -2213,7 +2239,8 @@ export default function AdminMenuItems() {
                             
                             {/* Dropdown Menu */}
                             {(() => {
-                              const buttonRect = editFormSpiceDropdownRef.current?.querySelector('button')?.getBoundingClientRect();
+                              const dropdownElement = editFormSpiceDropdownRef.current as HTMLElement | null;
+                              const buttonRect = dropdownElement?.querySelector('button')?.getBoundingClientRect();
                               if (!buttonRect) return null;
                               
                               const itemHeight = 40;

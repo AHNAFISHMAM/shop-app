@@ -1,14 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'
 
 /**
  * Menu item interface
  */
 interface MenuItem {
-  name: string;
-  image?: string;
-  description?: string;
-  price: number | string;
-  category?: string;
+  name: string
+  image?: string
+  description?: string
+  price: number | string
+  category?: string
 }
 
 /**
@@ -16,9 +16,9 @@ interface MenuItem {
  */
 interface MenuPreviewProps {
   /** Array of menu items to display */
-  items?: MenuItem[];
+  items?: MenuItem[]
   /** Whether to show the "View All" button */
-  showViewAllButton?: boolean;
+  showViewAllButton?: boolean
 }
 
 /**
@@ -37,8 +37,12 @@ const MenuPreview = ({ items = [], showViewAllButton = true }: MenuPreviewProps)
   return (
     <section className="space-y-8" aria-labelledby="menu-preview-heading">
       {/* Grid of Menu Items */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" role="list" aria-label="Menu items">
-        {items.map((item) => (
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        role="list"
+        aria-label="Menu items"
+      >
+        {items.map(item => (
           <article
             key={item.name}
             className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-default)] hover:shadow-lg transition-all duration-300 group min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
@@ -54,20 +58,27 @@ const MenuPreview = ({ items = [], showViewAllButton = true }: MenuPreviewProps)
               </div>
             )}
             <div className="space-y-2 p-4">
-              <h3 className="text-lg font-semibold text-[var(--text-main)]" id={`menu-item-${item.name.replace(/\s+/g, '-').toLowerCase()}`}>
+              <h3
+                className="text-lg font-semibold text-[var(--text-main)]"
+                id={`menu-item-${item.name.replace(/\s+/g, '-').toLowerCase()}`}
+              >
                 {item.name}
               </h3>
               {item.description && (
-                <p className="text-sm text-[var(--text-muted)] line-clamp-2">
-                  {item.description}
-                </p>
+                <p className="text-sm text-[var(--text-muted)] line-clamp-2">{item.description}</p>
               )}
               <div className="flex items-center justify-between pt-2">
-                <span className="text-lg font-bold text-[var(--accent)]" aria-label={`Price: ${item.price}`}>
+                <span
+                  className="text-lg font-bold text-[var(--accent)]"
+                  aria-label={`Price: ${item.price}`}
+                >
                   ৳{item.price}
                 </span>
                 {item.category && (
-                  <span className="text-xs uppercase tracking-wide text-[var(--text-muted)]" aria-label={`Category: ${item.category}`}>
+                  <span
+                    className="text-xs uppercase tracking-wide text-[var(--text-muted)]"
+                    aria-label={`Category: ${item.category}`}
+                  >
                     {item.category}
                   </span>
                 )}
@@ -90,8 +101,7 @@ const MenuPreview = ({ items = [], showViewAllButton = true }: MenuPreviewProps)
         </div>
       )}
     </section>
-  );
-};
+  )
+}
 
-export default MenuPreview;
-
+export default MenuPreview

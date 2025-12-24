@@ -87,10 +87,11 @@ export function isSupabaseUser(value: unknown): value is User {
 
 /**
  * Type guard for Profile (from database.types)
+ * Note: profiles table may not exist in all database schemas
  */
 export function isProfile(
   value: unknown
-): value is Database['public']['Tables']['profiles']['Row'] {
+): value is { id: string; email: string | null; [key: string]: unknown } {
   if (!isObject(value)) return false
 
   return (
@@ -168,10 +169,7 @@ export function isOrder(value: unknown): value is Database['public']['Tables']['
  * }
  * ```
  */
-export function isArrayOf<T>(
-  arr: unknown,
-  guard: (item: unknown) => item is T
-): arr is T[] {
+export function isArrayOf<T>(arr: unknown, guard: (item: unknown) => item is T): arr is T[] {
   return Array.isArray(arr) && arr.every(guard)
 }
 
@@ -200,7 +198,7 @@ export function hasProperties<K extends string>(
   ...props: K[]
 ): value is Record<K, unknown> {
   if (!isObject(value)) return false
-  return props.every((prop) => prop in value)
+  return props.every(prop => prop in value)
 }
 
 /**
@@ -219,6 +217,7 @@ export function isDiscriminatedUnion<T extends Record<string, unknown>>(
   discriminator: keyof T,
   expectedValue: T[keyof T]
 ): value is T {
-  return isObject(value) && value[discriminator] === expectedValue
+  if (!isObject(value)) return false
+  const val = value as Record<string, unknown>
+  return val[discriminator as string] === expectedValue
 }
-

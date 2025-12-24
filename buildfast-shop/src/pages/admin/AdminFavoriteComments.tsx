@@ -5,32 +5,32 @@ import { logger } from '../../utils/logger'
 import CustomDropdown from '../../components/ui/CustomDropdown'
 
 interface Comment {
-  id: string;
-  review_text?: string;
-  created_at?: string;
-  user_id?: string;
+  id: string
+  review_text?: string
+  created_at?: string
+  user_id?: string
   menu_items?: {
-    name?: string;
-    image_url?: string;
-  };
+    name?: string
+    image_url?: string
+  }
   products?: {
-    name?: string;
-  };
-  favorite_target_label?: string;
-  favorite_is_general?: boolean;
-  menu_item_id?: string;
-  product_id?: string;
+    name?: string
+  }
+  favorite_target_label?: string
+  favorite_is_general?: boolean
+  menu_item_id?: string
+  product_id?: string
   customer?: {
-    full_name?: string;
-    email?: string;
-  };
-  review_images?: string[];
+    full_name?: string
+    email?: string
+  }
+  review_images?: string[]
 }
 
 interface Stats {
-  total: number;
-  timeframeCount: number;
-  uniqueUsers: number;
+  total: number
+  timeframeCount: number
+  uniqueUsers: number
 }
 
 function formatDate(value: string | null | undefined): string {
@@ -40,7 +40,7 @@ function formatDate(value: string | null | undefined): string {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -57,7 +57,9 @@ function AdminFavoriteComments(): JSX.Element {
   const checkAdminStatus = useCallback(async (): Promise<void> => {
     setVerifying(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) {
         setError('Log in to access admin tools.')
         setIsAdmin(false)
@@ -70,7 +72,8 @@ function AdminFavoriteComments(): JSX.Element {
         .eq('id', user.id)
         .single()
 
-      if (customerError || !data?.is_admin) {
+      const customerData = data as { is_admin?: boolean } | null
+      if (customerError || !customerData?.is_admin) {
         setError('Access denied. Administrator role required.')
         setIsAdmin(false)
         return
@@ -95,7 +98,8 @@ function AdminFavoriteComments(): JSX.Element {
       setComments(result.data as Comment[])
       setStats(result.stats as Stats)
     } else {
-      setError(result.error?.message || 'Failed to load favorite comments.')
+      const errorMsg = result.error instanceof Error ? result.error.message : String(result.error || 'Failed to load favorite comments')
+      setError(errorMsg)
       setComments([])
       setStats({ total: 0, timeframeCount: 0, uniqueUsers: 0 })
     }
@@ -122,7 +126,7 @@ function AdminFavoriteComments(): JSX.Element {
           event: '*',
           schema: 'public',
           table: 'product_reviews',
-          filter: 'source=eq.favorite'
+          filter: 'source=eq.favorite',
         },
         () => loadComments()
       )
@@ -138,10 +142,11 @@ function AdminFavoriteComments(): JSX.Element {
     const query = search.toLowerCase()
     return comments.filter(comment => {
       const text = comment.review_text?.toLowerCase() || ''
-      const dish = comment.menu_items?.name?.toLowerCase()
-        || comment.products?.name?.toLowerCase()
-        || comment.favorite_target_label?.toLowerCase()
-        || ''
+      const dish =
+        comment.menu_items?.name?.toLowerCase() ||
+        comment.products?.name?.toLowerCase() ||
+        comment.favorite_target_label?.toLowerCase() ||
+        ''
       const email = comment.customer?.email?.toLowerCase() || ''
       return text.includes(query) || dish.includes(query) || email.includes(query)
     })
@@ -170,17 +175,20 @@ function AdminFavoriteComments(): JSX.Element {
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-muted">Community Signal</p>
           <h1 className="text-3xl font-semibold">Favorite Comments</h1>
-          <p className="text-sm text-muted">Monitor monthly feedback on starred dishes, review imagery, and keep engagement professional.</p>
+          <p className="text-sm text-muted">
+            Monitor monthly feedback on starred dishes, review imagery, and keep engagement
+            professional.
+          </p>
         </div>
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
           <CustomDropdown
             options={[
               { value: 'current', label: 'Current month' },
               { value: 'last-90', label: 'Last 90 days' },
-              { value: 'all', label: 'All time' }
+              { value: 'all', label: 'All time' },
             ]}
             value={timeframe}
-            onChange={(event: ChangeEvent<HTMLSelectElement>) => setTimeframe(event.target.value)}
+            onChange={(event: { target: { value: string | number; name?: string } }) => setTimeframe(String(event.target.value))}
             placeholder="Current month"
             maxVisibleItems={5}
           />
@@ -239,7 +247,9 @@ function AdminFavoriteComments(): JSX.Element {
           {loading ? (
             <div className="py-16 text-center text-sm text-muted">Loading favorite comments…</div>
           ) : filteredComments.length === 0 ? (
-            <div className="py-16 text-center text-sm text-muted">No favorite comments match this view.</div>
+            <div className="py-16 text-center text-sm text-muted">
+              No favorite comments match this view.
+            </div>
           ) : (
             <table className="min-w-full divide-y divide-white/10">
               <thead className="bg-[rgba(255,255,255,0.03)] text-left text-xs uppercase tracking-[0.18em] text-[var(--text-main)]/40">
@@ -252,7 +262,7 @@ function AdminFavoriteComments(): JSX.Element {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
-                {filteredComments.map((comment) => {
+                {filteredComments.map(comment => {
                   const product = comment.menu_items
                   const image = comment.menu_items?.image_url
                   const title = comment.favorite_target_label || product?.name || 'General Feedback'
@@ -285,7 +295,9 @@ function AdminFavoriteComments(): JSX.Element {
                       </td>
                       <td className="px-6 py-4 align-top">
                         <div className="text-sm text-[var(--text-main)]">
-                          {comment.customer?.full_name || comment.customer?.email || comment.user_id?.slice(0, 8)}
+                          {comment.customer?.full_name ||
+                            comment.customer?.email ||
+                            comment.user_id?.slice(0, 8)}
                         </div>
                         {comment.customer?.email && (
                           <div className="text-xs text-muted">{comment.customer.email}</div>
@@ -301,7 +313,11 @@ function AdminFavoriteComments(): JSX.Element {
                                 className="h-14 w-14 overflow-hidden rounded-lg border border-theme"
                                 onClick={() => window.open(url, '_blank')}
                               >
-                                <img src={url} alt="Attachment" className="h-full w-full object-cover" />
+                                <img
+                                  src={url}
+                                  alt="Attachment"
+                                  className="h-full w-full object-cover"
+                                />
                               </button>
                             ))}
                           </div>
@@ -325,4 +341,3 @@ function AdminFavoriteComments(): JSX.Element {
 }
 
 export default AdminFavoriteComments
-

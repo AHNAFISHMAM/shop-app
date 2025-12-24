@@ -5,8 +5,8 @@
  * Admin can control hours, capacity, features, etc.
  */
 
-import { supabase } from './supabase';
-import { logger } from '../utils/logger';
+import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 
 /**
  * Get current reservation settings
@@ -15,32 +15,29 @@ import { logger } from '../utils/logger';
  */
 export async function getReservationSettings() {
   try {
-    const { data, error } = await supabase
-      .from('reservation_settings')
-      .select('*')
-      .single();
+    const { data, error } = await supabase.from('reservation_settings').select('*').single()
 
     if (error) {
-      logger.error('Error fetching reservation settings:', error);
+      logger.error('Error fetching reservation settings:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load reservation settings'
-      };
+        error: error.message || 'Failed to load reservation settings',
+      }
     }
 
     return {
       success: true,
       data: data,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getReservationSettings:', err);
+    logger.error('Unexpected error in getReservationSettings:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -53,16 +50,13 @@ export async function getReservationSettings() {
 export async function updateReservationSettings(settings) {
   try {
     // Get the current settings ID (should only be one row)
-    const { data: current } = await supabase
-      .from('reservation_settings')
-      .select('id')
-      .single();
+    const { data: current } = await supabase.from('reservation_settings').select('id').single()
 
     if (!current) {
       return {
         success: false,
-        error: 'No settings record found'
-      };
+        error: 'No settings record found',
+      }
     }
 
     // Update settings
@@ -70,28 +64,28 @@ export async function updateReservationSettings(settings) {
       .from('reservation_settings')
       .update({
         ...settings,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', current.id);
+      .eq('id', current.id)
 
     if (error) {
-      logger.error('Error updating reservation settings:', error);
+      logger.error('Error updating reservation settings:', error)
       return {
         success: false,
-        error: error.message || 'Failed to update settings'
-      };
+        error: error.message || 'Failed to update settings',
+      }
     }
 
     return {
       success: true,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in updateReservationSettings:', err);
+    logger.error('Unexpected error in updateReservationSettings:', err)
     return {
       success: false,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -102,34 +96,31 @@ export async function updateReservationSettings(settings) {
  * @returns {Array<string>} Array of time strings (HH:MM)
  */
 export function generateTimeSlotsFromSettings(settings) {
-  if (!settings) return [];
+  if (!settings) return []
 
-  const slots = [];
-  const interval = settings.time_slot_interval || 30;
+  const slots = []
+  const interval = settings.time_slot_interval || 30
 
   // Parse opening and closing times
-  const [openHour, openMin] = settings.opening_time.split(':').map(Number);
-  const [closeHour, closeMin] = settings.closing_time.split(':').map(Number);
+  const [openHour, openMin] = settings.opening_time.split(':').map(Number)
+  const [closeHour, closeMin] = settings.closing_time.split(':').map(Number)
 
-  let currentHour = openHour;
-  let currentMin = openMin;
+  let currentHour = openHour
+  let currentMin = openMin
 
-  while (
-    currentHour < closeHour ||
-    (currentHour === closeHour && currentMin < closeMin)
-  ) {
-    const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
-    slots.push(timeString);
+  while (currentHour < closeHour || (currentHour === closeHour && currentMin < closeMin)) {
+    const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`
+    slots.push(timeString)
 
     // Add interval
-    currentMin += interval;
+    currentMin += interval
     if (currentMin >= 60) {
-      currentMin -= 60;
-      currentHour += 1;
+      currentMin -= 60
+      currentHour += 1
     }
   }
 
-  return slots;
+  return slots
 }
 
 /**
@@ -140,7 +131,7 @@ export function generateTimeSlotsFromSettings(settings) {
  * @returns {boolean}
  */
 export function isDateBlocked(date, blockedDates = []) {
-  return blockedDates.includes(date);
+  return blockedDates.includes(date)
 }
 
 /**
@@ -150,9 +141,9 @@ export function isDateBlocked(date, blockedDates = []) {
  * @param {Array<number>} operatingDays - Array of operating day numbers
  * @returns {boolean}
  */
-export function isDayOperating(date, operatingDays = [0,1,2,3,4,5,6]) {
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-  return operatingDays.includes(dayOfWeek);
+export function isDayOperating(date, operatingDays = [0, 1, 2, 3, 4, 5, 6]) {
+  const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+  return operatingDays.includes(dayOfWeek)
 }
 
 /**
@@ -162,16 +153,16 @@ export function isDayOperating(date, operatingDays = [0,1,2,3,4,5,6]) {
  * @returns {Date}
  */
 export function getMinBookingDate(allowSameDayBooking = true) {
-  const today = new Date();
+  const today = new Date()
 
   if (allowSameDayBooking) {
-    return today;
+    return today
   }
 
   // Next day
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow;
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  return tomorrow
 }
 
 /**
@@ -181,10 +172,10 @@ export function getMinBookingDate(allowSameDayBooking = true) {
  * @returns {Date}
  */
 export function getMaxBookingDate(advanceBookingDays = 30) {
-  const today = new Date();
-  const maxDate = new Date(today);
-  maxDate.setDate(maxDate.getDate() + advanceBookingDays);
-  return maxDate;
+  const today = new Date()
+  const maxDate = new Date(today)
+  maxDate.setDate(maxDate.getDate() + advanceBookingDays)
+  return maxDate
 }
 
 export default {
@@ -194,5 +185,5 @@ export default {
   isDateBlocked,
   isDayOperating,
   getMinBookingDate,
-  getMaxBookingDate
-};
+  getMaxBookingDate,
+}

@@ -14,7 +14,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { queryKeys } from '../../../shared/lib/query-keys'
 import { supabase } from '../../../lib/supabase'
 import { logger } from '../../../utils/logger'
-import { logError, getUserFriendlyError } from '../../../lib/error-handler'
+import { logError } from '../../../lib/error-handler'
 import { defaultQueryConfig } from '../../../shared/lib/query-config'
 import type { Database } from '../../../lib/database.types'
 
@@ -57,21 +57,35 @@ async function fetchMenuData(): Promise<MenuData> {
     // Try RPC function first (faster - 1 query instead of 2)
     const { data: rpcData, error: rpcError } = await supabase.rpc('get_public_menu')
 
-    if (!rpcError && rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
+    if (!rpcError && rpcData && Array.isArray(rpcData)) {
       // Transform RPC response to match expected format
-      const categories: MenuCategory[] = rpcData.map((cat: any) => ({
-        id: cat.category_id,
-        name: cat.category_name,
-        sort_order: cat.category_order,
-        slug: cat.category_name?.toLowerCase().replace(/\s+/g, '-'),
-        created_at: cat.created_at || new Date().toISOString(),
-        updated_at: cat.updated_at || new Date().toISOString(),
-      }))
+      const rpcArray = rpcData as Array<Record<string, unknown>>
+      if (rpcArray.length === 0) {
+        return { categories: [], items: [] }
+      }
+      const categories: MenuCategory[] = rpcArray.length > 0
+        ? rpcArray
+            .filter((cat: any): cat is Record<string, unknown> => cat && typeof cat === 'object')
+            .map((cat: any): MenuCategory => ({
+              id: String(cat.category_id || ''),
+              name: String(cat.category_name || ''),
+              slug: String(cat.category_name?.toLowerCase().replace(/\s+/g, '-') || ''),
+              description: cat.description || null,
+              image_url: cat.image_url || null,
+              sort_order: Number(cat.category_order || 0),
+              is_active: cat.is_active !== false,
+              created_at: String(cat.created_at || new Date().toISOString()),
+              updated_at: String(cat.updated_at || new Date().toISOString()),
+            }))
+        : []
 
       // Flatten dishes from all categories
-      const items: MenuItem[] = rpcData.flatMap((cat: any) => {
-        const dishes = (cat.dishes || []).map((dish: any) => ({
-          ...dish,
+      const items: MenuItem[] = rpcArray.flatMap((cat: any) => {
+        if (!cat || typeof cat !== 'object') return []
+        const dishesArray = Array.isArray(cat.dishes) ? cat.dishes : []
+        if (dishesArray.length === 0) return []
+        const dishes = dishesArray.map((dish: any) => ({
+          ...(dish as Record<string, unknown>),
           category_id: cat.category_id,
           menu_categories: {
             id: cat.category_id,
@@ -89,7 +103,10 @@ async function fetchMenuData(): Promise<MenuData> {
     }
 
     // Fallback to separate queries if RPC fails or returns empty
-    logger.warn('RPC get_public_menu failed or returned empty, falling back to separate queries:', rpcError)
+    logger.warn(
+      'RPC get_public_menu failed or returned empty, falling back to separate queries:',
+      rpcError
+    )
 
     // Fetch categories
     const { data: categoriesData, error: categoriesError } = await supabase
@@ -167,4 +184,3 @@ export function useMenuData(options: UseMenuDataOptions = {}): UseMenuDataReturn
     },
   }
 }
-

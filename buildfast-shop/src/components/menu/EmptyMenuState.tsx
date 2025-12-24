@@ -1,10 +1,10 @@
-import React, { memo } from 'react';
-import { m } from 'framer-motion';
-import { staggerContainer, fadeSlideUp } from '../animations/menuAnimations';
+import { memo } from 'react'
+import { m } from 'framer-motion'
+import { staggerContainer, fadeSlideUp } from '../animations/menuAnimations'
 
 interface EmptyMenuStateProps {
-  onClearFilters: () => void;
-  prefersReducedMotion: boolean;
+  onClearFilters: () => void
+  prefersReducedMotion: boolean
 }
 
 const EmptyMenuState = memo(({ onClearFilters, prefersReducedMotion }: EmptyMenuStateProps) => {
@@ -12,9 +12,9 @@ const EmptyMenuState = memo(({ onClearFilters, prefersReducedMotion }: EmptyMenu
     <m.div
       className="flex flex-col items-center justify-center py-20"
       variants={prefersReducedMotion ? {} : staggerContainer}
-      initial={prefersReducedMotion ? false : 'hidden'}
-      animate={prefersReducedMotion ? false : 'visible'}
-      exit={prefersReducedMotion ? false : 'exit'}
+      initial={prefersReducedMotion ? undefined : 'hidden'}
+      animate={prefersReducedMotion ? undefined : 'visible'}
+      exit={prefersReducedMotion ? undefined : 'exit'}
       custom={0.58}
       role="status"
       aria-live="polite"
@@ -59,10 +59,9 @@ const EmptyMenuState = memo(({ onClearFilters, prefersReducedMotion }: EmptyMenu
         Clear Filters
       </m.button>
     </m.div>
-  );
-});
+  )
+})
 
-EmptyMenuState.displayName = 'EmptyMenuState';
+EmptyMenuState.displayName = 'EmptyMenuState'
 
-export default EmptyMenuState;
-
+export default EmptyMenuState

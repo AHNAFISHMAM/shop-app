@@ -5,8 +5,8 @@
  * Abstracts Supabase RPC calls for reservations.
  */
 
-import { supabase } from './supabase';
-import { logger } from '../utils/logger';
+import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 
 /**
  * Create a new reservation using RPC function
@@ -42,66 +42,66 @@ export async function createReservation(reservationData) {
       checkInDate,
       checkOutDate,
       roomType,
-      guestNotes
-    } = reservationData;
+      guestNotes,
+    } = reservationData
 
     // Validate required fields
     if (!customerName || customerName.trim() === '') {
       return {
         success: false,
         reservationId: null,
-        error: 'Customer name is required'
-      };
+        error: 'Customer name is required',
+      }
     }
 
     if (!customerEmail || customerEmail.trim() === '') {
       return {
         success: false,
         reservationId: null,
-        error: 'Email address is required'
-      };
+        error: 'Email address is required',
+      }
     }
 
     if (!customerPhone || customerPhone.trim() === '') {
       return {
         success: false,
         reservationId: null,
-        error: 'Phone number is required'
-      };
+        error: 'Phone number is required',
+      }
     }
 
     if (!reservationDate) {
       return {
         success: false,
         reservationId: null,
-        error: 'Reservation date is required'
-      };
+        error: 'Reservation date is required',
+      }
     }
 
     if (!reservationTime) {
       return {
         success: false,
         reservationId: null,
-        error: 'Reservation time is required'
-      };
+        error: 'Reservation time is required',
+      }
     }
 
     if (checkOutDate && reservationDate && checkOutDate < reservationDate) {
       return {
         success: false,
         reservationId: null,
-        error: 'Check-out date must be after check-in date'
-      };
+        error: 'Check-out date must be after check-in date',
+      }
     }
 
-    const normalizedTime = reservationTime.length === 5 ? `${reservationTime}:00` : reservationTime;
+    const normalizedTime = reservationTime.length === 5 ? `${reservationTime}:00` : reservationTime
 
     if (!partySize || partySize < 1 || partySize > 20) {
       return {
         success: false,
         reservationId: null,
-        error: 'Party size must be between 1 and 20 guests'
-      };
+        error: 'Party size must be between 1 and 20 guests',
+      }
     }
 
     // Use RPC function for server-side validation and atomic creation
@@ -114,80 +114,87 @@ export async function createReservation(reservationData) {
       _reservation_date: reservationDate,
       _reservation_time: normalizedTime,
       _party_size: parseInt(partySize),
-      _special_requests: specialRequests?.trim() || null
-    });
+      _special_requests: specialRequests?.trim() || null,
+    })
 
-    let error = rpcError;
-    let finalReservationId = reservationId;
+    let error = rpcError
+    let finalReservationId = reservationId
 
     // If RPC succeeded and we have additional fields not supported by RPC, update the reservation
-    if (!error && reservationId && (occasion || tablePreference || checkInDate || checkOutDate || roomType || guestNotes)) {
-      const updateData = {};
-      if (occasion) updateData.occasion = occasion;
-      if (tablePreference) updateData.table_preference = tablePreference;
-      if (checkInDate) updateData.check_in_date = checkInDate;
-      if (checkOutDate) updateData.check_out_date = checkOutDate;
-      if (roomType) updateData.room_type = roomType;
-      if (guestNotes) updateData.guest_notes = guestNotes;
+    if (
+      !error &&
+      reservationId &&
+      (occasion || tablePreference || checkInDate || checkOutDate || roomType || guestNotes)
+    ) {
+      const updateData = {}
+      if (occasion) updateData.occasion = occasion
+      if (tablePreference) updateData.table_preference = tablePreference
+      if (checkInDate) updateData.check_in_date = checkInDate
+      if (checkOutDate) updateData.check_out_date = checkOutDate
+      if (roomType) updateData.room_type = roomType
+      if (guestNotes) updateData.guest_notes = guestNotes
 
       const { error: updateError } = await supabase
         .from('table_reservations')
         .update(updateData)
-        .eq('id', reservationId);
+        .eq('id', reservationId)
 
       if (updateError) {
         // Log warning but don't fail - core reservation was created successfully
-        logger.warn('RPC succeeded but additional fields update failed:', updateError);
+        logger.warn('RPC succeeded but additional fields update failed:', updateError)
       }
     }
 
     if (error) {
-      logger.error('Error creating reservation:', error);
+      logger.error('Error creating reservation:', error)
 
       // Return user-friendly error messages from RPC function
       if (error.message && error.message.includes('already have a reservation')) {
         return {
           success: false,
           reservationId: null,
-          error: 'You already have a reservation around this time. Please choose a different time.'
-        };
+          error: 'You already have a reservation around this time. Please choose a different time.',
+        }
       }
 
-      if (error.message && (error.message.includes('past') || error.message.includes('Cannot make reservations'))) {
+      if (
+        error.message &&
+        (error.message.includes('past') || error.message.includes('Cannot make reservations'))
+      ) {
         return {
           success: false,
           reservationId: null,
-          error: 'Cannot make reservations for past dates or times.'
-        };
+          error: 'Cannot make reservations for past dates or times.',
+        }
       }
 
       if (error.message && error.message.includes('party_size')) {
         return {
           success: false,
           reservationId: null,
-          error: 'Party size must be between 1 and 20 guests.'
-        };
+          error: 'Party size must be between 1 and 20 guests.',
+        }
       }
 
       return {
         success: false,
         reservationId: null,
-        error: error.message || 'Failed to create reservation'
-      };
+        error: error.message || 'Failed to create reservation',
+      }
     }
 
     return {
       success: true,
       reservationId: finalReservationId,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in createReservation:', err);
+    logger.error('Unexpected error in createReservation:', err)
     return {
       success: false,
       reservationId: null,
-      error: 'An unexpected error occurred while creating your reservation'
-    };
+      error: 'An unexpected error occurred while creating your reservation',
+    }
   }
 }
 
@@ -204,45 +211,45 @@ export async function getUserReservations(userId = null, email = null) {
       .from('table_reservations')
       .select('*')
       .order('reservation_date', { ascending: false })
-      .order('reservation_time', { ascending: false });
+      .order('reservation_time', { ascending: false })
 
     if (userId) {
       // Authenticated user
-      query = query.eq('user_id', userId);
+      query = query.eq('user_id', userId)
     } else if (email) {
       // Guest user - lookup by email
-      query = query.eq('customer_email', email);
+      query = query.eq('customer_email', email)
     } else {
       return {
         success: false,
         data: null,
-        error: 'User ID or email is required'
-      };
+        error: 'User ID or email is required',
+      }
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query
 
     if (error) {
-      logger.error('Error fetching reservations:', error);
+      logger.error('Error fetching reservations:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load reservations'
-      };
+        error: error.message || 'Failed to load reservations',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getUserReservations:', err);
+    logger.error('Unexpected error in getUserReservations:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -258,29 +265,29 @@ export async function getReservationById(reservationId) {
       .from('table_reservations')
       .select('*')
       .eq('id', reservationId)
-      .single();
+      .single()
 
     if (error) {
-      logger.error('Error fetching reservation:', error);
+      logger.error('Error fetching reservation:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Reservation not found'
-      };
+        error: error.message || 'Reservation not found',
+      }
     }
 
     return {
       success: true,
       data: data,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getReservationById:', err);
+    logger.error('Unexpected error in getReservationById:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -297,38 +304,38 @@ export async function cancelReservation(reservationId, userId) {
       .from('table_reservations')
       .update({
         status: 'cancelled',
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', reservationId)
       .eq('user_id', userId)
       .in('status', ['pending', 'confirmed'])
-      .select();
+      .select()
 
     if (error) {
-      logger.error('Error cancelling reservation:', error);
+      logger.error('Error cancelling reservation:', error)
       return {
         success: false,
-        error: error.message || 'Failed to cancel reservation'
-      };
+        error: error.message || 'Failed to cancel reservation',
+      }
     }
 
     if (!data || data.length === 0) {
       return {
         success: false,
-        error: 'Reservation not found or cannot be cancelled'
-      };
+        error: 'Reservation not found or cannot be cancelled',
+      }
     }
 
     return {
       success: true,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in cancelReservation:', err);
+    logger.error('Unexpected error in cancelReservation:', err)
     return {
       success: false,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -347,43 +354,43 @@ export async function getAllReservations(filters = {}) {
       .from('table_reservations')
       .select('*')
       .order('reservation_date', { ascending: false })
-      .order('reservation_time', { ascending: false });
+      .order('reservation_time', { ascending: false })
 
     if (filters.status) {
-      query = query.eq('status', filters.status);
+      query = query.eq('status', filters.status)
     }
 
     if (filters.date) {
-      query = query.eq('reservation_date', filters.date);
+      query = query.eq('reservation_date', filters.date)
     }
 
     if (filters.limit) {
-      query = query.limit(filters.limit);
+      query = query.limit(filters.limit)
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query
 
     if (error) {
-      logger.error('Error fetching all reservations:', error);
+      logger.error('Error fetching all reservations:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load reservations'
-      };
+        error: error.message || 'Failed to load reservations',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getAllReservations:', err);
+    logger.error('Unexpected error in getAllReservations:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -397,47 +404,47 @@ export async function getAllReservations(filters = {}) {
  */
 export async function updateReservationStatus(reservationId, status, adminNotes = null) {
   try {
-    const validStatuses = ['pending', 'confirmed', 'declined', 'cancelled', 'completed', 'no_show'];
+    const validStatuses = ['pending', 'confirmed', 'declined', 'cancelled', 'completed', 'no_show']
 
     if (!validStatuses.includes(status)) {
       return {
         success: false,
-        error: 'Invalid status value'
-      };
+        error: 'Invalid status value',
+      }
     }
 
     const updateData = {
       status: status,
-      updated_at: new Date().toISOString()
-    };
+      updated_at: new Date().toISOString(),
+    }
 
     if (adminNotes) {
-      updateData.admin_notes = adminNotes;
+      updateData.admin_notes = adminNotes
     }
 
     const { error } = await supabase
       .from('table_reservations')
       .update(updateData)
-      .eq('id', reservationId);
+      .eq('id', reservationId)
 
     if (error) {
-      logger.error('Error updating reservation status:', error);
+      logger.error('Error updating reservation status:', error)
       return {
         success: false,
-        error: error.message || 'Failed to update reservation'
-      };
+        error: error.message || 'Failed to update reservation',
+      }
     }
 
     return {
       success: true,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in updateReservationStatus:', err);
+    logger.error('Unexpected error in updateReservationStatus:', err)
     return {
       success: false,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -447,5 +454,5 @@ export default {
   getReservationById,
   cancelReservation,
   getAllReservations,
-  updateReservationStatus
-};
+  updateReservationStatus,
+}

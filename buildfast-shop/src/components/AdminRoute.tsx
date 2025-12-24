@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
 
 interface AdminRouteProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 /**
@@ -28,28 +28,28 @@ function AdminRoute({ children }: AdminRouteProps): JSX.Element {
 
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
-  
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
+
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
+    if (typeof document === 'undefined') return
+
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
-    
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
+
+    checkTheme()
+
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
+      attributeFilter: ['class'],
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   // PRIORITY 1: If user is authenticated and confirmed as admin, allow access immediately
   // This ensures admin access persists even during background updates
@@ -69,8 +69,18 @@ function AdminRoute({ children }: AdminRouteProps): JSX.Element {
         <div className="bg-neutral-900/50 backdrop-blur-sm rounded-lg shadow-2xl p-8 max-w-md w-full border border-theme">
           <div className="flex items-center mb-6">
             <div className="bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                className="w-6 h-6 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
             </div>
             <div className="ml-4">
@@ -88,17 +98,24 @@ function AdminRoute({ children }: AdminRouteProps): JSX.Element {
               <h3 className="text-sm font-semibold text-accent mb-2">To gain admin access:</h3>
               <ol className="text-xs text-neutral-400 list-decimal list-inside space-y-1">
                 <li>Open Supabase SQL Editor</li>
-                <li>Run the SQL from <code className="bg-accent/10 text-accent px-1 rounded">036_enforce_single_admin_user.sql</code></li>
-                <li>Or manually set your user as admin:
-                  <code 
+                <li>
+                  Run the SQL from{' '}
+                  <code className="bg-accent/10 text-accent px-1 rounded">
+                    036_enforce_single_admin_user.sql
+                  </code>
+                </li>
+                <li>
+                  Or manually set your user as admin:
+                  <code
                     className="block p-2 mt-1 rounded text-[10px]"
                     style={{
-                      backgroundColor: isLightTheme 
-                        ? 'rgba(255, 255, 255, 0.3)' 
-                        : 'rgba(5, 5, 9, 0.3)'
+                      backgroundColor: isLightTheme
+                        ? 'rgba(255, 255, 255, 0.3)'
+                        : 'rgba(5, 5, 9, 0.3)',
                     }}
                   >
-                    UPDATE customers SET is_admin = true WHERE id = (SELECT id FROM auth.users WHERE email = &apos;your-email@example.com&apos;);
+                    UPDATE customers SET is_admin = true WHERE id = (SELECT id FROM auth.users WHERE
+                    email = &apos;your-email@example.com&apos;);
                   </code>
                 </li>
                 <li>Click &quot;Refresh Admin Status&quot; button below after making changes</li>
@@ -106,23 +123,25 @@ function AdminRoute({ children }: AdminRouteProps): JSX.Element {
               </ol>
             </div>
 
-            <div 
+            <div
               className="text-xs text-neutral-500 rounded-lg p-3 border border-theme-subtle"
               style={{
-                backgroundColor: isLightTheme 
-                  ? 'rgba(255, 255, 255, 0.3)' 
-                  : 'rgba(5, 5, 9, 0.3)'
+                backgroundColor: isLightTheme ? 'rgba(255, 255, 255, 0.3)' : 'rgba(5, 5, 9, 0.3)',
               }}
             >
               <p className="mb-2 text-neutral-400">Current status:</p>
               <ul className="space-y-1.5 ml-2">
                 <li className="flex items-center gap-2">
                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span>Logged in as <span className="font-medium text-neutral-200">{user?.email}</span></span>
+                  <span>
+                    Logged in as <span className="font-medium text-neutral-200">{user?.email}</span>
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                  <span>Admin status: <span className="font-medium text-red-400">Denied</span></span>
+                  <span>
+                    Admin status: <span className="font-medium text-red-400">Denied</span>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -152,14 +171,19 @@ function AdminRoute({ children }: AdminRouteProps): JSX.Element {
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
                   </svg>
                   <span>Refresh Admin Status</span>
                 </>
               )}
             </button>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => (window.location.href = '/')}
               className="w-full px-4 py-3 bg-accent text-black font-medium rounded-lg hover:bg-accent/90 transition-all duration-200 shadow-lg shadow-accent/20"
             >
               Return to Home

@@ -90,4 +90,3 @@ export function useAsync<T>(
 
   return { data, loading, error, execute, reset }
 }
-

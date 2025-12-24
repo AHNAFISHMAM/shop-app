@@ -6,7 +6,7 @@
 export function cn(...classes) {
   return classes
     .filter(Boolean)
-    .map((cls) => {
+    .map(cls => {
       if (typeof cls === 'string') return cls
       if (Array.isArray(cls)) return cls.filter(Boolean).join(' ')
       if (typeof cls === 'object' && cls !== null) {
@@ -20,4 +20,3 @@ export function cn(...classes) {
     .filter(Boolean)
     .join(' ')
 }
-

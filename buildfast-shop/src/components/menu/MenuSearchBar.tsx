@@ -1,15 +1,15 @@
-import { useCallback, useMemo } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import { searchBarSequence, staggerContainer, fadeSlideUp } from '../animations/menuAnimations';
+import { useCallback, useMemo } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
+import { searchBarSequence, staggerContainer, fadeSlideUp } from '../animations/menuAnimations'
 
 /**
  * MenuSearchBar component props
  */
 interface MenuSearchBarProps {
   /** Current search query */
-  searchQuery: string;
+  searchQuery: string
   /** Callback when search query changes */
-  onSearchChange: (query: string) => void;
+  onSearchChange: (query: string) => void
 }
 
 /**
@@ -29,20 +29,22 @@ interface MenuSearchBarProps {
 const MenuSearchBar = ({ searchQuery, onSearchChange }: MenuSearchBarProps) => {
   // Check for reduced motion preference
   const prefersReducedMotion = useMemo(() => {
-    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }, []);
+    return (
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+  }, [])
 
   // Wrap handler in useCallback for performance
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      onSearchChange(e.target.value);
+      onSearchChange(e.target.value)
     },
     [onSearchChange]
-  );
+  )
 
   const handleClear = useCallback(() => {
-    onSearchChange('');
-  }, [onSearchChange]);
+    onSearchChange('')
+  }, [onSearchChange])
 
   return (
     <m.section
@@ -54,24 +56,42 @@ const MenuSearchBar = ({ searchQuery, onSearchChange }: MenuSearchBarProps) => {
       aria-labelledby="menu-search-heading"
     >
       {/* Hero Section */}
-      <m.div className="text-center mb-8" variants={prefersReducedMotion ? undefined : staggerContainer}>
-        <m.p className="text-sm uppercase tracking-widest text-[var(--accent)] mb-2" variants={prefersReducedMotion ? undefined : fadeSlideUp}>
+      <m.div
+        className="text-center mb-8"
+        variants={prefersReducedMotion ? undefined : staggerContainer}
+      >
+        <m.p
+          className="text-sm uppercase tracking-widest text-[var(--accent)] mb-2"
+          variants={prefersReducedMotion ? undefined : fadeSlideUp}
+        >
           Discover Our Menu
         </m.p>
-        <m.h1 id="menu-search-heading" className="text-lg sm:text-xl md:text-5xl font-bold text-[var(--text-main)] mb-4" variants={prefersReducedMotion ? undefined : fadeSlideUp}>
+        <m.h1
+          id="menu-search-heading"
+          className="text-lg sm:text-xl md:text-5xl font-bold text-[var(--text-main)] mb-4"
+          variants={prefersReducedMotion ? undefined : fadeSlideUp}
+        >
           Taste That Shines
         </m.h1>
-        <m.p className="text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto" variants={prefersReducedMotion ? undefined : fadeSlideUp}>
-          Explore our exquisite selection of dishes crafted with passion and
-          premium ingredients
+        <m.p
+          className="text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto"
+          variants={prefersReducedMotion ? undefined : fadeSlideUp}
+        >
+          Explore our exquisite selection of dishes crafted with passion and premium ingredients
         </m.p>
       </m.div>
 
       {/* Search Bar - Glass Morphism */}
-      <m.div className="max-w-2xl mx-auto" variants={prefersReducedMotion ? undefined : staggerContainer}>
+      <m.div
+        className="max-w-2xl mx-auto"
+        variants={prefersReducedMotion ? undefined : staggerContainer}
+      >
         <m.div className="relative group" variants={prefersReducedMotion ? undefined : fadeSlideUp}>
           {/* Search Icon */}
-          <div className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors pointer-events-none" aria-hidden="true">
+          <div
+            className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors pointer-events-none"
+            aria-hidden="true"
+          >
             <svg
               className="w-5 h-5"
               fill="none"
@@ -134,14 +154,19 @@ const MenuSearchBar = ({ searchQuery, onSearchChange }: MenuSearchBarProps) => {
 
         {/* Search Results Count */}
         {searchQuery && (
-          <m.p id="search-results-count" className="text-sm text-[var(--text-muted)] mt-2 text-center" variants={prefersReducedMotion ? undefined : fadeSlideUp} role="status" aria-live="polite">
+          <m.p
+            id="search-results-count"
+            className="text-sm text-[var(--text-muted)] mt-2 text-center"
+            variants={prefersReducedMotion ? undefined : fadeSlideUp}
+            role="status"
+            aria-live="polite"
+          >
             Searching for &quot;{searchQuery}&quot;
           </m.p>
         )}
       </m.div>
     </m.section>
-  );
-};
+  )
+}
 
-export default MenuSearchBar;
-
+export default MenuSearchBar

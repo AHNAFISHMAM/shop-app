@@ -8,7 +8,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../../../shared/lib/query-keys'
 import { defaultMutationConfig } from '../../../shared/lib/query-config'
-import { createOrder, type OrderData, type OrderResponse } from '../../../lib/orderService'
+import { createOrderWithItems, type OrderData, type OrderResponse } from '../../../lib/orderService'
 
 /**
  * Create order mutation
@@ -18,8 +18,8 @@ export function useCreateOrder() {
 
   return useMutation<OrderResponse, Error, OrderData>({
     ...defaultMutationConfig,
-    mutationFn: async (orderData) => {
-      return await createOrder(orderData)
+    mutationFn: async orderData => {
+      return await createOrderWithItems(orderData)
     },
     onSuccess: (data, variables) => {
       if (data.success && data.orderId) {
@@ -33,4 +33,3 @@ export function useCreateOrder() {
     },
   })
 }
-

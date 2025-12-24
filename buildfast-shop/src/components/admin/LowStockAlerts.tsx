@@ -5,30 +5,30 @@ import { logger } from '../../utils/logger'
 
 interface Dish {
   // Note: Actually represents menu_items from database (legacy name kept for backward compatibility)
-  id: string;
-  name: string;
-  is_available: boolean;
+  id: string
+  name: string
+  is_available: boolean
   // Note: stock_quantity removed - use is_available boolean instead
-  [key: string]: unknown;
+  [key: string]: unknown
 }
 
 interface VariantCombination {
-  id: string;
-  product_id: string;
-  variant_values?: Record<string, unknown>;
-  is_active?: boolean;
-  [key: string]: unknown;
+  id: string
+  product_id: string
+  variant_values?: Record<string, unknown>
+  is_active?: boolean
+  [key: string]: unknown
 }
 
 interface Message {
-  type: 'success' | 'error';
-  text: string;
+  type: 'success' | 'error'
+  text: string
 }
 
 interface StatusCounts {
-  unavailable?: number;
-  limited?: number;
-  available?: number;
+  unavailable?: number
+  limited?: number
+  available?: number
 }
 
 /**
@@ -48,32 +48,6 @@ interface StatusCounts {
  * - Success/Fully Available: Gold-green (#9CAF88)
  */
 function LowStockAlerts(): JSX.Element {
-  // Detect current theme from document element (for consistency with hybrid approach)
-  // eslint-disable-next-line no-unused-vars
-  const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
-  
-  // Watch for theme changes
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
-    const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
-    
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
-
   const [allDishes, setAllDishes] = useState<Dish[]>([])
   const [dishCombinations, setDishCombinations] = useState<Record<string, VariantCombination[]>>({})
   const [expandedDishes, setExpandedDishes] = useState<Record<string, boolean>>({})
@@ -85,42 +59,45 @@ function LowStockAlerts(): JSX.Element {
 
   // Dark Luxe color constants
   const COLORS = {
-    burgundy: '#8B2634',    // Error/Unavailable
-    amber: '#B8860B',       // Warning/Limited availability
-    goldGreen: '#9CAF88',   // Success/Fully available
-    accent: '#C59D5F'       // Primary accent
+    burgundy: '#8B2634', // Error/Unavailable
+    amber: '#B8860B', // Warning/Limited availability
+    goldGreen: '#9CAF88', // Success/Fully available
+    accent: '#C59D5F', // Primary accent
   }
 
-  const fetchCombinationsForDishes = useCallback(async (dishes: Dish[]) => {
-    const combosMap: Record<string, VariantCombination[]> = {}
+  const fetchCombinationsForDishes = useCallback(
+    async (dishes: Dish[]) => {
+      const combosMap: Record<string, VariantCombination[]> = {}
 
-    for (const dish of dishes) {
-      try {
-        const { data, error } = await supabase
-          .from('variant_combinations')
-          .select('*')
-          .eq('product_id', dish.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: true })
+      for (const dish of dishes) {
+        try {
+          const { data, error } = await supabase
+            .from('variant_combinations')
+            .select('*')
+            .eq('product_id', dish.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: true })
 
-        if (!error && data) {
-          // Note: variant_combinations doesn't have stock_quantity in restaurant context
-          // Filter by is_active only (already filtered in query above)
-          let filteredCombos = data as VariantCombination[]
-          // For restaurant context, we show all active combinations
-          // Low stock logic would need to be based on menu_item.is_available instead
+          if (!error && data) {
+            // Note: variant_combinations doesn't have stock_quantity in restaurant context
+            // Filter by is_active only (already filtered in query above)
+            let filteredCombos = data as VariantCombination[]
+            // For restaurant context, we show all active combinations
+            // Low stock logic would need to be based on menu_item.is_available instead
 
-          if (filteredCombos.length > 0) {
-            combosMap[dish.id] = filteredCombos
+            if (filteredCombos.length > 0) {
+              combosMap[dish.id] = filteredCombos
+            }
           }
+        } catch (err) {
+          logger.error(`Error fetching combinations for dish ${dish.id}:`, err)
         }
-      } catch (err) {
-        logger.error(`Error fetching combinations for dish ${dish.id}:`, err)
       }
-    }
 
-    setDishCombinations(combosMap)
-  }, [showAllDishes])
+      setDishCombinations(combosMap)
+    },
+    [showAllDishes]
+  )
 
   const fetchAllDishes = useCallback(async () => {
     try {
@@ -152,7 +129,6 @@ function LowStockAlerts(): JSX.Element {
 
       setAllDishes(filtered)
       await fetchCombinationsForDishes(filtered)
-
     } catch (err) {
       logger.error('Error in fetchAllDishes:', err)
       setAllDishes([])
@@ -162,19 +138,25 @@ function LowStockAlerts(): JSX.Element {
   }, [showAllDishes, fetchCombinationsForDishes])
 
   useEffect(() => {
-    fetchAllDishes()
+    void fetchAllDishes()
 
     const channel = supabase
       .channel('all-menu-items-availability')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
-        fetchAllDishes()
+        void fetchAllDishes()
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'variant_combinations' }, () => {
-        fetchAllDishes()
-      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'variant_combinations' },
+        () => {
+          void fetchAllDishes()
+        }
+      )
       .subscribe()
 
-    return () => supabase.removeChannel(channel)
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [fetchAllDishes])
 
   const handleReplenish = async (dishId: string) => {
@@ -202,7 +184,7 @@ function LowStockAlerts(): JSX.Element {
       // Note: menu_items doesn't have stock_quantity, using is_available instead
       const { error: updateError } = await supabase
         .from('menu_items')
-        .update({ is_available: true, updated_at: new Date().toISOString() })
+        .update({ is_available: true, updated_at: new Date().toISOString() } as never)
         .eq('id', dishId)
 
       if (updateError) throw new Error(`Failed to update: ${updateError.message}`)
@@ -220,7 +202,7 @@ function LowStockAlerts(): JSX.Element {
           // Note: variant_combinations may not have stock_quantity in restaurant context
           return supabase
             .from('variant_combinations')
-            .update({ updated_at: new Date().toISOString() })
+            .update({ updated_at: new Date().toISOString() } as never)
             .eq('id', combo.id)
         })
 
@@ -235,17 +217,16 @@ function LowStockAlerts(): JSX.Element {
 
       setMessage({
         type: 'success',
-        text: `${dish.name} replenished successfully. Availability updated.`
+        text: `${(dish as Dish).name} replenished successfully. Availability updated.`,
       })
 
       setTimeout(() => {
         fetchAllDishes()
         setMessage(null)
       }, 3000)
-
     } catch (err) {
       logger.error('Replenish error:', err)
-      const error = err as Error;
+      const error = err as Error
       setMessage({ type: 'error', text: `Failed: ${error.message}` })
       setTimeout(() => setMessage(null), 8000)
     } finally {
@@ -257,7 +238,11 @@ function LowStockAlerts(): JSX.Element {
     }
   }
 
-  const handleReplenishCombination = async (comboId: string, dishName: string, variantLabel: string) => {
+  const handleReplenishCombination = async (
+    comboId: string,
+    dishName: string,
+    variantLabel: string
+  ) => {
     const addQuantity = parseInt(replenishInput[`combo-${comboId}`] || '0')
 
     if (!addQuantity || addQuantity <= 0) {
@@ -282,7 +267,7 @@ function LowStockAlerts(): JSX.Element {
       // Note: variant_combinations may not have stock_quantity in restaurant context
       const { error: updateError } = await supabase
         .from('variant_combinations')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ updated_at: new Date().toISOString() } as never)
         .eq('id', comboId)
 
       if (updateError) throw new Error(`Failed to update: ${updateError.message}`)
@@ -295,17 +280,16 @@ function LowStockAlerts(): JSX.Element {
 
       setMessage({
         type: 'success',
-        text: `${dishName} (${variantLabel}) replenished successfully. Availability updated.`
+        text: `${dishName} (${variantLabel}) replenished successfully. Availability updated.`,
       })
 
       setTimeout(() => {
         fetchAllDishes()
         setMessage(null)
       }, 3000)
-
     } catch (err) {
       logger.error('Combination replenish error:', err)
-      const error = err as Error;
+      const error = err as Error
       setMessage({ type: 'error', text: `Failed: ${error.message}` })
       setTimeout(() => setMessage(null), 8000)
     } finally {
@@ -317,7 +301,9 @@ function LowStockAlerts(): JSX.Element {
     }
   }
 
-  const formatVariantLabel = (variantValues: Record<string, unknown> | null | undefined): string => {
+  const formatVariantLabel = (
+    variantValues: Record<string, unknown> | null | undefined
+  ): string => {
     if (!variantValues || typeof variantValues !== 'object') return ''
     return Object.entries(variantValues)
       .map(([key, value]) => `${key}: ${value}`)
@@ -327,7 +313,7 @@ function LowStockAlerts(): JSX.Element {
   const toggleExpand = (dishId: string) => {
     setExpandedDishes(prev => ({
       ...prev,
-      [dishId]: !prev[dishId]
+      [dishId]: !prev[dishId],
     }))
   }
 
@@ -337,15 +323,26 @@ function LowStockAlerts(): JSX.Element {
         className="rounded-2xl border backdrop-blur-xl p-6 animate-pulse"
         style={{
           backgroundColor: 'rgba(255, 255, 255, 0.03)',
-          borderColor: 'rgba(255, 255, 255, 0.1)'
+          borderColor: 'rgba(255, 255, 255, 0.1)',
         }}
         data-animate="fade-scale"
         data-animate-active="false"
       >
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 rounded-lg" style={{ backgroundColor: `${COLORS.amber}20` }}>
-            <svg className="w-5 h-5" style={{ color: COLORS.amber }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              className="w-5 h-5"
+              style={{ color: COLORS.amber }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           </div>
           <div>
@@ -390,8 +387,19 @@ function LowStockAlerts(): JSX.Element {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg" style={{ backgroundColor: `${COLORS.goldGreen}20` }}>
-              <svg className="w-5 h-5" style={{ color: COLORS.goldGreen }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5"
+                style={{ color: COLORS.goldGreen }}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div>
@@ -409,7 +417,12 @@ function LowStockAlerts(): JSX.Element {
             style={{ backgroundColor: COLORS.accent }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
             </svg>
             View All Menu Items
           </Link>
@@ -423,7 +436,7 @@ function LowStockAlerts(): JSX.Element {
       className="rounded-2xl border backdrop-blur-xl p-6"
       style={{
         backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderColor: 'rgba(255, 255, 255, 0.1)'
+        borderColor: 'rgba(255, 255, 255, 0.1)',
       }}
       data-animate="fade-scale"
       data-animate-active="false"
@@ -437,8 +450,8 @@ function LowStockAlerts(): JSX.Element {
               backgroundColor: showAllDishes
                 ? `${COLORS.accent}20`
                 : totalAlerts > 0
-                ? `${COLORS.burgundy}20`
-                : `${COLORS.goldGreen}20`
+                  ? `${COLORS.burgundy}20`
+                  : `${COLORS.goldGreen}20`,
             }}
           >
             <svg
@@ -447,17 +460,27 @@ function LowStockAlerts(): JSX.Element {
                 color: showAllDishes
                   ? COLORS.accent
                   : totalAlerts > 0
-                  ? COLORS.burgundy
-                  : COLORS.goldGreen
+                    ? COLORS.burgundy
+                    : COLORS.goldGreen,
               }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
               {showAllDishes ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               )}
             </svg>
           </div>
@@ -469,9 +492,8 @@ function LowStockAlerts(): JSX.Element {
               {showAllDishes
                 ? `${totalDishes} menu ${totalDishes !== 1 ? 'items' : 'item'} total`
                 : totalAlerts > 0
-                ? `${totalAlerts} ${totalAlerts === 1 ? 'item needs' : 'items need'} replenishment`
-                : 'All menu items fully available'
-              }
+                  ? `${totalAlerts} ${totalAlerts === 1 ? 'item needs' : 'items need'} replenishment`
+                  : 'All menu items fully available'}
             </p>
           </div>
         </div>
@@ -482,11 +504,16 @@ function LowStockAlerts(): JSX.Element {
             className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2"
             style={{
               backgroundColor: COLORS.accent,
-              color: '#000'
+              color: '#000',
             }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
             </svg>
             View All Menu Items
           </Link>
@@ -494,15 +521,27 @@ function LowStockAlerts(): JSX.Element {
             onClick={() => setShowAllDishes(!showAllDishes)}
             className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2"
             style={{
-              backgroundColor: showAllDishes ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.1)',
-              color: 'rgba(203, 213, 225, 0.9)'
+              backgroundColor: showAllDishes
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(203, 213, 225, 0.9)',
             }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {showAllDishes ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
               )}
             </svg>
             {showAllDishes ? 'Show Alerts Only' : 'See Alerts Only'}
@@ -515,7 +554,7 @@ function LowStockAlerts(): JSX.Element {
               style={{
                 backgroundColor: `${COLORS.burgundy}20`,
                 color: COLORS.burgundy,
-                borderColor: `${COLORS.burgundy}40`
+                borderColor: `${COLORS.burgundy}40`,
               }}
             >
               {totalAlerts}
@@ -529,12 +568,10 @@ function LowStockAlerts(): JSX.Element {
         <div
           className="mb-4 p-4 rounded-xl border backdrop-blur-xl"
           style={{
-            backgroundColor: message.type === 'success'
-              ? `${COLORS.goldGreen}15`
-              : `${COLORS.burgundy}15`,
-            borderColor: message.type === 'success'
-              ? `${COLORS.goldGreen}40`
-              : `${COLORS.burgundy}40`
+            backgroundColor:
+              message.type === 'success' ? `${COLORS.goldGreen}15` : `${COLORS.burgundy}15`,
+            borderColor:
+              message.type === 'success' ? `${COLORS.goldGreen}40` : `${COLORS.burgundy}40`,
           }}
         >
           <div className="flex items-center gap-2">
@@ -546,9 +583,19 @@ function LowStockAlerts(): JSX.Element {
               viewBox="0 0 24 24"
             >
               {message.type === 'success' ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               )}
             </svg>
             <p
@@ -563,7 +610,7 @@ function LowStockAlerts(): JSX.Element {
 
       {/* Menu Items List */}
       <div className="space-y-4">
-        {allDishes.map((dish) => {
+        {allDishes.map(dish => {
           // Note: menu_items doesn't have stock_quantity, using is_available
           const availabilityPercentage = dish.is_available ? 100 : 0
           const isReplenishing = replenishing[dish.id]
@@ -575,7 +622,11 @@ function LowStockAlerts(): JSX.Element {
           const hasVariants = combinations.length > 0
           const isExpanded = expandedDishes[dish.id]
 
-          const statusColor = isUnavailable ? COLORS.burgundy : isLimited ? COLORS.amber : COLORS.goldGreen
+          const statusColor = isUnavailable
+            ? COLORS.burgundy
+            : isLimited
+              ? COLORS.amber
+              : COLORS.goldGreen
 
           return (
             <div key={dish.id} className="space-y-2">
@@ -585,22 +636,33 @@ function LowStockAlerts(): JSX.Element {
                 style={{
                   backgroundColor: `${statusColor}08`,
                   borderColor: `${statusColor}40`,
-                  borderWidth: '2px'
+                  borderWidth: '2px',
                 }}
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <h4 className="font-bold text-base text-[var(--text-main)]">
-                        {dish.name}
-                      </h4>
+                      <h4 className="font-bold text-base text-[var(--text-main)]">{dish.name}</h4>
                       {isUnavailable ? (
                         <span
                           className="px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1"
-                          style={{ backgroundColor: `${COLORS.burgundy}30`, color: COLORS.burgundy }}
+                          style={{
+                            backgroundColor: `${COLORS.burgundy}30`,
+                            color: COLORS.burgundy,
+                          }}
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           </svg>
                           UNAVAILABLE
                         </span>
@@ -614,10 +676,23 @@ function LowStockAlerts(): JSX.Element {
                       ) : (
                         <span
                           className="px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap flex items-center gap-1"
-                          style={{ backgroundColor: `${COLORS.goldGreen}20`, color: COLORS.goldGreen }}
+                          style={{
+                            backgroundColor: `${COLORS.goldGreen}20`,
+                            color: COLORS.goldGreen,
+                          }}
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           Fully Available
                         </span>
@@ -635,7 +710,12 @@ function LowStockAlerts(): JSX.Element {
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                         </button>
                       )}
@@ -647,7 +727,10 @@ function LowStockAlerts(): JSX.Element {
                         <span className="font-bold text-lg" style={{ color: statusColor }}>
                           {dish.is_available ? 'Available' : 'Unavailable'}
                         </span>
-                        <span style={{ color: 'var(--text-body-muted)' }}> (Stock tracking disabled)</span>
+                        <span style={{ color: 'var(--text-body-muted)' }}>
+                          {' '}
+                          (Stock tracking disabled)
+                        </span>
                       </div>
                     </div>
 
@@ -660,7 +743,7 @@ function LowStockAlerts(): JSX.Element {
                         className="h-2.5 rounded-full transition-all duration-300"
                         style={{
                           width: `${availabilityPercentage}%`,
-                          backgroundColor: statusColor
+                          backgroundColor: statusColor,
                         }}
                       />
                     </div>
@@ -672,10 +755,13 @@ function LowStockAlerts(): JSX.Element {
                   className="rounded-lg p-3 border"
                   style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                    borderColor: 'rgba(255, 255, 255, 0.1)'
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
                   }}
                 >
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'rgba(203, 213, 225, 0.9)' }}>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: 'rgba(203, 213, 225, 0.9)' }}
+                  >
                     Add Portions to Availability:
                   </label>
                   <div className="flex items-center gap-2">
@@ -684,15 +770,18 @@ function LowStockAlerts(): JSX.Element {
                       min="1"
                       placeholder="Enter amount"
                       value={inputValue}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setReplenishInput(prev => ({ ...prev, [dish.id]: e.target.value }))}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setReplenishInput(prev => ({ ...prev, [dish.id]: e.target.value }))
+                      }
                       disabled={isReplenishing}
-                      className="flex-1 px-4 py-2.5 border-2 rounded-lg text-base focus:outline-none focus:ring-2 disabled:opacity-50 transition-all"
-                      style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        borderColor: 'rgba(255, 255, 255, 0.2)',
-                        color: 'var(--text-heading)',
-                        focusRingColor: COLORS.accent
-                      }}
+                      className="flex-1 px-4 py-2.5 border-2 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50 transition-all"
+                      style={
+                        {
+                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                          borderColor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'var(--text-heading)',
+                        } as React.CSSProperties
+                      }
                     />
                     <button
                       onClick={() => handleReplenish(dish.id)}
@@ -707,8 +796,18 @@ function LowStockAlerts(): JSX.Element {
                         </>
                       ) : (
                         <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                            />
                           </svg>
                           Replenish
                         </>
@@ -716,7 +815,8 @@ function LowStockAlerts(): JSX.Element {
                     </button>
                   </div>
                   <p className="text-xs mt-2" style={{ color: 'var(--text-body-muted)' }}>
-                    Status: <span className="font-semibold" style={{ color: 'var(--text-heading)' }}>
+                    Status:{' '}
+                    <span className="font-semibold" style={{ color: 'var(--text-heading)' }}>
                       {dish.is_available ? 'Available' : 'Unavailable'}
                     </span>
                   </p>
@@ -726,14 +826,18 @@ function LowStockAlerts(): JSX.Element {
               {/* Variant Combinations (Expandable) */}
               {hasVariants && isExpanded && (
                 <div className="ml-4 space-y-2">
-                  {combinations.map((combo) => {
+                  {combinations.map(combo => {
                     const comboId = `combo-${combo.id}`
                     const comboReplenishing = replenishing[comboId]
                     const comboInputValue = replenishInput[comboId] || ''
                     // Note: variant_combinations may not have stock_quantity
                     const comboUnavailable = !combo.is_available
                     const comboLimited = false // Stock tracking disabled
-                    const comboStatusColor = comboUnavailable ? COLORS.burgundy : comboLimited ? COLORS.amber : COLORS.goldGreen
+                    const comboStatusColor = comboUnavailable
+                      ? COLORS.burgundy
+                      : comboLimited
+                        ? COLORS.amber
+                        : COLORS.goldGreen
                     const variantLabel = formatVariantLabel(combo.variant_values)
 
                     return (
@@ -743,35 +847,57 @@ function LowStockAlerts(): JSX.Element {
                         style={{
                           backgroundColor: `${comboStatusColor}08`,
                           borderColor: `${comboStatusColor}40`,
-                          borderWidth: '2px'
+                          borderWidth: '2px',
                         }}
                       >
                         <div className="flex items-center justify-between gap-2 mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold" style={{ color: 'var(--text-heading)' }}>
+                            <span
+                              className="text-sm font-semibold"
+                              style={{ color: 'var(--text-heading)' }}
+                            >
                               {variantLabel}
                             </span>
                             {comboUnavailable ? (
                               <span
                                 className="px-2 py-0.5 rounded text-xs font-bold"
-                                style={{ backgroundColor: `${COLORS.burgundy}30`, color: COLORS.burgundy }}
+                                style={{
+                                  backgroundColor: `${COLORS.burgundy}30`,
+                                  color: COLORS.burgundy,
+                                }}
                               >
                                 OUT
                               </span>
                             ) : comboLimited ? (
                               <span
                                 className="px-2 py-0.5 rounded text-xs font-medium"
-                                style={{ backgroundColor: `${COLORS.amber}20`, color: COLORS.amber }}
+                                style={{
+                                  backgroundColor: `${COLORS.amber}20`,
+                                  color: COLORS.amber,
+                                }}
                               >
                                 Limited
                               </span>
                             ) : (
                               <span
                                 className="px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1"
-                                style={{ backgroundColor: `${COLORS.goldGreen}20`, color: COLORS.goldGreen }}
+                                style={{
+                                  backgroundColor: `${COLORS.goldGreen}20`,
+                                  color: COLORS.goldGreen,
+                                }}
                               >
-                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                <svg
+                                  className="w-2.5 h-2.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
                                 </svg>
                                 Available
                               </span>
@@ -788,17 +914,21 @@ function LowStockAlerts(): JSX.Element {
                             min="1"
                             placeholder="Amount"
                             value={comboInputValue}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setReplenishInput(prev => ({ ...prev, [comboId]: e.target.value }))}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                              setReplenishInput(prev => ({ ...prev, [comboId]: e.target.value }))
+                            }
                             disabled={comboReplenishing}
                             className="flex-1 px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 disabled:opacity-50"
                             style={{
                               backgroundColor: 'rgba(255, 255, 255, 0.05)',
                               borderColor: 'rgba(255, 255, 255, 0.2)',
-                              color: 'var(--text-heading)'
+                              color: 'var(--text-heading)',
                             }}
                           />
                           <button
-                            onClick={() => handleReplenishCombination(combo.id, dish.name, variantLabel)}
+                            onClick={() =>
+                              handleReplenishCombination(combo.id, dish.name, variantLabel)
+                            }
                             disabled={comboReplenishing || !comboInputValue}
                             className="px-4 py-2 rounded text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                             style={{ backgroundColor: COLORS.accent, color: '#000' }}
@@ -810,8 +940,18 @@ function LowStockAlerts(): JSX.Element {
                               </>
                             ) : (
                               <>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                  />
                                 </svg>
                                 Replenish
                               </>
@@ -846,4 +986,3 @@ function LowStockAlerts(): JSX.Element {
 }
 
 export default LowStockAlerts
-

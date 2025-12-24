@@ -1,6 +1,6 @@
 /**
  * React Query Mock Utilities
- * 
+ *
  * Helpers for mocking React Query hooks in tests.
  */
 
@@ -32,4 +32,3 @@ export function mockUseMutation() {
     reset: vi.fn(),
   })
 }
-

@@ -36,7 +36,7 @@ export const clearGuestSession = () => {
  * Generate UUID v4
  */
 const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0
     const v = c === 'x' ? r : (r & 0x3) | 0x8
     return v.toString(16)
@@ -63,15 +63,17 @@ export const getGuestCart = () => {
 /**
  * Save guest cart items
  */
-export const saveGuestCart = (cartItems) => {
+export const saveGuestCart = cartItems => {
   try {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartItems))
 
     // Dispatch custom events to notify components of cart update
-    window.dispatchEvent(new CustomEvent('guestCartUpdated', {
-      detail: { itemCount: cartItems.length }
-    }))
-    
+    window.dispatchEvent(
+      new CustomEvent('guestCartUpdated', {
+        detail: { itemCount: cartItems.length },
+      })
+    )
+
     // Dispatch generic cart update event for hooks
     window.dispatchEvent(new CustomEvent('cart:updated'))
   } catch (error) {
@@ -82,13 +84,23 @@ export const saveGuestCart = (cartItems) => {
 /**
  * Add item to guest cart (supports both products and menu_items)
  */
-export const addToGuestCart = (product, quantity = 1, optionsOrIsMenuItem = null, legacyVariantId = null, legacyVariantDisplay = null) => {
+export const addToGuestCart = (
+  product,
+  quantity = 1,
+  optionsOrIsMenuItem = null,
+  legacyVariantId = null,
+  legacyVariantDisplay = null
+) => {
   if (!product) return []
 
   const cart = getGuestCart()
 
   let options = {}
-  if (optionsOrIsMenuItem && typeof optionsOrIsMenuItem === 'object' && !Array.isArray(optionsOrIsMenuItem)) {
+  if (
+    optionsOrIsMenuItem &&
+    typeof optionsOrIsMenuItem === 'object' &&
+    !Array.isArray(optionsOrIsMenuItem)
+  ) {
     options = { ...optionsOrIsMenuItem }
   } else if (optionsOrIsMenuItem !== null && optionsOrIsMenuItem !== undefined) {
     options.isMenuItem = optionsOrIsMenuItem
@@ -105,7 +117,7 @@ export const addToGuestCart = (product, quantity = 1, optionsOrIsMenuItem = null
   const {
     isMenuItem: explicitIsMenuItem = null,
     variantId: optionVariantId = null,
-    variantDisplay = null
+    variantDisplay = null,
   } = options
 
   let isMenuItem = explicitIsMenuItem
@@ -118,8 +130,9 @@ export const addToGuestCart = (product, quantity = 1, optionsOrIsMenuItem = null
   const resolvedVariantId = optionVariantId
 
   const existingIndex = cart.findIndex(
-    (item) =>
-      ((productId && item.product_id === productId) || (menuItemId && item.menu_item_id === menuItemId)) &&
+    item =>
+      ((productId && item.product_id === productId) ||
+        (menuItemId && item.menu_item_id === menuItemId)) &&
       item.variant_id === resolvedVariantId
   )
 
@@ -134,7 +147,7 @@ export const addToGuestCart = (product, quantity = 1, optionsOrIsMenuItem = null
       quantity,
       variant_id: resolvedVariantId,
       variant_display: variantDisplay ?? null,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     })
   }
 
@@ -151,15 +164,13 @@ export const updateGuestCartQuantity = (itemId, newQuantity) => {
 
   if (newQuantity <= 0) {
     // Remove item
-    const filtered = cart.filter((item) => item.id !== itemId)
+    const filtered = cart.filter(item => item.id !== itemId)
     saveGuestCart(filtered)
     emitCartChanged() // Trigger navbar update
     return filtered
   }
 
-  const updated = cart.map((item) =>
-    item.id === itemId ? { ...item, quantity: newQuantity } : item
-  )
+  const updated = cart.map(item => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
 
   saveGuestCart(updated)
   emitCartChanged() // Trigger navbar update
@@ -169,9 +180,9 @@ export const updateGuestCartQuantity = (itemId, newQuantity) => {
 /**
  * Remove item from guest cart
  */
-export const removeFromGuestCart = (itemId) => {
+export const removeFromGuestCart = itemId => {
   const cart = getGuestCart()
-  const filtered = cart.filter((item) => item.id !== itemId)
+  const filtered = cart.filter(item => item.id !== itemId)
   saveGuestCart(filtered)
   emitCartChanged() // Trigger navbar update
   return filtered
@@ -184,9 +195,11 @@ export const clearGuestCart = () => {
   localStorage.removeItem(GUEST_CART_KEY)
 
   // Dispatch custom event to notify navbar of cart update
-  window.dispatchEvent(new CustomEvent('guestCartUpdated', {
-    detail: { itemCount: 0 }
-  }))
+  window.dispatchEvent(
+    new CustomEvent('guestCartUpdated', {
+      detail: { itemCount: 0 },
+    })
+  )
 
   emitCartChanged() // Trigger navbar update
 }
@@ -203,12 +216,12 @@ export const migrateGuestCartToUser = async (userId, supabase) => {
 
   try {
     // Insert guest cart items into database
-    const cartItemsData = guestCart.map((item) => ({
+    const cartItemsData = guestCart.map(item => ({
       user_id: userId,
       product_id: item.product_id || null,
       menu_item_id: item.menu_item_id || null,
       quantity: item.quantity,
-      variant_id: item.variant_id || null
+      variant_id: item.variant_id || null,
     }))
 
     // Migrate each item individually since we might have mixed product/menu_item IDs
@@ -216,13 +229,9 @@ export const migrateGuestCartToUser = async (userId, supabase) => {
       // Skip if neither ID is present
       if (!itemData.product_id && !itemData.menu_item_id) continue
 
-      const { error } = await supabase
-        .from('cart_items')
-        .upsert([itemData], {
-          onConflict: itemData.product_id
-            ? 'user_id,product_id'
-            : 'user_id,menu_item_id'
-        })
+      const { error } = await supabase.from('cart_items').upsert([itemData], {
+        onConflict: itemData.product_id ? 'user_id,product_id' : 'user_id,menu_item_id',
+      })
 
       if (error) {
         logger.error('Error migrating cart item:', error)

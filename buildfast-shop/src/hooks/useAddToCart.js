@@ -7,12 +7,12 @@ import { logger } from '../utils/logger'
 
 /**
  * Custom hook for adding items to cart
- * 
+ *
  * Returns:
  * - addToCart: Function to add/update cart item
  * - addingToCart: Boolean indicating if operation is in progress
  * - message: Success or error message (null if none)
- * 
+ *
  * @param {string} returnPath - Path to return to after login if needed
  * @returns {{ addToCart: Function, addingToCart: boolean, message: string|null }}
  */
@@ -29,11 +29,7 @@ export const useAddToCart = (_returnPath = '/products') => {
   }
 
   const addToCart = async (product, options = {}) => {
-    const {
-      preventDefault = false,
-      stopPropagation = false,
-      event
-    } = options
+    const { preventDefault = false, stopPropagation = false, event } = options
 
     if (preventDefault && event) {
       event.preventDefault()
@@ -42,13 +38,15 @@ export const useAddToCart = (_returnPath = '/products') => {
       event.stopPropagation()
     }
 
-    const isMenuItem = product?.isMenuItem ?? (product?.category_id !== undefined && product?.is_available !== undefined)
+    const isMenuItem =
+      product?.isMenuItem ??
+      (product?.category_id !== undefined && product?.is_available !== undefined)
     // Note: menu_items doesn't have stock_quantity, use is_available instead
     const _isAvailable = product?.is_available !== false
     // For non-menu items, check if stock_quantity exists (legacy products table)
     const hasFiniteStock = product?.stock_quantity !== null && product?.stock_quantity !== undefined
-    const isOutOfStock = isMenuItem 
-      ? product?.is_available === false 
+    const isOutOfStock = isMenuItem
+      ? product?.is_available === false
       : hasFiniteStock && product?.stock_quantity === 0
 
     if (!product || isOutOfStock) {
@@ -74,7 +72,9 @@ export const useAddToCart = (_returnPath = '/products') => {
 
       if (result.stockExceeded) {
         const limit = result.stockLimit ?? 0
-        setMessage(limit > 0 ? `Only ${limit} item(s) available in stock` : 'This product is out of stock')
+        setMessage(
+          limit > 0 ? `Only ${limit} item(s) available in stock` : 'This product is out of stock'
+        )
         setMessageType('error')
         setTimeout(() => clearMessage(), 5000)
         return
@@ -102,7 +102,6 @@ export const useAddToCart = (_returnPath = '/products') => {
     addingToCart,
     message,
     messageType,
-    clearMessage
+    clearMessage,
   }
 }
-

@@ -1,8 +1,8 @@
-import React, { memo } from 'react';
-import { Link } from 'react-router-dom';
-import { m } from 'framer-motion';
-import { Heart, ShoppingBag } from 'lucide-react';
-import { fadeSlideUp } from '../animations/menuAnimations';
+import { memo } from 'react'
+import { Link } from 'react-router-dom'
+import { m } from 'framer-motion'
+import { Heart, ShoppingBag } from 'lucide-react'
+import { fadeSlideUp } from '../animations/menuAnimations'
 
 const EmptyFavoritesState = memo(() => {
   return (
@@ -23,19 +23,11 @@ const EmptyFavoritesState = memo(() => {
       </m.div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-          No favorites yet
-        </h2>
-        <p className="text-[var(--text-muted)]">
-          Start adding items you love to see them here
-        </p>
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">No favorites yet</h2>
+        <p className="text-[var(--text-muted)]">Start adding items you love to see them here</p>
       </div>
 
-      <m.div
-        variants={fadeSlideUp}
-        custom={0.2}
-        className="flex flex-col gap-4 sm:flex-row"
-      >
+      <m.div variants={fadeSlideUp} custom={0.2} className="flex flex-col gap-4 sm:flex-row">
         <Link
           to="/menu"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--accent-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2"
@@ -53,10 +45,9 @@ const EmptyFavoritesState = memo(() => {
         </Link>
       </m.div>
     </m.div>
-  );
-});
+  )
+})
 
-EmptyFavoritesState.displayName = 'EmptyFavoritesState';
+EmptyFavoritesState.displayName = 'EmptyFavoritesState'
 
-export default EmptyFavoritesState;
-
+export default EmptyFavoritesState

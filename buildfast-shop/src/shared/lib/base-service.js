@@ -1,14 +1,14 @@
 /**
  * Base Service Class
- * 
+ *
  * Provides standardized service layer with consistent error handling,
  * response formatting, and logging.
- * 
+ *
  * All services should extend this base class or follow its patterns.
  */
 
-import { logger } from '../../utils/logger';
-import { handleAsyncError, handleDatabaseError } from '../../lib/error-handler';
+import { logger } from '../../utils/logger'
+import { handleAsyncError, handleDatabaseError } from '../../lib/error-handler'
 
 /**
  * Standard service response format
@@ -21,7 +21,7 @@ import { handleAsyncError, handleDatabaseError } from '../../lib/error-handler';
 
 /**
  * Base Service Class
- * 
+ *
  * Provides common functionality for all services:
  * - Standardized error handling
  * - Consistent response format
@@ -33,11 +33,11 @@ export class BaseService {
    * Service name for logging
    * @type {string}
    */
-  serviceName = 'BaseService';
+  serviceName = 'BaseService'
 
   /**
    * Create standardized success response
-   * 
+   *
    * @param {*} data - Response data
    * @param {Object|null} meta - Optional metadata
    * @returns {ServiceResponse}
@@ -47,13 +47,13 @@ export class BaseService {
       success: true,
       data,
       error: null,
-      meta: meta || null
-    };
+      meta: meta || null,
+    }
   }
 
   /**
    * Create standardized error response
-   * 
+   *
    * @param {string} error - Error message
    * @param {Error|null} errorDetails - Original error object
    * @param {string|null} code - Error code
@@ -61,7 +61,7 @@ export class BaseService {
    */
   errorResponse(error, errorDetails = null, code = null) {
     if (errorDetails) {
-      logger.error(`[${this.serviceName}]`, errorDetails);
+      logger.error(`[${this.serviceName}]`, errorDetails)
     }
 
     return {
@@ -70,17 +70,19 @@ export class BaseService {
       error: error || 'An unexpected error occurred',
       code: code || errorDetails?.code || null,
       meta: {
-        errorDetails: errorDetails ? {
-          message: errorDetails.message,
-          stack: errorDetails.stack
-        } : null
-      }
-    };
+        errorDetails: errorDetails
+          ? {
+              message: errorDetails.message,
+              stack: errorDetails.stack,
+            }
+          : null,
+      },
+    }
   }
 
   /**
    * Wrap async operation with error handling
-   * 
+   *
    * @param {Function} asyncFn - Async function to execute
    * @param {string} context - Context for error logging
    * @param {string} fallbackError - Fallback error message
@@ -88,17 +90,17 @@ export class BaseService {
    */
   async wrapAsync(asyncFn, context, fallbackError = 'Operation failed') {
     try {
-      const data = await asyncFn();
-      return this.successResponse(data);
+      const data = await asyncFn()
+      return this.successResponse(data)
     } catch (error) {
-      const result = handleAsyncError(error, `${this.serviceName}.${context}`, fallbackError);
-      return this.errorResponse(result.error, error, result.code);
+      const result = handleAsyncError(error, `${this.serviceName}.${context}`, fallbackError)
+      return this.errorResponse(result.error, error, result.code)
     }
   }
 
   /**
    * Wrap database operation with error handling
-   * 
+   *
    * @param {Function} dbFn - Database function to execute
    * @param {string} context - Context for error logging
    * @param {Object} options - Error handling options
@@ -106,41 +108,41 @@ export class BaseService {
    */
   async wrapDatabase(dbFn, context, options = {}) {
     try {
-      const data = await dbFn();
-      return this.successResponse(data);
+      const data = await dbFn()
+      return this.successResponse(data)
     } catch (error) {
-      const result = handleDatabaseError(error, `${this.serviceName}.${context}`, options);
-      return this.errorResponse(result.error, error, result.code);
+      const result = handleDatabaseError(error, `${this.serviceName}.${context}`, options)
+      return this.errorResponse(result.error, error, result.code)
     }
   }
 
   /**
    * Validate required fields
-   * 
+   *
    * @param {Object} data - Data to validate
    * @param {Array<string>} requiredFields - Required field names
    * @returns {Object|null} Validation error response or null if valid
    */
   validateRequired(data, requiredFields) {
     const missing = requiredFields.filter(field => {
-      const value = data[field];
-      return value === undefined || value === null || value === '';
-    });
+      const value = data[field]
+      return value === undefined || value === null || value === ''
+    })
 
     if (missing.length > 0) {
       return this.errorResponse(
         `Missing required fields: ${missing.join(', ')}`,
         null,
         'VALIDATION_ERROR'
-      );
+      )
     }
 
-    return null;
+    return null
   }
 
   /**
    * Create paginated response
-   * 
+   *
    * @param {Array} data - Response data
    * @param {Object} pagination - Pagination info
    * @param {number} pagination.page - Current page
@@ -149,8 +151,8 @@ export class BaseService {
    * @returns {ServiceResponse}
    */
   paginatedResponse(data, pagination) {
-    const { page, pageSize, total } = pagination;
-    const totalPages = Math.ceil(total / pageSize);
+    const { page, pageSize, total } = pagination
+    const totalPages = Math.ceil(total / pageSize)
 
     return this.successResponse(data, {
       pagination: {
@@ -159,9 +161,9 @@ export class BaseService {
         total,
         totalPages,
         hasNext: page < totalPages,
-        hasPrev: page > 1
-      }
-    });
+        hasPrev: page > 1,
+      },
+    })
   }
 }
 
@@ -181,8 +183,8 @@ export function createSuccessResponse(data, meta = null) {
     success: true,
     data,
     error: null,
-    meta: meta || null
-  };
+    meta: meta || null,
+  }
 }
 
 /**
@@ -199,11 +201,12 @@ export function createErrorResponse(error, errorDetails = null, code = null) {
     error: error || 'An unexpected error occurred',
     code: code || errorDetails?.code || null,
     meta: {
-      errorDetails: errorDetails ? {
-        message: errorDetails.message,
-        stack: errorDetails.stack
-      } : null
-    }
-  };
+      errorDetails: errorDetails
+        ? {
+            message: errorDetails.message,
+            stack: errorDetails.stack,
+          }
+        : null,
+    },
+  }
 }
-

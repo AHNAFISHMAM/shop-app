@@ -28,4 +28,3 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(
     },
   }
 )
-

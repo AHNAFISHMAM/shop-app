@@ -1,23 +1,17 @@
 /**
  * Database Type Definitions
- * 
+ *
  * Auto-generated TypeScript types for Supabase database schema.
  * These types should be regenerated when the schema changes.
- * 
+ *
  * To regenerate:
  * 1. Use Supabase CLI: `supabase gen types typescript --local > src/lib/database.types.ts`
  * 2. Or use Supabase Studio: Database > Types > TypeScript > Copy
- * 
+ *
  * Last Updated: 2025-01-20
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -365,9 +359,12 @@ export interface Database {
 }
 
 // Helper types for common use cases
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-export type Inserts<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert']
-export type Updates<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update']
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row']
+export type Inserts<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Insert']
+export type Updates<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Update']
 
 // Specific table types
 export type MenuCategory = Tables<'menu_categories'>
@@ -381,6 +378,7 @@ export type Review = Tables<'reviews'>
 
 // RPC Function return types
 export type GetPublicMenuResult = Database['public']['Functions']['get_public_menu']['Returns']
-export type CreateOrderResult = Database['public']['Functions']['create_order_with_items']['Returns']
-export type CreateReservationResult = Database['public']['Functions']['create_reservation']['Returns']
-
+export type CreateOrderResult =
+  Database['public']['Functions']['create_order_with_items']['Returns']
+export type CreateReservationResult =
+  Database['public']['Functions']['create_reservation']['Returns']

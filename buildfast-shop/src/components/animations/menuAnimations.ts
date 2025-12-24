@@ -1,24 +1,27 @@
-import { Variants } from 'framer-motion';
+import { Variants } from 'framer-motion'
 
 // Optimized easing functions (cubic-bezier equivalents for better performance)
-const easeOut: [number, number, number, number] = [0.25, 0.1, 0.25, 1]; // cubic-bezier equivalent
-const easeIn: [number, number, number, number] = [0.42, 0, 1, 1];
-const easeInOut: [number, number, number, number] = [0.42, 0, 0.58, 1];
+// Removed unused easeOut
+const easeIn: [number, number, number, number] = [0.42, 0, 1, 1]
+const easeInOut: [number, number, number, number] = [0.42, 0, 0.58, 1]
 
 type BatchCustom =
   | number
   | {
-      batchIndex?: number;
-      itemIndex?: number;
-      baseDelay?: number;
-      batchDelay?: number;
-      itemDelay?: number;
-      exitDelay?: number;
-    };
+      batchIndex?: number
+      itemIndex?: number
+      baseDelay?: number
+      batchDelay?: number
+      itemDelay?: number
+      exitDelay?: number
+    }
 
-const resolveDelay = (custom: BatchCustom, defaults?: { baseDelay?: number; batchDelay?: number; itemDelay?: number }) => {
+const resolveDelay = (
+  custom: BatchCustom,
+  defaults?: { baseDelay?: number; batchDelay?: number; itemDelay?: number }
+) => {
   if (typeof custom === 'number') {
-    return { delay: custom };
+    return { delay: custom }
   }
 
   const {
@@ -27,13 +30,13 @@ const resolveDelay = (custom: BatchCustom, defaults?: { baseDelay?: number; batc
     baseDelay = defaults?.baseDelay ?? 0,
     batchDelay = defaults?.batchDelay ?? 0.3, // Reduced from 0.4 for snappier feel
     itemDelay = defaults?.itemDelay ?? 0.06, // Reduced from 0.08
-  } = custom ?? {};
+  } = custom ?? {}
 
   return {
     delay: baseDelay + batchIndex * batchDelay + itemIndex * itemDelay,
     exitDelay: custom?.exitDelay ?? 0,
-  };
-};
+  }
+}
 
 export const pageFade: Variants = {
   hidden: { opacity: 0 },
@@ -45,7 +48,7 @@ export const pageFade: Variants = {
     opacity: 0,
     transition: { duration: 0.3, ease: easeIn }, // Reduced from 0.5
   },
-};
+}
 
 export const pageBackdrop: Variants = {
   hidden: { opacity: 0 },
@@ -57,7 +60,7 @@ export const pageBackdrop: Variants = {
     opacity: 0,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const sidebarSequence: Variants = {
   hidden: { opacity: 0, x: -28 },
@@ -71,7 +74,7 @@ export const sidebarSequence: Variants = {
     x: -32,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const searchBarSequence: Variants = {
   hidden: { opacity: 0, y: -20 },
@@ -85,24 +88,28 @@ export const searchBarSequence: Variants = {
     y: -18,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const fadeSlideUp: Variants = {
   hidden: { opacity: 0, y: 32 },
   visible: (custom: BatchCustom = 0) => {
-    const { delay } = resolveDelay(custom);
+    const { delay } = resolveDelay(custom)
     return {
       opacity: 1,
       y: 0,
       transition: { duration: 0.4, ease: easeInOut, delay }, // Reduced from 0.55
-    };
+    }
   },
   exit: (custom: BatchCustom = 0) => ({
     opacity: 0,
     y: 24,
-    transition: { duration: 0.3, ease: easeIn, delay: typeof custom === 'number' ? 0 : custom?.exitDelay ?? 0 },
+    transition: {
+      duration: 0.3,
+      ease: easeIn,
+      delay: typeof custom === 'number' ? 0 : (custom?.exitDelay ?? 0),
+    },
   }),
-};
+}
 
 export const batchFadeSlideUp: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -116,7 +123,7 @@ export const batchFadeSlideUp: Variants = {
     y: 22,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const fadeSlideDown: Variants = {
   hidden: { opacity: 0, y: -28 },
@@ -130,7 +137,7 @@ export const fadeSlideDown: Variants = {
     y: -22,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const fadeSlideFromLeft: Variants = {
   hidden: { opacity: 0, x: -40 },
@@ -144,7 +151,7 @@ export const fadeSlideFromLeft: Variants = {
     x: -32,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const fadeSlideFromRight: Variants = {
   hidden: { opacity: 0, x: 40 },
@@ -158,7 +165,7 @@ export const fadeSlideFromRight: Variants = {
     x: 32,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const gridReveal: Variants = {
   hidden: { opacity: 0 },
@@ -175,7 +182,7 @@ export const gridReveal: Variants = {
     opacity: 0,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const menuStagger: Variants = {
   hidden: {},
@@ -191,7 +198,7 @@ export const menuStagger: Variants = {
       when: 'afterChildren',
     },
   },
-};
+}
 
 export const floatingCartSequence: Variants = {
   hidden: { opacity: 0, x: 32, scale: 0.98 },
@@ -207,7 +214,7 @@ export const floatingCartSequence: Variants = {
     scale: 0.97,
     transition: { duration: 0.3, ease: easeIn },
   },
-};
+}
 
 export const staggerContainer: Variants = {
   hidden: {},
@@ -223,6 +230,4 @@ export const staggerContainer: Variants = {
       when: 'afterChildren',
     },
   },
-};
-
-
+}

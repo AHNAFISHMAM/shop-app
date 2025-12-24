@@ -31,16 +31,18 @@ export function calculateTotalItemsCount(cartItems: CartItem[]): number {
 export function calculateSubtotal(cartItems: CartItem[]): number {
   return cartItems.reduce((sum, item) => {
     // Use resolved product, fallback to embedded product, or use cart item data
-    const product = item.resolvedProduct || item.product || {
-      price: item.price || item.price_at_purchase || 0
-    }
-    
+    const product = item.resolvedProduct ||
+      item.product || {
+        price: item.price || item.price_at_purchase || 0,
+      }
+
     // Handle price - might be string or number, or use fallback from cart item
-    const price = typeof product.price === 'number' 
-      ? product.price 
-      : parsePrice(product.price || item.price || item.price_at_purchase || '0')
-    
-    return sum + (price * item.quantity)
+    const price =
+      typeof product.price === 'number'
+        ? product.price
+        : parsePrice(product.price || item.price || item.price_at_purchase || '0')
+
+    return sum + price * item.quantity
   }, 0)
 }
 
@@ -77,4 +79,3 @@ export function calculateGrandTotal(
 export function getTaxRatePercent(): number {
   return DEFAULT_TAX_RATE * 100
 }
-

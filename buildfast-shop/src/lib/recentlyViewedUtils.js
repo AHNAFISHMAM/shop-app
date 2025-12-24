@@ -3,7 +3,7 @@
  * Uses localStorage to persist viewed products across sessions
  */
 
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger'
 
 const STORAGE_KEY = 'recently_viewed_products'
 const MAX_PRODUCTS = 15
@@ -29,12 +29,12 @@ export function getRecentlyViewed() {
     }
 
     return parsed
-      .map((entry) => {
+      .map(entry => {
         if (typeof entry === 'string') {
           return {
             productId: entry,
             itemType: 'product',
-            timestamp: Date.now()
+            timestamp: Date.now(),
           }
         }
 
@@ -42,13 +42,13 @@ export function getRecentlyViewed() {
           return {
             productId: entry.productId ?? entry.id,
             itemType: entry.itemType ?? 'product',
-            timestamp: entry.timestamp ?? Date.now()
+            timestamp: entry.timestamp ?? Date.now(),
           }
         }
 
         return null
       })
-      .filter((entry) => entry && entry.productId)
+      .filter(entry => entry && entry.productId)
   } catch (err) {
     logger.error('Error reading recently viewed products:', err)
     // Clear corrupted data
@@ -73,14 +73,14 @@ export function addToRecentlyViewed(productId, itemType = 'product') {
 
     // Remove product if it already exists (to avoid duplicates)
     recentlyViewed = recentlyViewed.filter(
-      (item) => !(item.productId === productId && item.itemType === itemType)
+      item => !(item.productId === productId && item.itemType === itemType)
     )
 
     // Add product to the front of the list
     recentlyViewed.unshift({
       productId: productId,
       itemType,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
 
     // Keep only the first MAX_PRODUCTS items

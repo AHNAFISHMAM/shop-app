@@ -1,20 +1,20 @@
-import { useMemo } from 'react';
-import { getCurrencySymbol, formatPrice } from '../../lib/priceUtils';
+import { useMemo } from 'react'
+import { getCurrencySymbol, formatPrice } from '../../lib/priceUtils'
 
 /**
  * PriceDisplay component props
  */
 interface PriceDisplayProps {
   /** Unit price of the item */
-  unitPrice: number;
+  unitPrice: number
   /** Quantity of items */
-  quantity: number;
+  quantity: number
   /** Currency code (default: 'BDT') */
-  currency?: string;
+  currency?: string
   /** Whether to show price breakdown (default: true) */
-  showBreakdown?: boolean;
+  showBreakdown?: boolean
   /** Size variant */
-  size?: 'small' | 'default' | 'large';
+  size?: 'small' | 'default' | 'large'
 }
 
 /**
@@ -49,37 +49,55 @@ const PriceDisplay = ({
   size = 'default',
 }: PriceDisplayProps) => {
   // Memoize calculations
-  const total = useMemo(() => unitPrice * quantity, [unitPrice, quantity]);
-  const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
-  const formattedUnitPrice = useMemo(() => formatPrice(unitPrice, 0), [unitPrice]);
-  const formattedTotal = useMemo(() => formatPrice(total, 0), [total]);
+  const total = useMemo(() => unitPrice * quantity, [unitPrice, quantity])
+  const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency])
+  const formattedUnitPrice = useMemo(() => formatPrice(unitPrice, 0), [unitPrice])
+  const formattedTotal = useMemo(() => formatPrice(total, 0), [total])
 
-  const sizeClasses = useMemo(() => ({
-    small: 'cart-price-display-small',
-    default: 'cart-price-display-default',
-    large: 'cart-price-display-large',
-  }), []);
+  const sizeClasses = useMemo(
+    () => ({
+      small: 'cart-price-display-small',
+      default: 'cart-price-display-default',
+      large: 'cart-price-display-large',
+    }),
+    []
+  )
 
   return (
-    <div className="cart-price-display" role="text" aria-label={`Price: ${currencySymbol}${formattedTotal}`}>
+    <div
+      className="cart-price-display"
+      role="text"
+      aria-label={`Price: ${currencySymbol}${formattedTotal}`}
+    >
       {showBreakdown && quantity > 1 && (
-        <div className="cart-price-breakdown" aria-label={`${currencySymbol}${formattedUnitPrice} per item, quantity ${quantity}`}>
+        <div
+          className="cart-price-breakdown"
+          aria-label={`${currencySymbol}${formattedUnitPrice} per item, quantity ${quantity}`}
+        >
           <span>
-            {currencySymbol}{formattedUnitPrice} × {quantity}
+            {currencySymbol}
+            {formattedUnitPrice} × {quantity}
           </span>
         </div>
       )}
-      <div className={`cart-price-total ${sizeClasses[size]}`} aria-label={`Total: ${currencySymbol}${formattedTotal}`}>
-        {currencySymbol}{formattedTotal}
+      <div
+        className={`cart-price-total ${sizeClasses[size]}`}
+        aria-label={`Total: ${currencySymbol}${formattedTotal}`}
+      >
+        {currencySymbol}
+        {formattedTotal}
       </div>
       {showBreakdown && quantity === 1 && (
-        <div className="cart-price-unit" aria-label={`Unit price: ${currencySymbol}${formattedUnitPrice}`}>
-          {currencySymbol}{formattedUnitPrice} each
+        <div
+          className="cart-price-unit"
+          aria-label={`Unit price: ${currencySymbol}${formattedUnitPrice}`}
+        >
+          {currencySymbol}
+          {formattedUnitPrice} each
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default PriceDisplay;
-
+export default PriceDisplay

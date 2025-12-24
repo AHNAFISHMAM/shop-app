@@ -11,7 +11,7 @@ import { pageFade, fadeSlideUp } from '../components/animations/menuAnimations'
  *
  * Provides user authentication with email and password.
  * Redirects to intended destination or admin dashboard after successful login.
- * 
+ *
  * @component
  */
 const Login = memo((): JSX.Element => {
@@ -22,7 +22,7 @@ const Login = memo((): JSX.Element => {
   const [loading, setLoading] = useState<boolean>(false)
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
-  const isLightTheme = useTheme()
+  const _isLightTheme = useTheme()
   const { signIn, user, loading: authLoading, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -30,12 +30,12 @@ const Login = memo((): JSX.Element => {
   // Detect reduced motion preference
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
-    
+
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const handleChange = (e: MediaQueryListEvent | { matches: boolean }): void => {
       setPrefersReducedMotion('matches' in e ? e.matches : false)
     }
-    
+
     if (mediaQuery.addEventListener) {
       setPrefersReducedMotion(mediaQuery.matches)
       mediaQuery.addEventListener('change', handleChange)
@@ -64,50 +64,53 @@ const Login = memo((): JSX.Element => {
     }
   }, [user, authLoading, shouldRedirect, navigate, from, isAdmin])
 
-  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault()
-    setError('')
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+      e.preventDefault()
+      setError('')
 
-    // Basic validation
-    if (!email.trim()) {
-      setError('Please enter your email address')
-      return
-    }
-
-    if (!password) {
-      setError('Please enter your password')
-      return
-    }
-
-    setLoading(true)
-
-    const { data, error: signInError } = await signIn(email, password)
-
-    if (signInError) {
-      // Handle common error messages
-      if (signInError.message.includes('Invalid login credentials')) {
-        setError('Invalid email or password. Please try again.')
-      } else if (signInError.message.includes('Email not confirmed')) {
-        setError('Please confirm your email address before logging in.')
-      } else {
-        setError(signInError.message)
+      // Basic validation
+      if (!email.trim()) {
+        setError('Please enter your email address')
+        return
       }
-      setLoading(false)
-      return
-    }
 
-    // Success - wait for auth state to update via useEffect
-    if (data?.session) {
-      setShouldRedirect(true)
-    } else {
-      // Fallback: if session exists but user not set yet, wait a bit
-      setTimeout(() => {
+      if (!password) {
+        setError('Please enter your password')
+        return
+      }
+
+      setLoading(true)
+
+      const { data, error: signInError } = await signIn(email, password)
+
+      if (signInError) {
+        // Handle common error messages
+        if (signInError.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.')
+        } else if (signInError.message.includes('Email not confirmed')) {
+          setError('Please confirm your email address before logging in.')
+        } else {
+          setError(signInError.message)
+        }
         setLoading(false)
-        const destination = isAdmin ? '/admin' : from
-        navigate(destination, { replace: true })
-      }, 200)
-    }
-  }, [email, password, signIn, isAdmin, from, navigate])
+        return
+      }
+
+      // Success - wait for auth state to update via useEffect
+      if (data?.session) {
+        setShouldRedirect(true)
+      } else {
+        // Fallback: if session exists but user not set yet, wait a bit
+        setTimeout(() => {
+          setLoading(false)
+          const destination = isAdmin ? '/admin' : from
+          navigate(destination, { replace: true })
+        }, 200)
+      }
+    },
+    [email, password, signIn, isAdmin, from, navigate]
+  )
 
   const togglePasswordVisibility = useCallback((): void => {
     setShowPassword(prev => !prev)
@@ -116,11 +119,11 @@ const Login = memo((): JSX.Element => {
   return (
     <m.main
       variants={prefersReducedMotion ? {} : pageFade}
-      initial={prefersReducedMotion ? undefined : "hidden"}
-      animate={prefersReducedMotion ? undefined : "visible"}
-      exit={prefersReducedMotion ? undefined : "exit"}
+      initial={prefersReducedMotion ? undefined : 'hidden'}
+      animate={prefersReducedMotion ? undefined : 'visible'}
+      exit={prefersReducedMotion ? undefined : 'exit'}
       className="min-h-screen"
-      style={{ 
+      style={{
         pointerEvents: 'auto',
         // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
         paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -128,7 +131,7 @@ const Login = memo((): JSX.Element => {
         // Ensure no overflow constraints that break positioning
         overflow: 'visible',
         overflowX: 'visible',
-        overflowY: 'visible'
+        overflowY: 'visible',
       }}
       role="main"
       aria-label="Login page"
@@ -136,9 +139,9 @@ const Login = memo((): JSX.Element => {
       <AuthShell.Root>
         <m.div
           variants={prefersReducedMotion ? {} : fadeSlideUp}
-          initial={prefersReducedMotion ? undefined : "hidden"}
-          animate={prefersReducedMotion ? undefined : "visible"}
-          exit={prefersReducedMotion ? undefined : "exit"}
+          initial={prefersReducedMotion ? undefined : 'hidden'}
+          animate={prefersReducedMotion ? undefined : 'visible'}
+          exit={prefersReducedMotion ? undefined : 'exit'}
           custom={0.12}
           className="w-full"
         >
@@ -146,26 +149,41 @@ const Login = memo((): JSX.Element => {
             <AuthShell.Header
               eyebrow="Welcome back"
               title="Sign in to your account"
-              helper={(
+              helper={
                 <span>
                   Don&apos;t have an account?{' '}
-                  <Link to="/signup" className="font-medium text-[var(--accent)] underline underline-offset-4 transition hover:text-[var(--accent)]/80" aria-label="Go to sign up page">
+                  <Link
+                    to="/signup"
+                    className="font-medium text-[var(--accent)] underline underline-offset-4 transition hover:text-[var(--accent)]/80"
+                    aria-label="Go to sign up page"
+                  >
                     Sign up
                   </Link>
                 </span>
-              )}
+              }
             />
 
             {error ? (
-              <div className="rounded-2xl border-[var(--status-error-border)] bg-[var(--status-error-bg)] px-4 py-3 text-left" role="alert" aria-live="assertive">
+              <div
+                className="rounded-2xl border-[var(--status-error-border)] bg-[var(--status-error-bg)] px-4 py-3 text-left"
+                role="alert"
+                aria-live="assertive"
+              >
                 <p className="text-sm font-medium text-[var(--color-red)]">{error}</p>
               </div>
             ) : null}
 
-            <form className="space-y-5 relative z-10 pointer-events-auto" onSubmit={handleSubmit} aria-label="Login form">
+            <form
+              className="space-y-5 relative z-10 pointer-events-auto"
+              onSubmit={handleSubmit}
+              aria-label="Login form"
+            >
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="email-address" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  <label
+                    htmlFor="email-address"
+                    className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]"
+                  >
                     Email address
                   </label>
                   <input
@@ -175,7 +193,7 @@ const Login = memo((): JSX.Element => {
                     autoComplete="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={e => setEmail(e.target.value)}
                     className="peer block w-full rounded-xl border border-theme bg-elevated px-3 py-3 text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] shadow-inner transition focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/70 focus:ring-offset-2 focus:ring-offset-[var(--bg-main)]/50 min-h-[44px]"
                     placeholder="john@example.com"
                     aria-required="true"
@@ -185,41 +203,72 @@ const Login = memo((): JSX.Element => {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  <label
+                    htmlFor="password"
+                    className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]"
+                  >
                     Password
                   </label>
                   <div className="relative">
                     <input
                       id="password"
                       name="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
                       required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={e => setPassword(e.target.value)}
                       className="block w-full rounded-xl border border-theme bg-elevated px-3 py-3 pr-10 text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] shadow-inner transition focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/70 focus:ring-offset-2 focus:ring-offset-[var(--bg-main)]/50 min-h-[44px]"
                       placeholder="Enter your password"
                       aria-required="true"
                       aria-invalid={error && error.includes('password') ? 'true' : 'false'}
-                      aria-describedby={error && error.includes('password') ? 'password-error' : undefined}
+                      aria-describedby={
+                        error && error.includes('password') ? 'password-error' : undefined
+                      }
                     />
                     <button
                       type="button"
                       data-unstyled
                       onClick={togglePasswordVisibility}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 p-1.5 text-[var(--text-muted)] transition-colors hover:text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:ring-offset-1 rounded-md bg-transparent border-none cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                       aria-pressed={showPassword}
                       tabIndex={0}
                     >
                       {showPassword ? (
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                          />
                         </svg>
                       ) : (
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
                         </svg>
                       )}
                     </button>
@@ -247,4 +296,3 @@ const Login = memo((): JSX.Element => {
 Login.displayName = 'Login'
 
 export default Login
-

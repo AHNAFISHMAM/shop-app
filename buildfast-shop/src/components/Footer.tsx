@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import { useMemo } from 'react';
-import { useStoreSettings } from '../contexts/StoreSettingsContext';
+import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
+import { useStoreSettings } from '../contexts/StoreSettingsContext'
 
 /**
  * Footer Component
@@ -13,15 +13,15 @@ import { useStoreSettings } from '../contexts/StoreSettingsContext';
  * - Design system compliant (CSS variables)
  */
 const Footer = () => {
-  const { settings, loading: settingsLoading } = useStoreSettings();
-  
+  const { settings, loading: settingsLoading } = useStoreSettings()
+
   const enableReservations = useMemo(() => {
-    return settingsLoading ? false : (settings?.enable_reservations ?? true);
-  }, [settings, settingsLoading]);
+    return settingsLoading ? false : (settings?.enable_reservations ?? true)
+  }, [settings, settingsLoading])
 
   const currentYear = useMemo(() => {
-    return new Date().getFullYear();
-  }, []);
+    return new Date().getFullYear()
+  }, [])
 
   return (
     <footer
@@ -33,7 +33,7 @@ const Footer = () => {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(var(--text-main-rgb),0.12),transparent_65%)]"
         aria-hidden="true"
       />
-      <div 
+      <div
         className="relative z-10 py-6 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center justify-between text-sm text-[var(--text-muted)]"
         style={{
           // Match navbar side spacing exactly
@@ -42,9 +42,7 @@ const Footer = () => {
         }}
       >
         <div className="space-y-1">
-          <div className="text-sm font-semibold text-[var(--accent)]">
-            Star Café
-          </div>
+          <div className="text-sm font-semibold text-[var(--accent)]">Star Café</div>
           <div className="text-sm leading-relaxed">Shuvash Chandra Road, Chitrar Mor, Jessore</div>
           <div className="text-sm">Phone: 01726-367742</div>
         </div>
@@ -78,8 +76,7 @@ const Footer = () => {
         </div>
       </div>
     </footer>
-  );
-};
+  )
+}
 
-export default Footer;
-
+export default Footer

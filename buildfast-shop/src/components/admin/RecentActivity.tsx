@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom'
 import { logger } from '../../utils/logger'
 
 interface Activity {
-  id: string;
-  created_at: string;
-  status: string;
-  type: 'order' | 'reservation';
-  order_total?: string | number;
-  customer_name?: string;
-  party_size?: number;
-  [key: string]: unknown;
+  id: string
+  created_at: string
+  status: string
+  type: 'order' | 'reservation'
+  order_total?: string | number
+  customer_name?: string
+  party_size?: number
+  [key: string]: unknown
 }
 
 /**
@@ -25,32 +25,6 @@ interface Activity {
  * - Links to full views
  */
 function RecentActivity(): JSX.Element {
-  // Detect current theme from document element (for consistency with hybrid approach)
-  // eslint-disable-next-line no-unused-vars
-  const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
-  
-  // Watch for theme changes
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
-    const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
-    
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
-
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -73,13 +47,17 @@ function RecentActivity(): JSX.Element {
           .from('table_reservations')
           .select('id, created_at, status, customer_name, party_size')
           .order('created_at', { ascending: false })
-          .limit(2)
+          .limit(2),
       ])
 
       // Combine and sort by created_at
       const combined: Activity[] = [
-        ...(orders || []).map(o => ({ ...o, type: 'order' as const })),
-        ...(reservations || []).map(r => ({ ...r, type: 'reservation' as const }))
+        ...(orders || []).map(
+          (o: Record<string, unknown>) => ({ ...o, type: 'order' as const }) as Activity
+        ),
+        ...(reservations || []).map(
+          (r: Record<string, unknown>) => ({ ...r, type: 'reservation' as const }) as Activity
+        ),
       ]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5)
@@ -129,13 +107,23 @@ function RecentActivity(): JSX.Element {
     if (type === 'order') {
       return (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          />
         </svg>
       )
     }
     return (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
       </svg>
     )
   }
@@ -160,8 +148,18 @@ function RecentActivity(): JSX.Element {
     return (
       <div className="text-center py-8">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-          <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          <svg
+            className="w-8 h-8 text-[var(--text-muted)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+            />
           </svg>
         </div>
         <p className="text-sm text-[var(--text-muted)]">No recent activity</p>
@@ -183,7 +181,7 @@ function RecentActivity(): JSX.Element {
             className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110"
             style={{
               backgroundColor: `${getStatusColor(activity.status)}20`,
-              color: getStatusColor(activity.status)
+              color: getStatusColor(activity.status),
             }}
           >
             {getActivityIcon(activity.type)}
@@ -201,7 +199,9 @@ function RecentActivity(): JSX.Element {
                   ) : (
                     <>
                       Reservation for{' '}
-                      <span className="text-[var(--accent)]">{activity.customer_name || 'Guest'}</span>
+                      <span className="text-[var(--accent)]">
+                        {activity.customer_name || 'Guest'}
+                      </span>
                     </>
                   )}
                 </p>
@@ -211,18 +211,16 @@ function RecentActivity(): JSX.Element {
                     className="px-2 py-0.5 rounded-full font-medium"
                     style={{
                       backgroundColor: `${getStatusColor(activity.status)}20`,
-                      color: getStatusColor(activity.status)
+                      color: getStatusColor(activity.status),
                     }}
                   >
                     {activity.status}
                   </span>
                   {/* Details */}
                   <span style={{ color: 'var(--text-body-muted-light)' }}>
-                    {activity.type === 'order' ? (
-                      `৳${parseFloat(String(activity.order_total || 0)).toFixed(2)}`
-                    ) : (
-                      `${activity.party_size} guests`
-                    )}
+                    {activity.type === 'order'
+                      ? `৳${parseFloat(String(activity.order_total || 0)).toFixed(2)}`
+                      : `${activity.party_size} guests`}
                   </span>
                 </div>
               </div>
@@ -248,4 +246,3 @@ function RecentActivity(): JSX.Element {
 }
 
 export default RecentActivity
-

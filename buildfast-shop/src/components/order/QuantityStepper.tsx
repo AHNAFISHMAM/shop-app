@@ -1,23 +1,23 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 /**
  * QuantityStepper component props
  */
 interface QuantityStepperProps {
   /** Current quantity value */
-  value: number;
+  value: number
   /** Callback when quantity changes */
-  onChange: (value: number) => void;
+  onChange: (value: number) => void
   /** Minimum allowed value */
-  min?: number;
+  min?: number
   /** Maximum allowed value */
-  max?: number;
+  max?: number
   /** Whether the stepper is disabled */
-  disabled?: boolean;
+  disabled?: boolean
   /** Whether the stepper is in loading state */
-  loading?: boolean;
+  loading?: boolean
   /** ARIA label for the quantity selector group */
-  'aria-label'?: string;
+  'aria-label'?: string
 }
 
 /**
@@ -43,79 +43,88 @@ const QuantityStepper = ({
   loading = false,
   'aria-label': ariaLabel,
 }: QuantityStepperProps) => {
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [inputValue, setInputValue] = useState<string>(value.toString());
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false)
+  const [inputValue, setInputValue] = useState<string>(value.toString())
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setInputValue(value.toString());
-  }, [value]);
+    setInputValue(value.toString())
+  }, [value])
 
   const handleDecrease = useCallback(() => {
-    if (disabled || loading || value <= min) return;
-    const newValue = Math.max(min, value - 1);
-    onChange(newValue);
-  }, [disabled, loading, value, min, onChange]);
+    if (disabled || loading || value <= min) return
+    const newValue = Math.max(min, value - 1)
+    onChange(newValue)
+  }, [disabled, loading, value, min, onChange])
 
   const handleIncrease = useCallback(() => {
-    if (disabled || loading || value >= max) return;
-    const newValue = Math.min(max, value + 1);
-    onChange(newValue);
-  }, [disabled, loading, value, max, onChange]);
+    if (disabled || loading || value >= max) return
+    const newValue = Math.min(max, value + 1)
+    onChange(newValue)
+  }, [disabled, loading, value, max, onChange])
 
   const handleInputFocus = useCallback(() => {
-    setIsEditing(true);
-    inputRef.current?.select();
-  }, []);
+    setIsEditing(true)
+    inputRef.current?.select()
+  }, [])
 
   const handleInputBlur = useCallback(() => {
-    setIsEditing(false);
-    const numValue = parseInt(inputValue, 10);
+    setIsEditing(false)
+    const numValue = parseInt(inputValue, 10)
     if (isNaN(numValue) || numValue < min) {
-      onChange(min);
+      onChange(min)
     } else if (numValue > max) {
-      onChange(max);
+      onChange(max)
     } else {
-      onChange(numValue);
+      onChange(numValue)
     }
-  }, [inputValue, min, max, onChange]);
+  }, [inputValue, min, max, onChange])
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value.replace(/[^0-9]/g, '');
-    setInputValue(newValue);
-  }, []);
+    const newValue = e.target.value.replace(/[^0-9]/g, '')
+    setInputValue(newValue)
+  }, [])
 
-  const handleInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.currentTarget.blur();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      handleIncrease();
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      handleDecrease();
-    } else if (e.key === 'Escape') {
-      setInputValue(value.toString());
-      e.currentTarget.blur();
-    }
-  }, [value, handleIncrease, handleDecrease]);
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.currentTarget.blur()
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        handleIncrease()
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        handleDecrease()
+      } else if (e.key === 'Escape') {
+        setInputValue(value.toString())
+        e.currentTarget.blur()
+      }
+    },
+    [value, handleIncrease, handleDecrease]
+  )
 
-  const handleDecreaseKeyDown = useCallback((e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleDecrease();
-    }
-  }, [handleDecrease]);
+  const handleDecreaseKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        handleDecrease()
+      }
+    },
+    [handleDecrease]
+  )
 
-  const handleIncreaseKeyDown = useCallback((e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleIncrease();
-    }
-  }, [handleIncrease]);
+  const handleIncreaseKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        handleIncrease()
+      }
+    },
+    [handleIncrease]
+  )
 
-  const isDecreaseDisabled = disabled || loading || value <= min;
-  const isIncreaseDisabled = disabled || loading || value >= max;
+  const isDecreaseDisabled = disabled || loading || value <= min
+  const isIncreaseDisabled = disabled || loading || value >= max
 
   return (
     <div className="quantity-stepper-v2" role="group" aria-label={ariaLabel || 'Quantity selector'}>
@@ -169,8 +178,7 @@ const QuantityStepper = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default QuantityStepper;
-
+export default QuantityStepper

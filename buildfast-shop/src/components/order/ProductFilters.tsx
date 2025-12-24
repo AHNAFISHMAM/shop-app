@@ -1,13 +1,13 @@
-import { useCallback, useMemo } from 'react';
-import CustomDropdown from '../ui/CustomDropdown';
+import { useCallback, useMemo } from 'react'
+import CustomDropdown from '../ui/CustomDropdown'
 
 /**
  * Category interface
  */
 interface Category {
-  id: string;
-  name: string;
-  [key: string]: unknown;
+  id: string
+  name: string
+  [key: string]: unknown
 }
 
 /**
@@ -15,33 +15,33 @@ interface Category {
  */
 interface ProductFiltersProps {
   /** Array of categories */
-  categories: Category[];
+  categories: Category[]
   /** Currently selected category */
-  selectedCategory?: Category | null;
+  selectedCategory?: Category | null
   /** Callback when category changes */
-  onCategoryChange: (category: Category | null) => void;
+  onCategoryChange: (category: Category | null) => void
   /** Array of filtered subcategories */
-  filteredSubcategories?: Category[];
+  filteredSubcategories?: Category[]
   /** Currently selected subcategory */
-  selectedSubcategory?: Category | null;
+  selectedSubcategory?: Category | null
   /** Callback when subcategory changes */
-  onSubcategoryChange: (subcategory: Category | null) => void;
+  onSubcategoryChange: (subcategory: Category | null) => void
   /** Current spice level (0-3) */
-  spiceLevel?: number | null;
+  spiceLevel?: number | null
   /** Callback when spice level changes */
-  onSpiceLevelChange: (level: number | null) => void;
+  onSpiceLevelChange: (level: number | null) => void
   /** Array of selected dietary filters */
-  dietaryFilters: string[];
+  dietaryFilters: string[]
   /** Callback when dietary filters change */
-  onDietaryFiltersChange: (filters: string[]) => void;
+  onDietaryFiltersChange: (filters: string[]) => void
   /** Whether to show only chef specials */
-  chefSpecialOnly: boolean;
+  chefSpecialOnly: boolean
   /** Callback when chef special only changes */
-  onChefSpecialOnlyChange: (value: boolean) => void;
+  onChefSpecialOnlyChange: (value: boolean) => void
   /** Whether to show only in-stock items */
-  inStockOnly: boolean;
+  inStockOnly: boolean
   /** Callback when in-stock only changes */
-  onInStockOnlyChange: (value: boolean) => void;
+  onInStockOnlyChange: (value: boolean) => void
 }
 
 /**
@@ -77,71 +77,88 @@ const ProductFilters = ({
   // Handle category change with useCallback
   const handleCategoryChange = useCallback(
     (event: { target: { value: string | number; name?: string } }) => {
-      const cat = categories.find((c) => c.id === String(event.target.value));
-      onCategoryChange(cat || null);
+      const cat = categories.find(c => c.id === String(event.target.value))
+      onCategoryChange(cat || null)
     },
     [categories, onCategoryChange]
-  );
+  )
 
   // Handle subcategory change with useCallback
   const handleSubcategoryChange = useCallback(
     (event: { target: { value: string | number; name?: string } }) => {
-      const sub = filteredSubcategories.find((s) => s.id === String(event.target.value));
-      onSubcategoryChange(sub || null);
+      const sub = filteredSubcategories.find(s => s.id === String(event.target.value))
+      onSubcategoryChange(sub || null)
     },
     [filteredSubcategories, onSubcategoryChange]
-  );
+  )
 
   // Handle spice level change with useCallback
   const handleSpiceLevelChange = useCallback(
     (event: { target: { value: string | number; name?: string } }) => {
       onSpiceLevelChange(
         event.target.value === '' ? null : parseInt(String(event.target.value), 10)
-      );
+      )
     },
     [onSpiceLevelChange]
-  );
+  )
 
   // Handle dietary checkbox change
   const handleDietaryChange = useCallback(
     (tag: string, checked: boolean) => {
       if (checked) {
-        onDietaryFiltersChange([...dietaryFilters, tag]);
+        onDietaryFiltersChange([...dietaryFilters, tag])
       } else {
-        onDietaryFiltersChange(dietaryFilters.filter((t) => t !== tag));
+        onDietaryFiltersChange(dietaryFilters.filter(t => t !== tag))
       }
     },
     [dietaryFilters, onDietaryFiltersChange]
-  );
+  )
 
   // Memoized dropdown options
-  const categoryOptions = useMemo(() => [
-    { value: '', label: 'All Categories' },
-    ...categories.map(cat => ({ value: cat.id, label: cat.name }))
-  ], [categories]);
+  const categoryOptions = useMemo(
+    () => [
+      { value: '', label: 'All Categories' },
+      ...categories.map(cat => ({ value: cat.id, label: cat.name })),
+    ],
+    [categories]
+  )
 
-  const subcategoryOptions = useMemo(() => [
-    { value: '', label: 'All Subcategories' },
-    ...filteredSubcategories.map(sub => ({ value: sub.id, label: sub.name }))
-  ], [filteredSubcategories]);
+  const subcategoryOptions = useMemo(
+    () => [
+      { value: '', label: 'All Subcategories' },
+      ...filteredSubcategories.map(sub => ({ value: sub.id, label: sub.name })),
+    ],
+    [filteredSubcategories]
+  )
 
-  const spiceLevelOptions = useMemo(() => [
-    { value: '', label: 'Any' },
-    { value: '0', label: 'Mild' },
-    { value: '1', label: 'Medium 🌶️' },
-    { value: '2', label: 'Hot 🌶️🌶️' },
-    { value: '3', label: 'Extra Hot 🌶️🌶️🌶️' }
-  ], []);
+  const spiceLevelOptions = useMemo(
+    () => [
+      { value: '', label: 'Any' },
+      { value: '0', label: 'Mild' },
+      { value: '1', label: 'Medium 🌶️' },
+      { value: '2', label: 'Hot 🌶️🌶️' },
+      { value: '3', label: 'Extra Hot 🌶️🌶️🌶️' },
+    ],
+    []
+  )
 
-  const dietaryTags = useMemo(() => ['vegetarian', 'vegan', 'gluten-free'], []);
+  const dietaryTags = useMemo(() => ['vegetarian', 'vegan', 'gluten-free'], [])
 
   return (
-    <section className="mb-6 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 space-y-4" aria-labelledby="product-filters-heading">
-      <h2 id="product-filters-heading" className="sr-only">Product Filters</h2>
+    <section
+      className="mb-6 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 space-y-4"
+      aria-labelledby="product-filters-heading"
+    >
+      <h2 id="product-filters-heading" className="sr-only">
+        Product Filters
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {/* Category */}
         <div>
-          <label htmlFor="category-filter" className="block text-sm sm:text-base text-[var(--text-muted)] mb-2">
+          <label
+            htmlFor="category-filter"
+            className="block text-sm sm:text-base text-[var(--text-muted)] mb-2"
+          >
             Category
           </label>
           <CustomDropdown
@@ -156,7 +173,10 @@ const ProductFilters = ({
 
         {/* Subcategory */}
         <div>
-          <label htmlFor="subcategory-filter" className="block text-sm sm:text-base text-[var(--text-muted)] mb-2">
+          <label
+            htmlFor="subcategory-filter"
+            className="block text-sm sm:text-base text-[var(--text-muted)] mb-2"
+          >
             Subcategory
           </label>
           <CustomDropdown
@@ -172,7 +192,10 @@ const ProductFilters = ({
 
         {/* Spice Level */}
         <div>
-          <label htmlFor="spice-level-filter" className="block text-sm sm:text-base text-[var(--text-muted)] mb-2">
+          <label
+            htmlFor="spice-level-filter"
+            className="block text-sm sm:text-base text-[var(--text-muted)] mb-2"
+          >
             Spice Level
           </label>
           <CustomDropdown
@@ -191,8 +214,12 @@ const ProductFilters = ({
         <label className="block text-sm sm:text-base text-[var(--text-muted)] mb-2">
           Dietary Preferences
         </label>
-        <div className="flex flex-wrap gap-3 sm:gap-4" role="group" aria-label="Dietary preferences">
-          {dietaryTags.map((tag) => (
+        <div
+          className="flex flex-wrap gap-3 sm:gap-4"
+          role="group"
+          aria-label="Dietary preferences"
+        >
+          {dietaryTags.map(tag => (
             <label
               key={tag}
               htmlFor={`dietary-${tag}`}
@@ -202,7 +229,7 @@ const ProductFilters = ({
                 id={`dietary-${tag}`}
                 type="checkbox"
                 checked={dietaryFilters.includes(tag)}
-                onChange={(e) => handleDietaryChange(tag, e.target.checked)}
+                onChange={e => handleDietaryChange(tag, e.target.checked)}
                 className="w-5 h-5 min-w-[44px] min-h-[44px] rounded border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 focus-visible:outline-none"
                 aria-label={`Filter by ${tag.replace('-', ' ')}`}
               />
@@ -216,24 +243,32 @@ const ProductFilters = ({
 
       {/* Toggles */}
       <div className="flex gap-3 sm:gap-4 md:gap-6" role="group" aria-label="Additional filters">
-        <label htmlFor="chef-special-only" className="flex items-center gap-3 sm:gap-4 cursor-pointer hover:text-[var(--text-main)] transition-colors min-h-[44px]">
+        <label
+          htmlFor="chef-special-only"
+          className="flex items-center gap-3 sm:gap-4 cursor-pointer hover:text-[var(--text-main)] transition-colors min-h-[44px]"
+        >
           <input
             id="chef-special-only"
             type="checkbox"
             checked={chefSpecialOnly}
-            onChange={(e) => onChefSpecialOnlyChange(e.target.checked)}
+            onChange={e => onChefSpecialOnlyChange(e.target.checked)}
             className="w-5 h-5 min-w-[44px] min-h-[44px] rounded border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 focus-visible:outline-none"
             aria-label="Show only chef specials"
           />
-          <span className="text-sm sm:text-base text-[var(--text-muted)]">⭐ Chef&apos;s Specials Only</span>
+          <span className="text-sm sm:text-base text-[var(--text-muted)]">
+            ⭐ Chef&apos;s Specials Only
+          </span>
         </label>
 
-        <label htmlFor="in-stock-only" className="flex items-center gap-3 sm:gap-4 cursor-pointer hover:text-[var(--text-main)] transition-colors min-h-[44px]">
+        <label
+          htmlFor="in-stock-only"
+          className="flex items-center gap-3 sm:gap-4 cursor-pointer hover:text-[var(--text-main)] transition-colors min-h-[44px]"
+        >
           <input
             id="in-stock-only"
             type="checkbox"
             checked={inStockOnly}
-            onChange={(e) => onInStockOnlyChange(e.target.checked)}
+            onChange={e => onInStockOnlyChange(e.target.checked)}
             className="w-5 h-5 min-w-[44px] min-h-[44px] rounded border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 focus-visible:outline-none"
             aria-label="Show only in-stock items"
           />
@@ -241,8 +276,7 @@ const ProductFilters = ({
         </label>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default ProductFilters;
-
+export default ProductFilters

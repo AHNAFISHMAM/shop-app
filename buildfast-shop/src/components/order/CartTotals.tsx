@@ -1,22 +1,22 @@
-import { useMemo } from 'react';
-import { getCurrencySymbol, formatPrice } from '../../lib/priceUtils';
+import { useMemo } from 'react'
+import { getCurrencySymbol, formatPrice } from '../../lib/priceUtils'
 
 /**
  * CartTotals component props
  */
 interface CartTotalsProps {
   /** Subtotal amount */
-  subtotal: number;
+  subtotal: number
   /** Delivery fee amount */
-  deliveryFee: number;
+  deliveryFee: number
   /** Total amount */
-  total: number;
+  total: number
   /** Currency code (default: 'BDT') */
-  currency?: string;
+  currency?: string
   /** Discount amount (default: 0) */
-  discount?: number;
+  discount?: number
   /** Whether to show trust badges (default: true) */
-  showTrustBadges?: boolean;
+  showTrustBadges?: boolean
 }
 
 /**
@@ -54,38 +54,64 @@ const CartTotals = ({
   showTrustBadges = true,
 }: CartTotalsProps) => {
   // Memoize formatted values
-  const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
-  const formattedSubtotal = useMemo(() => formatPrice(subtotal, 0), [subtotal]);
-  const formattedDiscount = useMemo(() => formatPrice(discount, 0), [discount]);
-  const formattedDeliveryFee = useMemo(() => formatPrice(deliveryFee, 0), [deliveryFee]);
-  const formattedTotal = useMemo(() => formatPrice(total, 0), [total]);
-  const isFreeDelivery = useMemo(() => deliveryFee === 0, [deliveryFee]);
-  const hasDiscount = useMemo(() => discount > 0, [discount]);
+  const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency])
+  const formattedSubtotal = useMemo(() => formatPrice(subtotal, 0), [subtotal])
+  const formattedDiscount = useMemo(() => formatPrice(discount, 0), [discount])
+  const formattedDeliveryFee = useMemo(() => formatPrice(deliveryFee, 0), [deliveryFee])
+  const formattedTotal = useMemo(() => formatPrice(total, 0), [total])
+  const isFreeDelivery = useMemo(() => deliveryFee === 0, [deliveryFee])
+  const hasDiscount = useMemo(() => discount > 0, [discount])
 
   return (
     <section className="cart-totals" aria-labelledby="cart-totals-heading">
-      <h2 id="cart-totals-heading" className="sr-only">Cart Totals</h2>
+      <h2 id="cart-totals-heading" className="sr-only">
+        Cart Totals
+      </h2>
       {/* Price Breakdown */}
       <div className="cart-totals-breakdown" role="table" aria-label="Price breakdown">
         <div className="cart-totals-row" role="row">
-          <span className="cart-totals-label" role="rowheader">Subtotal</span>
-          <span className="cart-totals-value" role="cell" aria-label={`Subtotal: ${currencySymbol}${formattedSubtotal}`}>
-            {currencySymbol}{formattedSubtotal}
+          <span className="cart-totals-label" role="rowheader">
+            Subtotal
+          </span>
+          <span
+            className="cart-totals-value"
+            role="cell"
+            aria-label={`Subtotal: ${currencySymbol}${formattedSubtotal}`}
+          >
+            {currencySymbol}
+            {formattedSubtotal}
           </span>
         </div>
 
         {hasDiscount && (
           <div className="cart-totals-row" role="row">
-            <span className="cart-totals-discount" role="rowheader">Discount</span>
-            <span className="cart-totals-discount" role="cell" aria-label={`Discount: -${currencySymbol}${formattedDiscount}`}>
-              -{currencySymbol}{formattedDiscount}
+            <span className="cart-totals-discount" role="rowheader">
+              Discount
+            </span>
+            <span
+              className="cart-totals-discount"
+              role="cell"
+              aria-label={`Discount: -${currencySymbol}${formattedDiscount}`}
+            >
+              -{currencySymbol}
+              {formattedDiscount}
             </span>
           </div>
         )}
 
         <div className="cart-totals-row" role="row">
-          <span className="cart-totals-label" role="rowheader">Delivery</span>
-          <span className="cart-totals-value" role="cell" aria-label={isFreeDelivery ? 'Free delivery' : `Delivery fee: ${currencySymbol}${formattedDeliveryFee}`}>
+          <span className="cart-totals-label" role="rowheader">
+            Delivery
+          </span>
+          <span
+            className="cart-totals-value"
+            role="cell"
+            aria-label={
+              isFreeDelivery
+                ? 'Free delivery'
+                : `Delivery fee: ${currencySymbol}${formattedDeliveryFee}`
+            }
+          >
             {isFreeDelivery ? (
               <span className="cart-totals-delivery-free">FREE</span>
             ) : (
@@ -96,9 +122,16 @@ const CartTotals = ({
 
         <div className="cart-totals-total" role="row">
           <div className="cart-totals-total-row">
-            <span className="cart-totals-total-label" role="rowheader">Total</span>
-            <span className="cart-totals-total-value" role="cell" aria-label={`Total: ${currencySymbol}${formattedTotal}`}>
-              {currencySymbol}{formattedTotal}
+            <span className="cart-totals-total-label" role="rowheader">
+              Total
+            </span>
+            <span
+              className="cart-totals-total-value"
+              role="cell"
+              aria-label={`Total: ${currencySymbol}${formattedTotal}`}
+            >
+              {currencySymbol}
+              {formattedTotal}
             </span>
           </div>
         </div>
@@ -144,8 +177,7 @@ const CartTotals = ({
         </div>
       )}
     </section>
-  );
-};
+  )
+}
 
-export default CartTotals;
-
+export default CartTotals

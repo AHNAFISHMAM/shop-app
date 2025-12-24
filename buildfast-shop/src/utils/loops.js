@@ -4,7 +4,7 @@
  * Handles transactional email sending via Loops API
  */
 
-import { logger } from './logger';
+import { logger } from './logger'
 
 const LOOPS_API_URL = 'https://app.loops.so/api/v1/transactional'
 const LOOPS_API_KEY = import.meta.env.VITE_LOOPS_API_KEY
@@ -27,12 +27,14 @@ export async function sendOrderConfirmationEmail({
   orderTotal,
   // eslint-disable-next-line no-unused-vars
   items = [], // Reserved for future use
-  shippingAddress = {}
+  shippingAddress = {},
 }) {
   try {
     // Validate required parameters
     if (!email || !orderId || orderTotal === undefined) {
-      throw new Error('Missing required email parameters: email, orderId, and orderTotal are required')
+      throw new Error(
+        'Missing required email parameters: email, orderId, and orderTotal are required'
+      )
     }
 
     // Validate API credentials
@@ -53,17 +55,17 @@ export async function sendOrderConfirmationEmail({
         First_Name: firstName,
         Order_Number: orderId,
         Order_Total: orderTotal.toFixed(2),
-      }
+      },
     }
 
     // Send request to Loops API
     const response = await fetch(LOOPS_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOOPS_API_KEY}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${LOOPS_API_KEY}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(emailData)
+      body: JSON.stringify(emailData),
     })
 
     // Handle response
@@ -76,7 +78,6 @@ export async function sendOrderConfirmationEmail({
     const result = await response.json()
     logger.log('Order confirmation email sent successfully:', result)
     return result
-
   } catch (error) {
     logger.error('Error sending order confirmation email:', error)
     // Re-throw to allow caller to handle
@@ -100,13 +101,13 @@ export async function testLoopsConnection() {
     const response = await fetch(LOOPS_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOOPS_API_KEY}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${LOOPS_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         transactionalId: LOOPS_TRANSACTIONAL_EMAIL_ID,
-        email: 'test@example.com'
-      })
+        email: 'test@example.com',
+      }),
     })
 
     return response.ok || response.status === 400 // 400 might indicate missing data variables, but connection works

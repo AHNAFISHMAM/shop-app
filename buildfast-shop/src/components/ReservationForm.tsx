@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import type { ReservationSettings } from '../lib/reservationSettingsService'
 import {
   getReservationSettings,
   generateTimeSlotsFromSettings,
   isDateBlocked,
   isDayOperating,
   getMinBookingDate,
-  getMaxBookingDate
+  getMaxBookingDate,
 } from '../lib/reservationSettingsService'
 import { logger } from '../utils/logger'
 import CustomDropdown from './ui/CustomDropdown'
@@ -28,11 +29,11 @@ export interface ReservationFormData {
 }
 
 /**
- * Reservation Settings Interface
+ * Reservation Settings Interface (extends service type)
  */
-interface ReservationSettings {
-  opening_time: string
-  closing_time: string
+interface LocalReservationSettings extends ReservationSettings {
+  opening_time?: string
+  closing_time?: string
   time_slot_interval: number
   max_capacity_per_slot: number
   max_party_size: number
@@ -97,7 +98,7 @@ export interface ReservationFormProps {
 /**
  * Default reservation settings fallback
  */
-const DEFAULT_SETTINGS: ReservationSettings = {
+const DEFAULT_SETTINGS: LocalReservationSettings = {
   opening_time: '11:00:00',
   closing_time: '23:00:00',
   time_slot_interval: 30,
@@ -110,7 +111,7 @@ const DEFAULT_SETTINGS: ReservationSettings = {
   enabled_occasions: ['birthday', 'anniversary', 'business', 'date', 'celebration', 'casual'],
   enabled_preferences: ['window', 'quiet', 'bar', 'outdoor', 'any'],
   blocked_dates: [],
-  special_notice: null
+  special_notice: null,
 }
 
 /**
@@ -122,7 +123,7 @@ const ALL_OCCASIONS: OccasionOption[] = [
   { value: 'business', label: 'Business', icon: '💼' },
   { value: 'date', label: 'Date Night', icon: '🌹' },
   { value: 'celebration', label: 'Celebration', icon: '🎉' },
-  { value: 'casual', label: 'Casual', icon: '☕' }
+  { value: 'casual', label: 'Casual', icon: '☕' },
 ]
 
 /**
@@ -133,7 +134,7 @@ const ALL_PREFERENCES: PreferenceOption[] = [
   { value: 'quiet', label: 'Quiet Area', icon: '🤫' },
   { value: 'bar', label: 'Near Bar', icon: '🍷' },
   { value: 'outdoor', label: 'Outdoor', icon: '🌳' },
-  { value: 'any', label: 'No Preference', icon: '✨' }
+  { value: 'any', label: 'No Preference', icon: '✨' },
 ]
 
 /**
@@ -142,21 +143,21 @@ const ALL_PREFERENCES: PreferenceOption[] = [
  * A comprehensive reservation form with real-time availability checking,
  * validation, and accessibility features. Supports admin-configurable
  * settings for hours, capacity, occasions, and preferences.
- * 
+ *
  * @component
  * @param props - ReservationForm component props
  */
-const ReservationForm: React.FC<ReservationFormProps> = ({ 
-  onSubmit, 
-  disabled = false, 
-  className = '' 
+const ReservationForm: React.FC<ReservationFormProps> = ({
+  onSubmit,
+  disabled = false,
+  className = '',
 }) => {
   const { user } = useAuth()
   const formRef = useRef<HTMLFormElement>(null)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
 
   // Settings state
-  const [settings, setSettings] = useState<ReservationSettings | null>(null)
+  const [settings, setSettings] = useState<LocalReservationSettings | null>(null)
   const [loadingSettings, setLoadingSettings] = useState<boolean>(true)
 
   // Form state
@@ -169,7 +170,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     guests: 2,
     requests: '',
     occasion: '',
-    preference: ''
+    preference: '',
   })
 
   const [checkingAvailability, setCheckingAvailability] = useState<boolean>(false)
@@ -179,12 +180,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   // Detect reduced motion preference
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
-    
+
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const handleChange = (e: MediaQueryListEvent | { matches: boolean }): void => {
       setPrefersReducedMotion('matches' in e ? e.matches : false)
     }
-    
+
     if (mediaQuery.addEventListener) {
       setPrefersReducedMotion(mediaQuery.matches)
       mediaQuery.addEventListener('change', handleChange)
@@ -207,7 +208,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     const result = await getReservationSettings()
 
     if (result.success && result.data) {
-      setSettings(result.data as ReservationSettings)
+      setSettings(result.data as unknown as LocalReservationSettings)
     } else {
       logger.error('Failed to load settings:', result.error)
       // Use defaults if settings fail to load
@@ -273,11 +274,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
       // Use max capacity from settings
       const maxCapacity = settings.max_capacity_per_slot || 50
-      const totalGuests = (existingReservations || []).reduce((sum: number, r: { party_size: number }) => sum + r.party_size, 0)
+      const totalGuests = (existingReservations || []).reduce(
+        (sum: number, r: { party_size: number }) => sum + r.party_size,
+        0
+      )
       const available = totalGuests + formData.guests <= maxCapacity
 
       setIsAvailable(available)
-
     } catch (err) {
       logger.error('Availability check error:', err)
       setIsAvailable(true)
@@ -331,7 +334,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     }
 
     // Guests validation
-    if (!formData.guests || formData.guests < (settings?.min_party_size || 1) || formData.guests > (settings?.max_party_size || 20)) {
+    if (
+      !formData.guests ||
+      formData.guests < (settings?.min_party_size || 1) ||
+      formData.guests > (settings?.max_party_size || 20)
+    ) {
       newErrors.guests = `Party size must be between ${settings?.min_party_size || 1} and ${settings?.max_party_size || 20}`
     }
 
@@ -339,30 +346,33 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     return Object.keys(newErrors).length === 0
   }, [formData, settings])
 
-  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault()
-    if (!validate()) {
-      return
-    }
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+      e.preventDefault()
+      if (!validate()) {
+        return
+      }
 
-    if (onSubmit) {
-      await onSubmit(formData)
+      if (onSubmit) {
+        await onSubmit(formData)
 
-      // Reset form
-      setFormData({
-        name: '',
-        email: user?.email || '',
-        phone: '',
-        date: '',
-        time: '',
-        guests: 2,
-        requests: '',
-        occasion: '',
-        preference: ''
-      })
-      setErrors({})
-    }
-  }, [formData, validate, onSubmit, user?.email])
+        // Reset form
+        setFormData({
+          name: '',
+          email: user?.email || '',
+          phone: '',
+          date: '',
+          time: '',
+          guests: 2,
+          requests: '',
+          occasion: '',
+          preference: '',
+        })
+        setErrors({})
+      }
+    },
+    [formData, validate, onSubmit, user?.email]
+  )
 
   // Calculate min and max dates based on settings
   const getMinDate = useCallback((): string => {
@@ -392,9 +402,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   // Show loading state while settings load
   if (loadingSettings) {
     return (
-      <div className={`card-soft p-12 ${className}`} role="status" aria-live="polite" aria-label="Loading reservation form">
+      <div
+        className={`card-soft p-12 ${className}`}
+        role="status"
+        aria-live="polite"
+        aria-label="Loading reservation form"
+      >
         <div className="flex flex-col items-center justify-center gap-4">
-          <div 
+          <div
             className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"
             style={{ animation: prefersReducedMotion ? 'none' : undefined }}
             aria-hidden="true"
@@ -409,27 +424,34 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     <form ref={formRef} onSubmit={handleSubmit} className={`space-y-5 ${className}`} noValidate>
       {/* Special Notice from Admin */}
       {settings?.special_notice && (
-        <div 
+        <div
           className="rounded-xl p-3 mb-4"
           style={{
             backgroundColor: 'rgba(var(--color-amber-rgb), 0.1)',
-            border: '1px solid rgba(var(--color-amber-rgb), 0.3)'
+            border: '1px solid rgba(var(--color-amber-rgb), 0.3)',
           }}
           role="alert"
           aria-live="polite"
         >
           <div className="flex gap-2">
-            <svg 
-              className="w-4 h-4 flex-shrink-0 mt-0.5" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="w-4 h-4 flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
               style={{ color: 'var(--color-amber)' }}
               aria-hidden="true"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            <p className="text-xs" style={{ color: 'var(--color-amber)' }}>{settings.special_notice}</p>
+            <p className="text-xs" style={{ color: 'var(--color-amber)' }}>
+              {settings.special_notice}
+            </p>
           </div>
         </div>
       )}
@@ -438,12 +460,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Date Selection */}
         <div className="space-y-2">
-          <label htmlFor="reservation-date" className="text-xs font-medium text-[var(--text-main)]">📅 Date *</label>
+          <label htmlFor="reservation-date" className="text-xs font-medium text-[var(--text-main)]">
+            📅 Date *
+          </label>
           <input
             id="reservation-date"
             type="date"
             value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            onChange={e => setFormData({ ...formData, date: e.target.value })}
             required
             disabled={disabled}
             min={getMinDate()}
@@ -454,7 +478,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
             aria-describedby={errors.date ? 'reservation-date-error' : undefined}
           />
           {errors.date && (
-            <p id="reservation-date-error" className="text-xs mt-1" style={{ color: 'var(--destructive)' }} role="alert">
+            <p
+              id="reservation-date-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--destructive)' }}
+              role="alert"
+            >
               {errors.date}
             </p>
           )}
@@ -462,15 +491,17 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
         {/* Time Selection - Dropdown */}
         <div className="space-y-2">
-          <label htmlFor="reservation-time" className="text-xs font-medium text-[var(--text-main)]">⏰ Time *</label>
+          <label htmlFor="reservation-time" className="text-xs font-medium text-[var(--text-main)]">
+            ⏰ Time *
+          </label>
           <CustomDropdown
             id="reservation-time"
             options={[
               { value: '', label: 'Select time' },
-              ...timeSlots.map((slot: string) => ({ value: slot, label: slot }))
+              ...timeSlots.map((slot: string) => ({ value: slot, label: slot })),
             ]}
             value={formData.time || ''}
-            onChange={(e) => setFormData({ ...formData, time: String(e.target.value) })}
+            onChange={e => setFormData({ ...formData, time: String(e.target.value) })}
             placeholder="Select time"
             disabled={disabled || !formData.date}
             required
@@ -480,7 +511,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
             aria-describedby={errors.time ? 'reservation-time-error' : undefined}
           />
           {errors.time && (
-            <p id="reservation-time-error" className="text-xs mt-1" style={{ color: 'var(--destructive)' }} role="alert">
+            <p
+              id="reservation-time-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--destructive)' }}
+              role="alert"
+            >
               {errors.time}
             </p>
           )}
@@ -488,12 +524,17 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
         {/* Party Size */}
         <div className="space-y-2">
-          <label htmlFor="reservation-guests" className="text-xs font-medium text-[var(--text-main)]">👥 Party Size *</label>
+          <label
+            htmlFor="reservation-guests"
+            className="text-xs font-medium text-[var(--text-main)]"
+          >
+            👥 Party Size *
+          </label>
           <input
             id="reservation-guests"
             type="number"
             value={formData.guests}
-            onChange={(e) => {
+            onChange={e => {
               setFormData({ ...formData, guests: parseInt(e.target.value) || 1 })
               if (errors.guests) setErrors({ ...errors, guests: undefined })
             }}
@@ -509,7 +550,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
             aria-describedby={errors.guests ? 'reservation-guests-error' : undefined}
           />
           {errors.guests && (
-            <p id="reservation-guests-error" className="text-xs mt-1" style={{ color: 'var(--destructive)' }} role="alert">
+            <p
+              id="reservation-guests-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--destructive)' }}
+              role="alert"
+            >
               {errors.guests}
             </p>
           )}
@@ -519,36 +565,37 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
         <div className="space-y-2">
           <label className="text-xs font-medium text-[var(--text-main)]">Status</label>
           {formData.date && formData.time && formData.guests ? (
-            <div 
+            <div
               className="px-3 py-2.5 rounded-lg border text-xs flex items-center gap-2 min-h-[44px]"
-              style={checkingAvailability
-                ? {
-                    borderColor: 'rgba(var(--color-blue-rgb), 0.3)',
-                    backgroundColor: 'rgba(var(--color-blue-rgb), 0.1)',
-                    color: 'var(--color-blue)'
-                  }
-                : isAvailable
+              style={
+                checkingAvailability
                   ? {
-                      borderColor: 'rgba(var(--color-emerald-rgb), 0.3)',
-                      backgroundColor: 'rgba(var(--color-emerald-rgb), 0.1)',
-                      color: 'var(--color-emerald)'
+                      borderColor: 'rgba(var(--color-blue-rgb), 0.3)',
+                      backgroundColor: 'rgba(var(--color-blue-rgb), 0.1)',
+                      color: 'var(--color-blue)',
                     }
-                  : {
-                      borderColor: 'rgba(var(--color-orange-rgb), 0.3)',
-                      backgroundColor: 'rgba(var(--color-orange-rgb), 0.1)',
-                      color: 'var(--color-orange)'
-                    }
+                  : isAvailable
+                    ? {
+                        borderColor: 'rgba(var(--color-emerald-rgb), 0.3)',
+                        backgroundColor: 'rgba(var(--color-emerald-rgb), 0.1)',
+                        color: 'var(--color-emerald)',
+                      }
+                    : {
+                        borderColor: 'rgba(var(--color-orange-rgb), 0.3)',
+                        backgroundColor: 'rgba(var(--color-orange-rgb), 0.1)',
+                        color: 'var(--color-orange)',
+                      }
               }
               role="status"
               aria-live="polite"
             >
               {checkingAvailability ? (
                 <>
-                  <div 
+                  <div
                     className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin"
-                    style={{ 
+                    style={{
                       borderColor: 'var(--color-blue)',
-                      animation: prefersReducedMotion ? 'none' : undefined
+                      animation: prefersReducedMotion ? 'none' : undefined,
                     }}
                     aria-hidden="true"
                   />
@@ -556,15 +603,37 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
                 </>
               ) : isAvailable ? (
                 <>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span>Available</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
                   </svg>
                   <span>Limited</span>
                 </>
@@ -581,12 +650,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       {/* Contact Information - 3 columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-theme">
         <div className="space-y-2">
-          <label htmlFor="reservation-name" className="text-xs font-medium text-[var(--text-main)]">Full Name *</label>
+          <label htmlFor="reservation-name" className="text-xs font-medium text-[var(--text-main)]">
+            Full Name *
+          </label>
           <input
             id="reservation-name"
             type="text"
             value={formData.name}
-            onChange={(e) => {
+            onChange={e => {
               setFormData({ ...formData, name: e.target.value })
               if (errors.name) setErrors({ ...errors, name: undefined })
             }}
@@ -600,19 +671,29 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
             aria-describedby={errors.name ? 'reservation-name-error' : undefined}
           />
           {errors.name && (
-            <p id="reservation-name-error" className="text-xs mt-1" style={{ color: 'var(--destructive)' }} role="alert">
+            <p
+              id="reservation-name-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--destructive)' }}
+              role="alert"
+            >
               {errors.name}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="reservation-email" className="text-xs font-medium text-[var(--text-main)]">Email *</label>
+          <label
+            htmlFor="reservation-email"
+            className="text-xs font-medium text-[var(--text-main)]"
+          >
+            Email *
+          </label>
           <input
             id="reservation-email"
             type="email"
             value={formData.email}
-            onChange={(e) => {
+            onChange={e => {
               setFormData({ ...formData, email: e.target.value })
               if (errors.email) setErrors({ ...errors, email: undefined })
             }}
@@ -626,19 +707,29 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
             aria-describedby={errors.email ? 'reservation-email-error' : undefined}
           />
           {errors.email && (
-            <p id="reservation-email-error" className="text-xs mt-1" style={{ color: 'var(--destructive)' }} role="alert">
+            <p
+              id="reservation-email-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--destructive)' }}
+              role="alert"
+            >
               {errors.email}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="reservation-phone" className="text-xs font-medium text-[var(--text-main)]">Phone *</label>
+          <label
+            htmlFor="reservation-phone"
+            className="text-xs font-medium text-[var(--text-main)]"
+          >
+            Phone *
+          </label>
           <input
             id="reservation-phone"
             type="tel"
             value={formData.phone}
-            onChange={(e) => {
+            onChange={e => {
               setFormData({ ...formData, phone: e.target.value })
               if (errors.phone) setErrors({ ...errors, phone: undefined })
             }}
@@ -652,7 +743,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
             aria-describedby={errors.phone ? 'reservation-phone-error' : undefined}
           />
           {errors.phone && (
-            <p id="reservation-phone-error" className="text-xs mt-1" style={{ color: 'var(--destructive)' }} role="alert">
+            <p
+              id="reservation-phone-error"
+              className="text-xs mt-1"
+              style={{ color: 'var(--destructive)' }}
+              role="alert"
+            >
               {errors.phone}
             </p>
           )}
@@ -663,15 +759,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-theme">
         {/* Occasion - Dropdown */}
         <div className="space-y-2">
-          <label htmlFor="reservation-occasion" className="text-xs font-medium text-[var(--text-main)]">Occasion (Optional)</label>
+          <label
+            htmlFor="reservation-occasion"
+            className="text-xs font-medium text-[var(--text-main)]"
+          >
+            Occasion (Optional)
+          </label>
           <CustomDropdown
             id="reservation-occasion"
             options={[
               { value: '', label: 'None' },
-              ...occasions.map(occ => ({ value: occ.value, label: `${occ.icon} ${occ.label}` }))
+              ...occasions.map(occ => ({ value: occ.value, label: `${occ.icon} ${occ.label}` })),
             ]}
             value={formData.occasion || ''}
-            onChange={(e) => {
+            onChange={e => {
               const value = String(e.target.value)
               setFormData({ ...formData, occasion: value || undefined })
             }}
@@ -683,15 +784,23 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
         {/* Table Preference - Dropdown */}
         <div className="space-y-2">
-          <label htmlFor="reservation-preference" className="text-xs font-medium text-[var(--text-main)]">Table Preference (Optional)</label>
+          <label
+            htmlFor="reservation-preference"
+            className="text-xs font-medium text-[var(--text-main)]"
+          >
+            Table Preference (Optional)
+          </label>
           <CustomDropdown
             id="reservation-preference"
             options={[
               { value: '', label: 'No preference' },
-              ...preferences.map(pref => ({ value: pref.value, label: `${pref.icon} ${pref.label}` }))
+              ...preferences.map(pref => ({
+                value: pref.value,
+                label: `${pref.icon} ${pref.label}`,
+              })),
             ]}
             value={formData.preference || ''}
-            onChange={(e) => {
+            onChange={e => {
               const value = String(e.target.value)
               setFormData({ ...formData, preference: value || undefined })
             }}
@@ -704,11 +813,16 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
       {/* Special Requests - Compact */}
       <div className="space-y-2 pt-2 border-t border-theme">
-        <label htmlFor="reservation-requests" className="text-xs font-medium text-[var(--text-main)]">Special Requests (Optional)</label>
+        <label
+          htmlFor="reservation-requests"
+          className="text-xs font-medium text-[var(--text-main)]"
+        >
+          Special Requests (Optional)
+        </label>
         <textarea
           id="reservation-requests"
           value={formData.requests || ''}
-          onChange={(e) => setFormData({ ...formData, requests: e.target.value })}
+          onChange={e => setFormData({ ...formData, requests: e.target.value })}
           rows={2}
           disabled={disabled}
           className="input-base resize-none min-h-[44px]"
@@ -724,13 +838,21 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       <div className="pt-4 border-t border-theme">
         <button
           type="submit"
-          disabled={!formData.date || !formData.time || !formData.guests || !formData.name || !formData.email || !formData.phone || disabled}
+          disabled={
+            !formData.date ||
+            !formData.time ||
+            !formData.guests ||
+            !formData.name ||
+            !formData.email ||
+            !formData.phone ||
+            disabled
+          }
           className="w-full btn-primary py-3 min-h-[44px] text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
           aria-label="Confirm reservation"
         >
           {disabled ? (
             <>
-              <div 
+              <div
                 className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
                 style={{ animation: prefersReducedMotion ? 'none' : undefined }}
                 aria-hidden="true"
@@ -738,9 +860,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
               Booking...
             </>
           ) : (
-            <>
-              ✓ Confirm Reservation
-            </>
+            <>✓ Confirm Reservation</>
           )}
         </button>
       </div>
@@ -749,4 +869,3 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 }
 
 export default ReservationForm
-

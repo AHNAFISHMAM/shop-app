@@ -1,40 +1,53 @@
-import { useEffect, useRef, useState, useMemo, useCallback, ChangeEvent, KeyboardEvent, MouseEvent } from 'react';
-import { createPortal } from 'react-dom';
-import { formatDistanceToNow } from 'date-fns';
-import GalleryCard from '../GalleryCard';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+  ChangeEvent,
+  KeyboardEvent,
+  MouseEvent,
+} from 'react'
+import { createPortal } from 'react-dom'
+import { formatDistanceToNow } from 'date-fns'
+import GalleryCard from '../GalleryCard'
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock'
 import {
   EFFECT_OPTIONS,
   parseEffects,
   parseEffectVariants,
   MAX_EFFECTS_PER_ROUND,
-} from '../../utils/effects';
-import CustomDropdown from '../ui/CustomDropdown';
+} from '../../utils/effects'
+import CustomDropdown from '../ui/CustomDropdown'
 
 interface GalleryCard {
-  id: string;
-  position: number;
-  default_image_url: string;
-  hover_image_url?: string;
-  effect?: string | string[];
-  effect_variants?: string | string[];
-  updated_at?: string;
-  created_at?: string;
-  is_active: boolean;
+  id: string
+  position: number
+  default_image_url: string
+  hover_image_url?: string
+  effect?: string | string[]
+  effect_variants?: string | string[]
+  updated_at?: string
+  created_at?: string
+  is_active: boolean
 }
 
 interface GalleryCardDetailModalProps {
-  card: GalleryCard | null;
-  isOpen: boolean;
-  onClose: () => void;
-  uploading: Record<string, boolean>;
-  handleImageUpload: (cardId: string, type: 'default' | 'hover', event: ChangeEvent<HTMLInputElement>) => void;
-  updateEffect: (cardId: string, rounds: string[][]) => void;
-  toggleActive: (cardId: string, currentState: boolean) => void;
-  moveCard: (cardId: string, direction: 'up' | 'down') => void;
-  deleteCard: (cardId: string) => void;
-  index: number;
-  totalCards: number;
+  card: GalleryCard | null
+  isOpen: boolean
+  onClose: () => void
+  uploading: Record<string, boolean>
+  handleImageUpload: (
+    cardId: string,
+    type: 'default' | 'hover',
+    event: ChangeEvent<HTMLInputElement>
+  ) => void
+  updateEffect: (cardId: string, rounds: string[][]) => void
+  toggleActive: (cardId: string, currentState: boolean) => void
+  moveCard: (cardId: string, direction: 'up' | 'down') => void
+  deleteCard: (cardId: string) => void
+  index: number
+  totalCards: number
 }
 
 const GalleryCardDetailModal = ({
@@ -50,175 +63,188 @@ const GalleryCardDetailModal = ({
   index,
   totalCards,
 }: GalleryCardDetailModalProps): JSX.Element | null => {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const focusableElementsRef = useRef<HTMLElement[]>([]);
-  
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const focusableElementsRef = useRef<HTMLElement[]>([])
+
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
-  
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
+
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
+    if (typeof document === 'undefined') return
+
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
-    
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
+
+    checkTheme()
+
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, [isOpen]);
+      attributeFilter: ['class'],
+    })
 
-  useBodyScrollLock(isOpen);
+    return () => observer.disconnect()
+  }, [isOpen])
+
+  useBodyScrollLock(isOpen)
 
   useEffect(() => {
     if (isOpen && closeButtonRef.current) {
-      closeButtonRef.current.focus();
+      closeButtonRef.current.focus()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
-        onClose();
+        onClose()
       }
-    };
+    }
 
-    window.addEventListener('keydown', handleKeyDown as unknown as EventListener);
+    window.addEventListener('keydown', handleKeyDown as unknown as EventListener)
     return () => {
-      window.removeEventListener('keydown', handleKeyDown as unknown as EventListener);
-    };
-  }, [isOpen, onClose]);
+      window.removeEventListener('keydown', handleKeyDown as unknown as EventListener)
+    }
+  }, [isOpen, onClose])
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
-    const node = dialogRef.current;
-    if (!node) return;
+    const node = dialogRef.current
+    if (!node) return
 
     focusableElementsRef.current = Array.from(
       node.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
-      ),
-    );
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+      )
+    )
 
-    const firstFocusable = focusableElementsRef.current[0];
-    const lastFocusable = focusableElementsRef.current[focusableElementsRef.current.length - 1];
+    const firstFocusable = focusableElementsRef.current[0]
+    const lastFocusable = focusableElementsRef.current[focusableElementsRef.current.length - 1]
 
     const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key !== 'Tab' || focusableElementsRef.current.length === 0) return;
+      if (event.key !== 'Tab' || focusableElementsRef.current.length === 0) return
 
       if (event.shiftKey) {
         if (document.activeElement === firstFocusable) {
-          event.preventDefault();
-          lastFocusable?.focus();
+          event.preventDefault()
+          lastFocusable?.focus()
         }
       } else if (document.activeElement === lastFocusable) {
-        event.preventDefault();
-        firstFocusable?.focus();
+        event.preventDefault()
+        firstFocusable?.focus()
       }
-    };
+    }
 
-    node.addEventListener('keydown', handleKeyDown as unknown as EventListener);
+    node.addEventListener('keydown', handleKeyDown as unknown as EventListener)
 
     return () => {
-      node.removeEventListener('keydown', handleKeyDown as unknown as EventListener);
-    };
-  }, [isOpen]);
-  const hoverEffectOptions = EFFECT_OPTIONS;
-  const roundTitles = ['First hover', 'Second hover', 'Third hover'];
+      node.removeEventListener('keydown', handleKeyDown as unknown as EventListener)
+    }
+  }, [isOpen])
+  const hoverEffectOptions = EFFECT_OPTIONS
+  const roundTitles = ['First hover', 'Second hover', 'Third hover']
 
-  const baseEffects = useMemo(() => parseEffects(card?.effect), [card?.effect]);
-  const [effectRounds, setEffectRounds] = useState<string[][]>(() => parseEffectVariants(card?.effect_variants, baseEffects));
-  const [dropdownValues, setDropdownValues] = useState<Record<number, string>>({});
+  const baseEffects = useMemo(() => parseEffects(card?.effect || null), [card?.effect])
+  const [effectRounds, setEffectRounds] = useState<string[][]>(() =>
+    parseEffectVariants(card?.effect_variants || null, baseEffects)
+  )
+  const [dropdownValues, setDropdownValues] = useState<Record<number, string>>({})
 
   useEffect(() => {
-    setEffectRounds(parseEffectVariants(card?.effect_variants, baseEffects));
-  }, [card?.effect_variants, baseEffects]);
+    setEffectRounds(parseEffectVariants(card?.effect_variants || null, baseEffects))
+  }, [card?.effect_variants, baseEffects])
 
   const commitRounds = useCallback(
     (nextRounds: string[][]): string[][] => {
       if (card?.id) {
-        updateEffect(card.id, nextRounds);
+        updateEffect(card.id, nextRounds)
       }
-      return parseEffectVariants(nextRounds, baseEffects);
+      return parseEffectVariants(JSON.stringify(nextRounds), baseEffects)
     },
-    [card?.id, updateEffect, baseEffects],
-  );
+    [card?.id, updateEffect, baseEffects]
+  )
 
   const updateRound = (roundIndex: number, updater: (round: string[]) => string[]): void => {
-    setEffectRounds((previous) => {
+    setEffectRounds(previous => {
       const next = previous.map((round, idx) => {
-        if (idx !== roundIndex) return round;
-        return updater(round);
-      });
-      return commitRounds(next);
-    });
-  };
+        if (idx !== roundIndex) return round
+        return updater(round)
+      })
+      return commitRounds(next)
+    })
+  }
 
   const handleAddEffectToRound = (roundIndex: number, value: string): void => {
-    if (!value) return;
-    updateRound(roundIndex, (round) => {
-      if (round.includes(value) || round.length >= MAX_EFFECTS_PER_ROUND) return round;
-      return [...round, value];
-    });
-  };
+    if (!value) return
+    updateRound(roundIndex, round => {
+      if (round.includes(value) || round.length >= MAX_EFFECTS_PER_ROUND) return round
+      return [...round, value]
+    })
+  }
 
   const handleRemoveEffectFromRound = (roundIndex: number, effectIndex: number): void => {
-    updateRound(roundIndex, (round) => round.filter((_, idx) => idx !== effectIndex));
-  };
+    updateRound(roundIndex, round => round.filter((_, idx) => idx !== effectIndex))
+  }
 
-  const handleMoveEffectWithinRound = (roundIndex: number, effectIndex: number, direction: number): void => {
-    updateRound(roundIndex, (round) => {
-      const target = effectIndex + direction;
-      if (target < 0 || target >= round.length) return round;
-      const copy = [...round];
-      [copy[effectIndex], copy[target]] = [copy[target], copy[effectIndex]];
-      return copy;
-    });
-  };
+  const handleMoveEffectWithinRound = (
+    roundIndex: number,
+    effectIndex: number,
+    direction: number
+  ): void => {
+    updateRound(roundIndex, round => {
+      const target = effectIndex + direction
+      if (target < 0 || target >= round.length) return round
+      const copy = [...round]
+      const effectValue = copy[effectIndex]
+      const targetValue = copy[target]
+      if (effectValue !== undefined && targetValue !== undefined) {
+        ;[copy[effectIndex], copy[target]] = [targetValue, effectValue]
+      }
+      return copy
+    })
+  }
 
   const handleClearRound = (roundIndex: number): void => {
-    updateRound(roundIndex, () => []);
-  };
+    updateRound(roundIndex, () => [])
+  }
 
   const roundSummaries = useMemo(() => {
     return effectRounds.map((round, idx) => {
       const labels = round
-        .map((value) => hoverEffectOptions.find((opt) => opt.value === value)?.label ?? value)
-        .join(' + ');
+        .map(value => hoverEffectOptions.find(opt => opt.value === value)?.label ?? value)
+        .join(' + ')
       if (idx > 0) {
-        const currentKey = round.join('|');
-        const previousKey = effectRounds[idx - 1]?.join('|') ?? '';
+        const currentKey = round.join('|')
+        const previousKey = effectRounds[idx - 1]?.join('|') ?? ''
         if (currentKey === previousKey) {
-          return labels ? `Same as previous round (${labels})` : 'Same as previous round';
+          return labels ? `Same as previous round (${labels})` : 'Same as previous round'
         }
       }
-      return labels || 'No animations configured';
-    });
-  }, [effectRounds, hoverEffectOptions]);
+      return labels || 'No animations configured'
+    })
+  }, [effectRounds, hoverEffectOptions])
 
-  if (!card || !isOpen) return null;
+  if (!card || !isOpen) return null
 
-  const updatedAtLabel = formatDistanceToNow(new Date(card.updated_at || card.created_at || Date.now()), { addSuffix: true });
+  const updatedAtLabel = formatDistanceToNow(
+    new Date(card.updated_at || card.created_at || Date.now()),
+    { addSuffix: true }
+  )
 
   return createPortal(
     <div
       className="fixed inset-0 z-[99998] flex items-center justify-center px-4 py-10"
       style={{
-        backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.5)'
+        backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.5)',
       }}
       onClick={onClose}
       role="presentation"
@@ -226,13 +252,11 @@ const GalleryCardDetailModal = ({
       <div
         className="relative flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-[26px] border border-theme"
         style={{
-          backgroundColor: isLightTheme 
-            ? 'rgba(255, 255, 255, 0.95)' 
-            : 'rgba(5, 5, 9, 0.95)',
-          boxShadow: isLightTheme 
-            ? '0 32px 120px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.1)' 
+          backgroundColor: isLightTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(5, 5, 9, 0.95)',
+          boxShadow: isLightTheme
+            ? '0 32px 120px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.1)'
             : '0 32px 120px rgba(0, 0, 0, 0.55)',
-          zIndex: 99999
+          zIndex: 99999,
         }}
         onClick={(event: MouseEvent) => event.stopPropagation()}
         role="dialog"
@@ -243,13 +267,13 @@ const GalleryCardDetailModal = ({
         ref={dialogRef}
       >
         {/* Fixed Header with Close Button - Mobile-First Design */}
-        <div 
+        <div
           className="sticky top-0 z-[100] flex items-center justify-between bg-gradient-to-br from-[rgba(197,157,95,0.16)] via-[rgba(8,10,14,0.94)] to-[rgba(6,8,12,0.9)] backdrop-blur px-4 sm:px-7 py-4 sm:py-6 flex-shrink-0 border-b border-[var(--border-default)]"
           style={{
             position: 'sticky',
             top: 0,
             transform: 'translateZ(0)',
-            willChange: 'transform'
+            willChange: 'transform',
           }}
         >
           <div className="space-y-2 flex-1 min-w-0 pr-3">
@@ -257,13 +281,15 @@ const GalleryCardDetailModal = ({
               Gallery card
             </span>
             <div>
-              <h3 
-                id={`gallery-card-${card.id}-heading`} 
+              <h3
+                id={`gallery-card-${card.id}-heading`}
                 className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--text-main)] truncate"
               >
                 Card #{card.position}
               </h3>
-              <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)] hidden sm:block">Detailed configuration</p>
+              <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)] hidden sm:block">
+                Detailed configuration
+              </p>
             </div>
           </div>
           <button
@@ -272,20 +298,25 @@ const GalleryCardDetailModal = ({
             className="flex-shrink-0 min-h-[44px] min-w-[44px] h-11 w-11 inline-flex items-center justify-center rounded-full border border-theme bg-theme-elevated text-[var(--text-main)]/70 transition hover:-translate-y-[2px] hover:text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[#C59D5F]/55 shadow-md"
             style={{
               position: 'relative',
-              zIndex: 101
+              zIndex: 101,
             }}
             aria-label="Close modal"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = isLightTheme 
-                ? 'rgba(0, 0, 0, 0.08)' 
-                : 'rgba(255, 255, 255, 0.1)';
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = isLightTheme
+                ? 'rgba(0, 0, 0, 0.08)'
+                : 'rgba(255, 255, 255, 0.1)'
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '';
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = ''
             }}
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.7}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -296,7 +327,7 @@ const GalleryCardDetailModal = ({
           style={{
             WebkitOverflowScrolling: 'touch',
             position: 'relative',
-            zIndex: 1
+            zIndex: 1,
           }}
         >
           <div className="grid gap-10 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
@@ -304,8 +335,8 @@ const GalleryCardDetailModal = ({
               <div className="flex flex-col gap-5 rounded-[22px] border border-theme bg-[rgba(8,10,14,0.95)] p-6 text-[var(--text-main)]/85 shadow-[0_22px_60px_rgba(0,0,0,0.55)]">
                 <div className="overflow-hidden rounded-[20px] border border-theme bg-[rgba(5,5,9,0.92)] shadow-[0_22px_52px_rgba(0,0,0,0.55)]">
                   <GalleryCard
-                    defaultImage={card.default_image_url}
-                    hoverImage={card.hover_image_url}
+                    defaultImage={card.default_image_url || ''}
+                    hoverImage={card.hover_image_url || ''}
                     effect={effectRounds[0]}
                     effectVariants={effectRounds}
                     alt={`Gallery card ${card.position}`}
@@ -316,12 +347,24 @@ const GalleryCardDetailModal = ({
                 <div className="flex flex-col gap-4 rounded-[18px] border border-theme bg-[rgba(10,12,18,0.9)] px-5 py-4 text-sm text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--accent)]/40 bg-[var(--accent)]/12 text-[var(--accent)]">
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+                        />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-[0.68rem] uppercase tracking-[0.3em] text-[var(--text-muted)]">Current animation sequence</p>
+                      <p className="text-[0.68rem] uppercase tracking-[0.3em] text-[var(--text-muted)]">
+                        Current animation sequence
+                      </p>
                       <p className="text-sm font-semibold text-[var(--text-main)]">
                         {roundSummaries
                           .map((summary, idx) => `Round ${idx + 1}: ${summary}`)
@@ -338,7 +381,9 @@ const GalleryCardDetailModal = ({
 
             <div className="space-y-8 text-[var(--text-main)]/85">
               <section className="space-y-4 rounded-[22px] border border-theme bg-[rgba(8,10,14,0.95)] p-6 shadow-[0_22px_60px_rgba(0,0,0,0.5)]">
-                <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-muted)]">Media uploads</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-muted)]">
+                  Media uploads
+                </h4>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-[var(--text-muted)]">
@@ -347,20 +392,30 @@ const GalleryCardDetailModal = ({
                     <input
                       type="file"
                       accept="image/jpeg,image/jpg,image/png,image/webp"
-                      onChange={(e) => handleImageUpload(card.id, 'default', e)}
+                      onChange={e => handleImageUpload(card.id, 'default', e)}
                       disabled={uploading[`${card.id}-default`]}
                       className="w-full rounded-xl border border-theme px-4 py-3 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-[var(--accent)] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-black"
                       style={{
-                        backgroundColor: isLightTheme 
-                          ? 'rgba(255, 255, 255, 0.9)' 
+                        backgroundColor: isLightTheme
+                          ? 'rgba(255, 255, 255, 0.9)'
                           : 'rgba(5, 5, 9, 0.9)',
-                        color: 'var(--text-main)'
+                        color: 'var(--text-main)',
                       }}
                     />
                     {uploading[`${card.id}-default`] && (
                       <p className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                        <svg className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
                         </svg>
                         Uploading default image...
                       </p>
@@ -374,20 +429,30 @@ const GalleryCardDetailModal = ({
                     <input
                       type="file"
                       accept="image/jpeg,image/jpg,image/png,image/webp"
-                      onChange={(e) => handleImageUpload(card.id, 'hover', e)}
+                      onChange={e => handleImageUpload(card.id, 'hover', e)}
                       disabled={uploading[`${card.id}-hover`]}
                       className="w-full rounded-xl border border-theme px-4 py-3 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-[var(--accent)] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-black"
                       style={{
-                        backgroundColor: isLightTheme 
-                          ? 'rgba(255, 255, 255, 0.9)' 
+                        backgroundColor: isLightTheme
+                          ? 'rgba(255, 255, 255, 0.9)'
                           : 'rgba(5, 5, 9, 0.9)',
-                        color: 'var(--text-main)'
+                        color: 'var(--text-main)',
                       }}
                     />
                     {uploading[`${card.id}-hover`] && (
                       <p className="flex items-center gap-2 text-xs text-[var(--accent)]">
-                        <svg className="h-3 w-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        <svg
+                          className="h-3 w-3 animate-spin"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
                         </svg>
                         Uploading hover image...
                       </p>
@@ -397,9 +462,12 @@ const GalleryCardDetailModal = ({
               </section>
 
               <section className="space-y-4 rounded-[22px] border border-theme bg-[rgba(8,10,14,0.95)] p-6 shadow-[0_22px_60px_rgba(0,0,0,0.5)]">
-                <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-muted)]">Presentation</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-muted)]">
+                  Presentation
+                </h4>
                 <p className="text-[0.7rem] uppercase tracking-[0.26em] text-[var(--text-muted)]/75">
-                  Configure up to three hover rounds. Guests see Round 1 the first time they hover, Round 2 on the next hover, and so on.
+                  Configure up to three hover rounds. Guests see Round 1 the first time they hover,
+                  Round 2 on the next hover, and so on.
                 </p>
                 <div className="space-y-5">
                   {effectRounds.map((round, roundIndex) => (
@@ -428,7 +496,7 @@ const GalleryCardDetailModal = ({
                           </span>
                         )}
                         {round.map((value, effectIndex) => {
-                          const meta = hoverEffectOptions.find((option) => option.value === value);
+                          const meta = hoverEffectOptions.find(option => option.value === value)
                           return (
                             <div
                               key={`${roundIndex}-${value}-${effectIndex}`}
@@ -440,7 +508,9 @@ const GalleryCardDetailModal = ({
                               <div className="flex items-center gap-1 text-[var(--text-muted)]">
                                 <button
                                   type="button"
-                                  onClick={() => handleMoveEffectWithinRound(roundIndex, effectIndex, -1)}
+                                  onClick={() =>
+                                    handleMoveEffectWithinRound(roundIndex, effectIndex, -1)
+                                  }
                                   disabled={effectIndex === 0}
                                   className="rounded-full border border-theme p-1 transition hover:border-[var(--accent)]/60 hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-40"
                                   aria-label="Move animation up"
@@ -449,7 +519,9 @@ const GalleryCardDetailModal = ({
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleMoveEffectWithinRound(roundIndex, effectIndex, 1)}
+                                  onClick={() =>
+                                    handleMoveEffectWithinRound(roundIndex, effectIndex, 1)
+                                  }
                                   disabled={effectIndex === round.length - 1}
                                   className="rounded-full border border-theme p-1 transition hover:border-[var(--accent)]/60 hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-40"
                                   aria-label="Move animation down"
@@ -458,7 +530,9 @@ const GalleryCardDetailModal = ({
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveEffectFromRound(roundIndex, effectIndex)}
+                                  onClick={() =>
+                                    handleRemoveEffectFromRound(roundIndex, effectIndex)
+                                  }
                                   className="rounded-full border border-theme p-1 text-[0.75rem] transition hover:border-rose-400/60 hover:text-rose-300"
                                   aria-label="Remove animation"
                                 >
@@ -466,7 +540,7 @@ const GalleryCardDetailModal = ({
                                 </button>
                               </div>
                             </div>
-                          );
+                          )
                         })}
                       </div>
                       {round.length < MAX_EFFECTS_PER_ROUND && (
@@ -475,16 +549,17 @@ const GalleryCardDetailModal = ({
                             key={`dropdown-${roundIndex}-${dropdownValues[roundIndex] || ''}`}
                             options={[
                               { value: '', label: 'Add animation to this round…' },
-                              ...hoverEffectOptions.map((effectOption) => ({
+                              ...hoverEffectOptions.map(effectOption => ({
                                 value: effectOption.value,
-                                label: effectOption.label
-                              }))
+                                label: effectOption.label,
+                              })),
                             ]}
                             value={dropdownValues[roundIndex] || ''}
-                            onChange={(event) => {
-                              if (event.target.value) {
-                                handleAddEffectToRound(roundIndex, event.target.value);
-                                setDropdownValues(prev => ({ ...prev, [roundIndex]: '' }));
+                            onChange={event => {
+                              const value = event.target.value
+                              if (value) {
+                                handleAddEffectToRound(roundIndex, String(value))
+                                setDropdownValues(prev => ({ ...prev, [roundIndex]: '' }))
                               }
                             }}
                             placeholder="Add animation to this round…"
@@ -493,23 +568,29 @@ const GalleryCardDetailModal = ({
                         </div>
                       )}
                       <p className="mt-2 text-[0.68rem] uppercase tracking-[0.26em] text-[var(--text-muted)]/80">
-                        {roundSummaries[roundIndex] || 'No specific animation — inherits previous hover'}
+                        {roundSummaries[roundIndex] ||
+                          'No specific animation — inherits previous hover'}
                       </p>
                     </div>
                   ))}
                 </div>
                 <p className="text-[0.7rem] uppercase tracking-[0.26em] text-[var(--text-muted)]/75">
-                  Sequence summary: {roundSummaries.map((summary, idx) => `Round ${idx + 1}: ${summary}`).join(' | ')}
+                  Sequence summary:{' '}
+                  {roundSummaries.map((summary, idx) => `Round ${idx + 1}: ${summary}`).join(' | ')}
                 </p>
               </section>
 
               <section className="space-y-4 rounded-[22px] border border-theme bg-[rgba(8,10,14,0.95)] p-6 shadow-[0_22px_60px_rgba(0,0,0,0.5)]">
-                <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-muted)]">Actions</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-muted)]">
+                  Actions
+                </h4>
                 <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
                   <button
                     onClick={() => toggleActive(card.id, card.is_active)}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.26em] transition-all duration-200 hover:-translate-y-[2px] ${
-                      card.is_active ? 'border-rose-400/60 text-rose-200' : 'border-emerald-400/50 text-emerald-200'
+                      card.is_active
+                        ? 'border-rose-400/60 text-rose-200'
+                        : 'border-emerald-400/50 text-emerald-200'
                     }`}
                   >
                     {card.is_active ? 'Hide Card' : 'Activate Card'}
@@ -540,13 +621,15 @@ const GalleryCardDetailModal = ({
               <footer className="rounded-[22px] border border-theme bg-[rgba(8,10,14,0.95)] px-6 py-5 text-xs text-[var(--text-muted)] shadow-[0_22px_60px_rgba(0,0,0,0.5)] sm:flex sm:items-center sm:justify-between">
                 <div>
                   Last updated{' '}
-                  <span className="font-semibold text-[var(--text-main)]">
-                    {updatedAtLabel}
-                  </span>
+                  <span className="font-semibold text-[var(--text-main)]">{updatedAtLabel}</span>
                 </div>
                 <div className="mt-3 flex gap-2 text-[0.65rem] uppercase tracking-[0.32em] sm:mt-0">
-                  <span className="rounded-full border border-theme px-2 py-1 text-[var(--text-muted)]">Gallery</span>
-                  <span className="rounded-full border border-theme px-2 py-1 text-[var(--text-muted)]">About Page</span>
+                  <span className="rounded-full border border-theme px-2 py-1 text-[var(--text-muted)]">
+                    Gallery
+                  </span>
+                  <span className="rounded-full border border-theme px-2 py-1 text-[var(--text-muted)]">
+                    About Page
+                  </span>
                 </div>
               </footer>
             </div>
@@ -554,9 +637,8 @@ const GalleryCardDetailModal = ({
         </div>
       </div>
     </div>,
-    document.body,
-  );
-};
+    document.body
+  )
+}
 
-export default GalleryCardDetailModal;
-
+export default GalleryCardDetailModal

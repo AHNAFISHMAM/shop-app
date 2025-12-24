@@ -1,36 +1,43 @@
-import { useState, useMemo, useEffect } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import { fadeSlideUp, staggerContainer, fadeSlideFromRight, batchFadeSlideUp } from '../animations/menuAnimations';
+import { useState, useMemo, useEffect } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
+import {
+  fadeSlideUp,
+  staggerContainer,
+  fadeSlideFromRight,
+  batchFadeSlideUp,
+} from '../animations/menuAnimations'
 
 interface QuickReorderItem {
-  id: string | number;
-  name?: string;
-  image_url?: string;
-  image?: string;
-  dietary_tags?: string[];
+  id: string | number
+  name?: string
+  image_url?: string
+  image?: string
+  dietary_tags?: string[]
 }
 
 interface MenuEnhancementsPanelProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  dietaryTags: string[];
-  activeDietaryTags: string[];
-  onDietaryToggle: (tag: string) => void;
-  allergenTags: string[];
-  activeAllergenTags: string[];
-  onAllergenToggle: (tag: string) => void;
-  quickReorderItems: QuickReorderItem[];
-  onQuickReorder?: ((itemId: string | number) => void) | null;
+  searchQuery: string
+  onSearchChange: (query: string) => void
+  dietaryTags: string[]
+  activeDietaryTags: string[]
+  onDietaryToggle: (tag: string) => void
+  allergenTags: string[]
+  activeAllergenTags: string[]
+  onAllergenToggle: (tag: string) => void
+  quickReorderItems: QuickReorderItem[]
+  onQuickReorder?: ((itemId: string | number) => void) | null
 }
 
 const formatLabel = (label: string): string => {
-  if (!label) return '';
-  const normalized = label.replace(/[-_]/g, ' ').toLowerCase();
-  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
-};
+  if (!label) return ''
+  const normalized = label.replace(/[-_]/g, ' ').toLowerCase()
+  return normalized.replace(/\b\w/g, char => char.toUpperCase())
+}
 
 const resolveImage = (item: QuickReorderItem): string =>
-  item?.image_url || item?.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=400&fit=crop';
+  item?.image_url ||
+  item?.image ||
+  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=400&fit=crop'
 
 const MenuEnhancementsPanel = ({
   searchQuery,
@@ -44,37 +51,37 @@ const MenuEnhancementsPanel = ({
   quickReorderItems,
   onQuickReorder,
 }: MenuEnhancementsPanelProps): JSX.Element => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(false)
 
-  const hasDietaryFilters = dietaryTags.length > 0;
-  const hasAllergenFilters = allergenTags.length > 0;
-  const hasQuickReorder = quickReorderItems.length > 0;
+  const hasDietaryFilters = dietaryTags.length > 0
+  const hasAllergenFilters = allergenTags.length > 0
+  const hasQuickReorder = quickReorderItems.length > 0
 
-  const quickReorderCards = useMemo(() => quickReorderItems.slice(0, 3), [quickReorderItems]);
+  const quickReorderCards = useMemo(() => quickReorderItems.slice(0, 3), [quickReorderItems])
 
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <m.aside
@@ -89,13 +96,11 @@ const MenuEnhancementsPanel = ({
         <m.div
           className="rounded-xl sm:rounded-2xl border border-theme backdrop-blur-md overflow-hidden"
           style={{
-            backgroundColor: isLightTheme 
-              ? 'rgba(0, 0, 0, 0.02)' 
-              : 'rgba(255, 255, 255, 0.02)',
-            boxShadow: isLightTheme 
-              ? '0 25px 60px -20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1)' 
+            backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)',
+            boxShadow: isLightTheme
+              ? '0 25px 60px -20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1)'
               : '0 25px 60px -20px rgba(0, 0, 0, 0.45)',
-            borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+            borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
           }}
           layout
         >
@@ -107,12 +112,16 @@ const MenuEnhancementsPanel = ({
             custom={0.1}
           >
             <div>
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted/70">Refine</p>
-              <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">Flavor Controls</h3>
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted/70">
+                Refine
+              </p>
+              <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">
+                Flavor Controls
+              </h3>
             </div>
             <m.button
               type="button"
-              onClick={() => setCollapsed((prev) => !prev)}
+              onClick={() => setCollapsed(prev => !prev)}
               className="rounded-xl sm:rounded-2xl border border-theme px-4 sm:px-6 py-3 min-h-[44px] text-[10px] sm:text-xs text-muted hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -131,10 +140,7 @@ const MenuEnhancementsPanel = ({
                 exit="hidden"
                 layout
               >
-                <m.div
-                  className="space-y-3 sm:space-y-4 md:space-y-6"
-                  variants={fadeSlideUp}
-                >
+                <m.div className="space-y-3 sm:space-y-4 md:space-y-6" variants={fadeSlideUp}>
                   <m.label
                     htmlFor="refine-search"
                     className="text-sm sm:text-base font-medium text-[var(--text-main)]/80"
@@ -142,15 +148,12 @@ const MenuEnhancementsPanel = ({
                   >
                     Quick Search
                   </m.label>
-                  <m.div
-                    className="relative"
-                    variants={fadeSlideUp}
-                  >
+                  <m.div className="relative" variants={fadeSlideUp}>
                     <input
                       id="refine-search"
                       type="search"
                       value={searchQuery}
-                      onChange={(event) => onSearchChange(event.target.value)}
+                      onChange={event => onSearchChange(event.target.value)}
                       placeholder="Search dishes"
                       className="w-full rounded-xl sm:rounded-2xl border border-theme bg-theme-elevated px-4 sm:px-6 py-3 min-h-[44px] text-sm sm:text-base text-[var(--text-main)] placeholder:text-muted focus:border-[var(--accent)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                     />
@@ -170,32 +173,28 @@ const MenuEnhancementsPanel = ({
                 </m.div>
 
                 {hasDietaryFilters && (
-                  <m.section
-                    className="space-y-3 sm:space-y-4 md:space-y-6"
-                    variants={fadeSlideUp}
-                  >
-                    <m.div
-                      className="flex items-center justify-between"
-                      variants={fadeSlideUp}
-                    >
-                      <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Dietary Focus</h4>
+                  <m.section className="space-y-3 sm:space-y-4 md:space-y-6" variants={fadeSlideUp}>
+                    <m.div className="flex items-center justify-between" variants={fadeSlideUp}>
+                      <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                        Dietary Focus
+                      </h4>
                       {activeDietaryTags.length > 0 && (
                         <m.button
                           type="button"
                           onClick={() => {
                             // Clear all active dietary tags by finding original format and toggling
-                            activeDietaryTags.forEach((normalizedTag) => {
+                            activeDietaryTags.forEach(normalizedTag => {
                               // Find the original tag format from dietaryTags array
-                              const originalTag = dietaryTags.find(t =>
-                                t.toLowerCase() === normalizedTag.toLowerCase()
-                              );
+                              const originalTag = dietaryTags.find(
+                                t => t.toLowerCase() === normalizedTag.toLowerCase()
+                              )
                               if (originalTag) {
-                                onDietaryToggle(originalTag);
+                                onDietaryToggle(originalTag)
                               } else {
                                 // Fallback: try toggling with the normalized tag
-                                onDietaryToggle(normalizedTag);
+                                onDietaryToggle(normalizedTag)
                               }
-                            });
+                            })
                           }}
                           className="text-[10px] sm:text-xs text-muted underline-offset-4 hover:text-[var(--accent)]"
                           whileHover={{ scale: 1.05 }}
@@ -210,8 +209,8 @@ const MenuEnhancementsPanel = ({
                       variants={staggerContainer}
                     >
                       {dietaryTags.map((tag, index) => {
-                        const normalized = tag.toLowerCase();
-                        const isActive = activeDietaryTags.includes(normalized);
+                        const normalized = tag.toLowerCase()
+                        const isActive = activeDietaryTags.includes(normalized)
 
                         return (
                           <m.button
@@ -230,39 +229,35 @@ const MenuEnhancementsPanel = ({
                           >
                             {formatLabel(tag)}
                           </m.button>
-                        );
+                        )
                       })}
                     </m.div>
                   </m.section>
                 )}
 
                 {hasAllergenFilters && (
-                  <m.section
-                    className="space-y-3 sm:space-y-4 md:space-y-6"
-                    variants={fadeSlideUp}
-                  >
-                    <m.div
-                      className="flex items-center justify-between"
-                      variants={fadeSlideUp}
-                    >
-                      <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Avoid Allergens</h4>
+                  <m.section className="space-y-3 sm:space-y-4 md:space-y-6" variants={fadeSlideUp}>
+                    <m.div className="flex items-center justify-between" variants={fadeSlideUp}>
+                      <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                        Avoid Allergens
+                      </h4>
                       {activeAllergenTags.length > 0 && (
                         <m.button
                           type="button"
                           onClick={() => {
                             // Clear all active allergen tags by finding original format and toggling
-                            activeAllergenTags.forEach((normalizedTag) => {
+                            activeAllergenTags.forEach(normalizedTag => {
                               // Find the original tag format from allergenTags array
-                              const originalTag = allergenTags.find(t =>
-                                t.toLowerCase() === normalizedTag.toLowerCase()
-                              );
+                              const originalTag = allergenTags.find(
+                                t => t.toLowerCase() === normalizedTag.toLowerCase()
+                              )
                               if (originalTag) {
-                                onAllergenToggle(originalTag);
+                                onAllergenToggle(originalTag)
                               } else {
                                 // Fallback: try toggling with the normalized tag
-                                onAllergenToggle(normalizedTag);
+                                onAllergenToggle(normalizedTag)
                               }
-                            });
+                            })
                           }}
                           className="text-[10px] sm:text-xs text-muted underline-offset-4 hover:text-[var(--accent)]"
                           whileHover={{ scale: 1.05 }}
@@ -277,8 +272,8 @@ const MenuEnhancementsPanel = ({
                       variants={staggerContainer}
                     >
                       {allergenTags.map((tag, index) => {
-                        const normalized = tag.toLowerCase();
-                        const isActive = activeAllergenTags.includes(normalized);
+                        const normalized = tag.toLowerCase()
+                        const isActive = activeAllergenTags.includes(normalized)
 
                         return (
                           <m.button
@@ -297,22 +292,20 @@ const MenuEnhancementsPanel = ({
                           >
                             {formatLabel(tag)}
                           </m.button>
-                        );
+                        )
                       })}
                     </m.div>
                   </m.section>
                 )}
 
-                <m.section
-                  className="space-y-3 sm:space-y-4 md:space-y-6"
-                  variants={fadeSlideUp}
-                >
-                  <m.div
-                    className="flex items-center justify-between"
-                    variants={fadeSlideUp}
-                  >
-                    <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Quick Reorder</h4>
-                    <span className="text-[10px] sm:text-xs text-muted">{hasQuickReorder ? 'Last enjoyed' : 'No history yet'}</span>
+                <m.section className="space-y-3 sm:space-y-4 md:space-y-6" variants={fadeSlideUp}>
+                  <m.div className="flex items-center justify-between" variants={fadeSlideUp}>
+                    <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                      Quick Reorder
+                    </h4>
+                    <span className="text-[10px] sm:text-xs text-muted">
+                      {hasQuickReorder ? 'Last enjoyed' : 'No history yet'}
+                    </span>
                   </m.div>
 
                   {hasQuickReorder ? (
@@ -325,13 +318,13 @@ const MenuEnhancementsPanel = ({
                           key={item.id}
                           className="flex gap-3 sm:gap-4 md:gap-6 rounded-xl sm:rounded-2xl border border-theme px-4 sm:px-6 py-3 sm:py-4"
                           style={{
-                            backgroundColor: isLightTheme 
-                              ? 'rgba(0, 0, 0, 0.04)' 
+                            backgroundColor: isLightTheme
+                              ? 'rgba(0, 0, 0, 0.04)'
                               : 'rgba(255, 255, 255, 0.05)',
-                            boxShadow: isLightTheme 
-                              ? '0 1px 2px 0 rgba(0, 0, 0, 0.1)' 
+                            boxShadow: isLightTheme
+                              ? '0 1px 2px 0 rgba(0, 0, 0, 0.1)'
                               : '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
-                            borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+                            borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
                           }}
                           variants={batchFadeSlideUp}
                           whileHover={{ scale: 1.02, y: -2 }}
@@ -346,18 +339,20 @@ const MenuEnhancementsPanel = ({
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm sm:text-base font-semibold text-[var(--text-main)] line-clamp-1">{item.name}</p>
+                            <p className="text-sm sm:text-base font-semibold text-[var(--text-main)] line-clamp-1">
+                              {item.name}
+                            </p>
                             <p className="text-[10px] sm:text-xs text-muted/80 line-clamp-1">
                               {(item.dietary_tags || [])
                                 .slice(0, 2)
-                                .map((tag) => formatLabel(tag))
+                                .map(tag => formatLabel(tag))
                                 .join(' • ')}
                             </p>
                             <m.button
                               type="button"
                               onClick={() => {
                                 if (onQuickReorder) {
-                                  onQuickReorder(item.id);
+                                  onQuickReorder(item.id)
                                 }
                               }}
                               className="mt-2 inline-flex items-center gap-3 sm:gap-4 md:gap-6 text-[10px] sm:text-xs font-medium text-[var(--accent)] hover:text-[var(--text-main)] transition-colors py-3 min-h-[44px]"
@@ -386,10 +381,10 @@ const MenuEnhancementsPanel = ({
                     <m.div
                       className="rounded-xl sm:rounded-2xl border border-dashed border-theme px-4 sm:px-6 py-3 sm:py-4 text-center"
                       style={{
-                        backgroundColor: isLightTheme 
-                          ? 'rgba(0, 0, 0, 0.04)' 
+                        backgroundColor: isLightTheme
+                          ? 'rgba(0, 0, 0, 0.04)'
                           : 'rgba(255, 255, 255, 0.05)',
-                        borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+                        borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
                       }}
                       variants={fadeSlideUp}
                     >
@@ -405,8 +400,7 @@ const MenuEnhancementsPanel = ({
         </m.div>
       </div>
     </m.aside>
-  );
-};
+  )
+}
 
-export default MenuEnhancementsPanel;
-
+export default MenuEnhancementsPanel

@@ -172,4 +172,3 @@ export function useCartCount(options: UseCartCountOptions): UseCartCountReturn {
     loading: user ? isLoading : false,
   }
 }
-

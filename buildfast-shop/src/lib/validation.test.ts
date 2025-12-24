@@ -1,6 +1,6 @@
 /**
  * Validation Utilities Tests
- * 
+ *
  * Unit tests for validation functions.
  */
 
@@ -50,7 +50,7 @@ describe('validatePassword', () => {
     const result1 = validatePassword('password123')
     expect(result1.valid).toBe(true)
     expect(result1.errors).toEqual([])
-    
+
     const result2 = validatePassword('SecurePass!')
     expect(result2.valid).toBe(true)
     expect(result2.errors).toEqual([])
@@ -60,7 +60,7 @@ describe('validatePassword', () => {
     const result1 = validatePassword('short')
     expect(result1.valid).toBe(false)
     expect(result1.errors).toContain('Password must be at least 8 characters')
-    
+
     const result2 = validatePassword('')
     expect(result2.valid).toBe(false)
     expect(result2.errors).toContain('Password is required')
@@ -110,7 +110,7 @@ describe('validateAmount', () => {
     const result1 = validateAmount(100)
     expect(result1.isValid).toBe(true)
     expect(result1.error).toBeUndefined()
-    
+
     const result2 = validateAmount(0.01)
     expect(result2.isValid).toBe(true)
     expect(result2.error).toBeUndefined()
@@ -120,7 +120,7 @@ describe('validateAmount', () => {
     const result1 = validateAmount(-1)
     expect(result1.isValid).toBe(false)
     expect(result1.error).toBe('Amount must be at least $0')
-    
+
     const result2 = validateAmount(0)
     expect(result2.isValid).toBe(true) // 0 is valid (min defaults to 0)
   })
@@ -146,8 +146,11 @@ describe('validateLength', () => {
   })
 
   it('should return error for invalid length', () => {
-    expect(validateLength('a', { min: 2, max: 10, fieldName: 'Field' })).toBe('Field must be at least 2 characters')
-    expect(validateLength('toolongstring', { min: 2, max: 10, fieldName: 'Field' })).toBe('Field must be 10 characters or less')
+    expect(validateLength('a', { min: 2, max: 10, fieldName: 'Field' })).toBe(
+      'Field must be at least 2 characters'
+    )
+    expect(validateLength('toolongstring', { min: 2, max: 10, fieldName: 'Field' })).toBe(
+      'Field must be 10 characters or less'
+    )
   })
 })
-

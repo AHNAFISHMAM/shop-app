@@ -128,10 +128,10 @@ export function FormField<T = string>({
           name={name}
           type={type}
           label={label}
-          value={value as string | number}
+          value={value !== null && value !== undefined ? (value as string | number) : undefined}
           onChange={handleChange}
           onBlur={onBlur}
-          error={error}
+          error={error ?? undefined}
           helperText={helperText}
           required={required}
           disabled={disabled}
@@ -146,4 +146,3 @@ export function FormField<T = string>({
 }
 
 FormField.displayName = 'FormField'
-

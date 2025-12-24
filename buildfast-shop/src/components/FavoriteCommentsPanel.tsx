@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { createReview, uploadReviewImage, fetchUserFavoriteReviews } from '../lib/reviewsApi'
 import CustomDropdown from './ui/CustomDropdown'
@@ -11,31 +11,31 @@ const FAVORITE_COMMENT_MAX_LENGTH = 300
 const FAVORITE_COMMENT_MAX_SIZE = 5 * 1024 * 1024
 
 interface FavoriteItem {
-  id: string;
-  menu_items?: { id: string; name: string; image_url?: string } | null;
-  dishes?: { id: string; name: string; image_url?: string } | null;
-  menu_item_id?: string;
-  product_id?: string;
+  id: string
+  menu_items?: { id: string; name: string; image_url?: string } | null
+  dishes?: { id: string; name: string; image_url?: string } | null
+  menu_item_id?: string
+  product_id?: string
 }
 
 interface Comment {
-  id: string;
-  created_at: string;
-  review_text: string;
-  review_images?: string[];
-  menu_items?: { name: string; image_url?: string } | null;
-  favorite_target_label?: string;
+  id: string
+  created_at: string
+  review_text: string
+  review_images?: string[]
+  menu_items?: { name: string; image_url?: string } | null
+  favorite_target_label?: string
 }
 
 interface FavoriteCommentsPanelProps {
-  favoriteItems?: FavoriteItem[];
-  userId?: string;
+  favoriteItems?: FavoriteItem[]
+  userId?: string
 }
 
 interface Attachment {
-  file: File;
-  url: string;
-  name: string;
+  file: File
+  url: string
+  name: string
 }
 
 function formatDateTime(value: string | null | undefined): string {
@@ -46,7 +46,7 @@ function formatDateTime(value: string | null | undefined): string {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -72,27 +72,27 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
 
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   const favoriteOptions = useMemo(() => {
     const itemOptions = favoriteItems
@@ -112,8 +112,8 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
             isMenuItem,
             targetId,
             product,
-            isGeneral: false
-          }
+            isGeneral: false,
+          },
         }
       })
       .filter((item): item is NonNullable<typeof item> => item !== null)
@@ -122,9 +122,9 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
       {
         value: 'general',
         label: 'General Feedback',
-        descriptor: { isGeneral: true, isMenuItem: false, targetId: null, product: null }
+        descriptor: { isGeneral: true, isMenuItem: false, targetId: null, product: null },
       },
-      ...itemOptions
+      ...itemOptions,
     ]
   }, [favoriteItems])
 
@@ -137,10 +137,7 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
     const now = new Date()
     return comments.filter(comment => {
       const created = new Date(comment.created_at)
-      return (
-        created.getFullYear() === now.getFullYear() &&
-        created.getMonth() === now.getMonth()
-      )
+      return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth()
     }).length
   }, [comments])
 
@@ -149,7 +146,7 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
   const daysSinceLast = getDaysSince(lastCommentAt)
 
   useEffect(() => {
-    if (!selectedTarget && favoriteOptions.length > 0) {
+    if (!selectedTarget && favoriteOptions.length > 0 && favoriteOptions[0]) {
       setSelectedTarget(favoriteOptions[0].value)
     }
   }, [favoriteOptions, selectedTarget])
@@ -158,9 +155,12 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
     if (!userId) return
     setListLoading(true)
     const result = await fetchUserFavoriteReviews({ userId })
-    if (result.success) {
-      setComments(result.data || [])
-      setLastCommentAt(result.data?.[0]?.created_at || null)
+    if (result.success && Array.isArray(result.data)) {
+      setComments(result.data as Comment[])
+      setLastCommentAt((result.data[0] as { created_at?: string | null })?.created_at || null)
+    } else {
+      setComments([])
+      setLastCommentAt(null)
     }
     setListLoading(false)
   }, [userId])
@@ -179,7 +179,7 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
           event: '*',
           schema: 'public',
           table: 'product_reviews',
-          filter: `user_id=eq.${userId} AND source=eq.favorite`
+          filter: `user_id=eq.${userId} AND source=eq.favorite`,
         },
         () => {
           loadComments()
@@ -213,7 +213,7 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
       next.push({
         file,
         url: URL.createObjectURL(file),
-        name: file.name
+        name: file.name,
       })
     })
 
@@ -245,7 +245,7 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
 
     const trimmed = commentText.trim()
     if (trimmed.length === 0) {
-      setFormError('Comment can\'t be empty.')
+      setFormError("Comment can't be empty.")
       return
     }
     if (trimmed.length > FAVORITE_COMMENT_MAX_LENGTH) {
@@ -263,11 +263,16 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
     setSubmitting(true)
 
     try {
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
+
       const imageUploads: string[] = []
       for (const attachment of attachments) {
         const uploadResult = await uploadReviewImage(attachment.file, userId)
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.error || 'Image upload failed')
+        if (!uploadResult.success || !uploadResult.url) {
+          const errorMsg = typeof uploadResult.error === 'string' ? uploadResult.error : uploadResult.error?.message || 'Image upload failed'
+          throw new Error(errorMsg)
         }
         imageUploads.push(uploadResult.url)
       }
@@ -277,28 +282,37 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
         : selectedDescriptor.product?.name || 'Favorite Dish'
 
       const menuItemId = selectedDescriptor.isGeneral
-        ? null
+        ? undefined
         : selectedDescriptor.isMenuItem
           ? selectedDescriptor.targetId
-          : null
+          : undefined
+
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
 
       const result = await createReview({
         userId,
-        productId: null,
-        menuItemId,
+        productId: undefined,
+        menuItemId: menuItemId || undefined,
         itemType: selectedDescriptor.isMenuItem ? 'menu_item' : 'product',
-        orderId: null,
-        orderItemId: null,
-        rating: null,
+        orderId: undefined,
+        orderItemId: undefined,
+        rating: undefined,
         reviewText: trimmed,
         reviewImages: imageUploads,
         source: 'favorite',
         favoriteIsGeneral: selectedDescriptor.isGeneral,
-        favoriteTargetLabel
+        favoriteTargetLabel: favoriteTargetLabel || undefined,
       })
 
       if (!result?.success) {
-        throw new Error(result?.message || 'Failed to save comment.')
+        const errorMsg = typeof result.error === 'string' 
+          ? result.error 
+          : result.error instanceof Error 
+            ? result.error.message 
+            : (result as { message?: string }).message ?? 'Failed to save comment.'
+        throw new Error(errorMsg)
       }
 
       setCommentText('')
@@ -321,35 +335,37 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
     <section
       className="glow-surface glow-soft rounded-2xl border border-[var(--border-default)] px-6 py-6 space-y-6"
       style={{
-        backgroundColor: isLightTheme 
-          ? 'rgba(0, 0, 0, 0.02)' 
-          : 'rgba(255, 255, 255, 0.03)',
+        backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.03)',
         boxShadow: isLightTheme
           ? '0 30px 70px -55px rgba(197, 157, 95, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)'
           : '0 30px 70px -55px rgba(197, 157, 95, 0.65)',
-        borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+        borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
       }}
       data-animate="fade-scale"
       data-animate-active="false"
     >
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-secondary)]">Monthly Feedback</p>
-          <h2 className="text-2xl font-semibold text-[var(--text-main)]">Comment on Your Favorites</h2>
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-secondary)]">
+            Monthly Feedback
+          </p>
+          <h2 className="text-2xl font-semibold text-[var(--text-main)]">
+            Comment on Your Favorites
+          </h2>
           <p className="text-sm text-[var(--text-secondary)]">
             Minimum one comment per month. Share why you love a dish and attach up to three images.
           </p>
         </div>
-        <div 
+        <div
           className="rounded-xl border border-[var(--border-default)] px-4 py-3 text-sm text-[var(--text-secondary)]"
           style={{
-            backgroundColor: isLightTheme 
-              ? 'rgba(0, 0, 0, 0.02)' 
-              : 'rgba(255, 255, 255, 0.02)',
-            borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+            backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)',
+            borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
           }}
         >
-          <span className="block text-xs uppercase tracking-[0.25em] text-[var(--text-secondary)]">This Month</span>
+          <span className="block text-xs uppercase tracking-[0.25em] text-[var(--text-secondary)]">
+            This Month
+          </span>
           <span className="mt-1 flex items-center gap-2 font-semibold text-[var(--text-main)]">
             {monthlyCount}/1 comment
             <span
@@ -364,7 +380,10 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
           </span>
           {lastCommentAt && (
             <span className="mt-1 block text-xs text-[var(--text-secondary)]">
-              Last comment: {daysSinceLast === 0 ? 'today' : `${daysSinceLast} day${daysSinceLast === 1 ? '' : 's'} ago`}
+              Last comment:{' '}
+              {daysSinceLast === 0
+                ? 'today'
+                : `${daysSinceLast} day${daysSinceLast === 1 ? '' : 's'} ago`}
             </span>
           )}
         </div>
@@ -372,8 +391,18 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
 
       {showReminder && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 flex items-start gap-3">
-          <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="h-5 w-5 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           <div className="flex-1">
             Drop at least one comment this month to keep your favorites active.
@@ -391,11 +420,16 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="grid gap-4 md:grid-cols-[2fr,3fr] md:gap-6">
           <label className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-secondary)]">Dish / Category</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-secondary)]">
+              Dish / Category
+            </span>
             <CustomDropdown
-              options={favoriteOptions.map(option => ({ value: option.value, label: option.label }))}
+              options={favoriteOptions.map(option => ({
+                value: option.value,
+                label: option.label,
+              }))}
               value={selectedTarget}
-              onChange={(event) => setSelectedTarget(event.target.value)}
+              onChange={event => setSelectedTarget(String(event.target.value))}
               placeholder="Select dish/category"
               maxVisibleItems={5}
             />
@@ -403,21 +437,24 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
 
           <label className="flex flex-col gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-secondary)]">
-              Comment <span className="text-[var(--text-secondary)] lowercase">(1–300 characters)</span>
+              Comment{' '}
+              <span className="text-[var(--text-secondary)] lowercase">(1–300 characters)</span>
             </span>
             <div className="relative">
               <textarea
                 value={commentText}
-                onChange={(event) => setCommentText(event.target.value.slice(0, FAVORITE_COMMENT_MAX_LENGTH))}
+                onChange={event =>
+                  setCommentText(event.target.value.slice(0, FAVORITE_COMMENT_MAX_LENGTH))
+                }
                 maxLength={FAVORITE_COMMENT_MAX_LENGTH}
                 rows={4}
                 placeholder="Tell the chef what makes this dish special…"
                 className="w-full rounded-xl border border-[var(--border-default)] px-3 py-2 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
                 style={{
-                  backgroundColor: isLightTheme 
-                    ? 'rgba(0, 0, 0, 0.02)' 
+                  backgroundColor: isLightTheme
+                    ? 'rgba(0, 0, 0, 0.02)'
                     : 'rgba(255, 255, 255, 0.02)',
-                  borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+                  borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
                 }}
               />
               <span className="absolute bottom-2 right-3 text-xs text-[var(--text-secondary)]">
@@ -429,16 +466,15 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
 
         <div className="flex flex-col gap-2">
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--text-secondary)]">
-            Attach Images <span className="text-[var(--text-secondary)] lowercase">(optional, up to 3)</span>
+            Attach Images{' '}
+            <span className="text-[var(--text-secondary)] lowercase">(optional, up to 3)</span>
           </span>
           <div className="flex flex-wrap gap-3">
-            <label 
+            <label
               className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border-strong)] text-xs text-[var(--text-secondary)] transition hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
               style={{
-                backgroundColor: isLightTheme 
-                  ? 'rgba(0, 0, 0, 0.02)' 
-                  : 'rgba(255, 255, 255, 0.02)',
-                borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.15)' : undefined
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)',
+                borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.15)' : undefined,
               }}
             >
               <input
@@ -446,14 +482,19 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
                 accept={FAVORITE_COMMENT_ALLOWED_TYPES.join(',')}
                 multiple
                 className="hidden"
-                onChange={(event) => {
+                onChange={event => {
                   handleFiles(event.target.files)
                   event.target.value = ''
                 }}
                 disabled={attachments.length >= FAVORITE_COMMENT_MAX_IMAGES || submitting}
               />
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add
             </label>
@@ -463,10 +504,10 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
                 key={attachment.url}
                 className="relative h-20 w-20 overflow-hidden rounded-xl border border-[var(--border-default)]"
                 style={{
-                  backgroundColor: isLightTheme 
-                    ? 'rgba(0, 0, 0, 0.02)' 
+                  backgroundColor: isLightTheme
+                    ? 'rgba(0, 0, 0, 0.02)'
                     : 'rgba(255, 255, 255, 0.02)',
-                  borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+                  borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
                 }}
               >
                 <img
@@ -479,20 +520,20 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
                   onClick={() => removeAttachment(index)}
                   className="absolute top-1 right-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs transition"
                   style={{
-                    backgroundColor: isLightTheme 
-                      ? 'rgba(255, 255, 255, 0.7)' 
+                    backgroundColor: isLightTheme
+                      ? 'rgba(255, 255, 255, 0.7)'
                       : 'rgba(5, 5, 9, 0.7)',
-                    color: 'var(--text-main)'
+                    color: 'var(--text-main)',
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isLightTheme 
-                      ? 'rgba(255, 255, 255, 0.95)' 
-                      : 'rgba(5, 5, 9, 0.95)';
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = isLightTheme
+                      ? 'rgba(255, 255, 255, 0.95)'
+                      : 'rgba(5, 5, 9, 0.95)'
                   }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = isLightTheme 
-                      ? 'rgba(255, 255, 255, 0.7)' 
-                      : 'rgba(5, 5, 9, 0.7)';
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = isLightTheme
+                      ? 'rgba(255, 255, 255, 0.7)'
+                      : 'rgba(5, 5, 9, 0.7)'
                   }}
                 >
                   ✕
@@ -532,20 +573,18 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--text-secondary)]">Recent Comments</h3>
-          {listLoading && (
-            <span className="text-xs text-[var(--text-secondary)]">Refreshing…</span>
-          )}
+          <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--text-secondary)]">
+            Recent Comments
+          </h3>
+          {listLoading && <span className="text-xs text-[var(--text-secondary)]">Refreshing…</span>}
         </div>
 
         {!comments.length && !listLoading ? (
-          <div 
+          <div
             className="rounded-xl border border-[var(--border-default)] px-4 py-6 text-center text-sm text-[var(--text-secondary)]"
             style={{
-              backgroundColor: isLightTheme 
-                ? 'rgba(0, 0, 0, 0.02)' 
-                : 'rgba(255, 255, 255, 0.02)',
-              borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+              backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.02)',
+              borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
             }}
           >
             No comments yet. Share your thoughts to keep your favorites fresh.
@@ -561,10 +600,10 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
                   key={comment.id}
                   className="glow-surface glow-soft flex flex-col gap-3 rounded-2xl border border-[var(--border-default)] px-4 py-4 backdrop-blur-sm"
                   style={{
-                    backgroundColor: isLightTheme 
-                      ? 'rgba(0, 0, 0, 0.02)' 
+                    backgroundColor: isLightTheme
+                      ? 'rgba(0, 0, 0, 0.02)'
                       : 'rgba(255, 255, 255, 0.02)',
-                    borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+                    borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
                   }}
                 >
                   <header className="flex items-start gap-3">
@@ -577,7 +616,9 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
                     )}
                     <div>
                       <h4 className="text-sm font-semibold text-[var(--text-main)]">{title}</h4>
-                      <p className="text-xs text-[var(--text-secondary)]">{formatDateTime(comment.created_at)}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {formatDateTime(comment.created_at)}
+                      </p>
                     </div>
                   </header>
                   <p className="text-sm text-[var(--text-main)]">{comment.review_text}</p>
@@ -610,4 +651,3 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
 }
 
 export default FavoriteCommentsPanel
-

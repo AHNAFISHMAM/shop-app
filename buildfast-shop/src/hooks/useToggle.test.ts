@@ -1,6 +1,6 @@
 /**
  * useToggle Hook Tests
- * 
+ *
  * Unit tests for useToggle hook.
  */
 
@@ -73,4 +73,3 @@ describe('useToggle', () => {
     expect(result.current[0]).toBe(true)
   })
 })
-

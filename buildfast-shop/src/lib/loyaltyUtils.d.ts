@@ -1,32 +1,27 @@
-interface LoyaltySnapshot {
-    tier: string;
-    currentPoints: number;
-    nextTierThreshold: number;
-    nextTierLabel: string;
-    pointsMultiplier: number;
+export interface LoyaltySnapshot {
+  tier: string;
+  currentPoints: number;
+  nextTierThreshold: number;
+  nextTierLabel: string;
+  pointsMultiplier: number;
 }
-interface Reward {
-    id: string;
-    label: string;
-    cost: number;
+
+export interface Reward {
+  id: string;
+  label: string;
+  cost: number;
 }
-export declare const resolveLoyaltyState: (orderTotal?: number) => {
-    snapshot: LoyaltySnapshot;
-    pointsEarnedThisOrder: number;
-    projectedPoints: number;
-    nextTierThreshold: number;
-    progressPercent: number;
-    pointsToNextTier: number;
-    redeemableRewards: Reward[];
-    newlyUnlockedRewards: Reward[];
-};
-export declare const getRewardsCatalog: () => Reward[];
-export declare const redeemReward: (rewardId: string) => {
-    success: boolean;
-    message?: string;
-};
-export declare const resolveReferralInfo: (user: any) => {
-    referralCode: string | null;
-    referralCount: number;
-    referralRewards: number;
-};
+
+export function getLoyaltySnapshot(): LoyaltySnapshot;
+export function updateLoyaltyPoints(points: number): void;
+export function getRewardsCatalog(): Reward[];
+export function redeemReward(rewardId: string): { success: boolean; error?: string };
+export function resolveLoyaltyState(orderTotal?: number): LoyaltySnapshot & { pointsEarnedThisOrder?: number; projectedPoints?: number; progressPercent?: number; pointsToNextTier?: number; redeemableRewards?: Reward[]; newlyUnlockedRewards?: Reward[]; rewardsCatalog?: Reward[] };
+export interface ReferralInfo {
+  code: string | null;
+  shareUrl: string;
+  headline: string;
+  subcopy: string;
+}
+export function resolveReferralInfo(user: { id: string } | null): ReferralInfo;
+

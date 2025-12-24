@@ -5,8 +5,8 @@
  * Abstracts Supabase RPC calls and direct queries for orders.
  */
 
-import { supabase } from './supabase';
-import { logger } from '../utils/logger';
+import { supabase } from './supabase'
+import { logger } from '../utils/logger'
 
 /**
  * Create order with items using RPC function (atomic transaction)
@@ -44,63 +44,63 @@ export async function createOrderWithItems(orderData) {
       discountCodeId = null,
       discountAmount = 0,
       guestSessionId = null,
-      isGuest = null
-    } = orderData;
+      isGuest = null,
+    } = orderData
 
     // Validate required fields
     if (!customerEmail || customerEmail.trim() === '') {
       return {
         success: false,
         orderId: null,
-        error: 'Customer email is required'
-      };
+        error: 'Customer email is required',
+      }
     }
 
     if (!customerName || customerName.trim() === '') {
       return {
         success: false,
         orderId: null,
-        error: 'Customer name is required'
-      };
+        error: 'Customer name is required',
+      }
     }
 
     if (!shippingAddress) {
       return {
         success: false,
         orderId: null,
-        error: 'Shipping address is required'
-      };
+        error: 'Shipping address is required',
+      }
     }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return {
         success: false,
         orderId: null,
-        error: 'Order must contain at least one item'
-      };
+        error: 'Order must contain at least one item',
+      }
     }
 
-    const sanitizedItems = [];
+    const sanitizedItems = []
 
     // Validate each item
     for (const item of items) {
-      const itemMenuItemId = item.menu_item_id || null;
-      const itemProductId = item.product_id || null;
-      const itemVariantId = item.variant_id || item.variantId || null;
-      const itemCombinationId = item.combination_id || item.combinationId || null;
+      const itemMenuItemId = item.menu_item_id || null
+      const itemProductId = item.product_id || null
+      const itemVariantId = item.variant_id || item.variantId || null
+      const itemCombinationId = item.combination_id || item.combinationId || null
 
-      let variantMetadata = item.variant_metadata || item.variantMetadata || null;
+      let variantMetadata = item.variant_metadata || item.variantMetadata || null
       if (!variantMetadata && item.variant_snapshot) {
-        variantMetadata = item.variant_snapshot;
+        variantMetadata = item.variant_snapshot
       } else if (!variantMetadata && item.variant_display) {
-        variantMetadata = { display: item.variant_display };
+        variantMetadata = { display: item.variant_display }
       }
 
       if (variantMetadata && typeof variantMetadata === 'string') {
         try {
-          variantMetadata = JSON.parse(variantMetadata);
+          variantMetadata = JSON.parse(variantMetadata)
         } catch {
-          variantMetadata = { display: variantMetadata };
+          variantMetadata = { display: variantMetadata }
         }
       }
 
@@ -108,24 +108,24 @@ export async function createOrderWithItems(orderData) {
         return {
           success: false,
           orderId: null,
-          error: 'Each item must have a menu_item_id or product_id'
-        };
+          error: 'Each item must have a menu_item_id or product_id',
+        }
       }
 
       if (!item.quantity || item.quantity <= 0) {
         return {
           success: false,
           orderId: null,
-          error: 'Each item must have a valid quantity'
-        };
+          error: 'Each item must have a valid quantity',
+        }
       }
 
       if (!item.price_at_purchase || item.price_at_purchase <= 0) {
         return {
           success: false,
           orderId: null,
-          error: 'Each item must have a valid price'
-        };
+          error: 'Each item must have a valid price',
+        }
       }
 
       sanitizedItems.push({
@@ -135,8 +135,8 @@ export async function createOrderWithItems(orderData) {
         price_at_purchase: Number(item.price_at_purchase),
         variant_id: itemVariantId,
         combination_id: itemCombinationId,
-        variant_metadata: variantMetadata
-      });
+        variant_metadata: variantMetadata,
+      })
     }
 
     // Call RPC function
@@ -150,48 +150,48 @@ export async function createOrderWithItems(orderData) {
       _discount_code_id: discountCodeId,
       _discount_amount: discountAmount || 0,
       _guest_session_id: guestSessionId || null,
-      _is_guest: isGuest !== null ? isGuest : !userId
-    });
+      _is_guest: isGuest !== null ? isGuest : !userId,
+    })
 
     if (error) {
-      logger.error('Error creating order:', error);
+      logger.error('Error creating order:', error)
 
       // Return user-friendly error messages
       if (error.message.includes('not available')) {
         return {
           success: false,
           orderId: null,
-          error: 'One or more items are no longer available. Please refresh and try again.'
-        };
+          error: 'One or more items are no longer available. Please refresh and try again.',
+        }
       }
 
       if (error.message.includes('Invalid price')) {
         return {
           success: false,
           orderId: null,
-          error: 'Invalid product pricing. Please refresh the page and try again.'
-        };
+          error: 'Invalid product pricing. Please refresh the page and try again.',
+        }
       }
 
       return {
         success: false,
         orderId: null,
-        error: error.message || 'Failed to create order'
-      };
+        error: error.message || 'Failed to create order',
+      }
     }
 
     return {
       success: true,
       orderId: orderId,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in createOrderWithItems:', err);
+    logger.error('Unexpected error in createOrderWithItems:', err)
     return {
       success: false,
       orderId: null,
-      error: 'An unexpected error occurred while creating your order'
-    };
+      error: 'An unexpected error occurred while creating your order',
+    }
   }
 }
 
@@ -210,47 +210,47 @@ export async function getUserOrders(userId, options = {}) {
       return {
         success: false,
         data: null,
-        error: 'User ID is required'
-      };
+        error: 'User ID is required',
+      }
     }
 
     let query = supabase
       .from('orders')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
 
     if (options.status) {
-      query = query.eq('status', options.status);
+      query = query.eq('status', options.status)
     }
 
     if (options.limit) {
-      query = query.limit(options.limit);
+      query = query.limit(options.limit)
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query
 
     if (error) {
-      logger.error('Error fetching orders:', error);
+      logger.error('Error fetching orders:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load orders'
-      };
+        error: error.message || 'Failed to load orders',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getUserOrders:', err);
+    logger.error('Unexpected error in getUserOrders:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -267,8 +267,8 @@ export async function getGuestOrders(email, sessionId) {
       return {
         success: false,
         data: null,
-        error: 'Email and session ID are required'
-      };
+        error: 'Email and session ID are required',
+      }
     }
 
     const { data, error } = await supabase
@@ -277,29 +277,29 @@ export async function getGuestOrders(email, sessionId) {
       .eq('customer_email', email)
       .eq('guest_session_id', sessionId)
       .eq('is_guest', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
 
     if (error) {
-      logger.error('Error fetching guest orders:', error);
+      logger.error('Error fetching guest orders:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load orders'
-      };
+        error: error.message || 'Failed to load orders',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getGuestOrders:', err);
+    logger.error('Unexpected error in getGuestOrders:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -315,21 +315,22 @@ export async function getOrderById(orderId) {
       .from('orders')
       .select('*')
       .eq('id', orderId)
-      .single();
+      .single()
 
     if (orderError) {
-      logger.error('Error fetching order:', orderError);
+      logger.error('Error fetching order:', orderError)
       return {
         success: false,
         data: null,
-        error: orderError.message || 'Order not found'
-      };
+        error: orderError.message || 'Order not found',
+      }
     }
 
     // Fetch order items
     const { data: items, error: itemsError } = await supabase
       .from('order_items')
-      .select(`
+      .select(
+        `
         *,
         menu_item:menu_item_id (
           id,
@@ -347,44 +348,45 @@ export async function getOrderById(orderId) {
           images,
           price
         )
-      `)
-      .eq('order_id', orderId);
+      `
+      )
+      .eq('order_id', orderId)
 
     if (itemsError) {
-      logger.error('Error fetching order items:', itemsError);
+      logger.error('Error fetching order items:', itemsError)
       // Return order without items rather than failing completely
       return {
         success: true,
         data: { ...order, items: [] },
-        error: null
-      };
+        error: null,
+      }
     }
 
-    const normalizedItems = (items || []).map((item) => {
-      const { menu_item, legacy_dish, ...rest } = item;
+    const normalizedItems = (items || []).map(item => {
+      const { menu_item, legacy_dish, ...rest } = item
       return {
         ...rest,
         menu_items: menu_item ?? null,
         dishes: legacy_dish ?? null,
-        resolvedProduct: menu_item ?? legacy_dish ?? null
-      };
-    });
+        resolvedProduct: menu_item ?? legacy_dish ?? null,
+      }
+    })
 
     return {
       success: true,
       data: {
         ...order,
-        items: normalizedItems
+        items: normalizedItems,
       },
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getOrderById:', err);
+    logger.error('Unexpected error in getOrderById:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -400,50 +402,47 @@ export async function getOrderById(orderId) {
  */
 export async function getAllOrders(filters = {}) {
   try {
-    let query = supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let query = supabase.from('orders').select('*').order('created_at', { ascending: false })
 
     if (filters.status) {
-      query = query.eq('status', filters.status);
+      query = query.eq('status', filters.status)
     }
 
     if (filters.startDate) {
-      query = query.gte('created_at', filters.startDate);
+      query = query.gte('created_at', filters.startDate)
     }
 
     if (filters.endDate) {
-      query = query.lte('created_at', filters.endDate);
+      query = query.lte('created_at', filters.endDate)
     }
 
     if (filters.limit) {
-      query = query.limit(filters.limit);
+      query = query.limit(filters.limit)
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query
 
     if (error) {
-      logger.error('Error fetching all orders:', error);
+      logger.error('Error fetching all orders:', error)
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to load orders'
-      };
+        error: error.message || 'Failed to load orders',
+      }
     }
 
     return {
       success: true,
       data: data || [],
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in getAllOrders:', err);
+    logger.error('Unexpected error in getAllOrders:', err)
     return {
       success: false,
       data: null,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -456,41 +455,41 @@ export async function getAllOrders(filters = {}) {
  */
 export async function updateOrderStatus(orderId, status) {
   try {
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
 
     if (!validStatuses.includes(status)) {
       return {
         success: false,
-        error: 'Invalid status value'
-      };
+        error: 'Invalid status value',
+      }
     }
 
     const { error } = await supabase
       .from('orders')
       .update({
         status: status,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', orderId);
+      .eq('id', orderId)
 
     if (error) {
-      logger.error('Error updating order status:', error);
+      logger.error('Error updating order status:', error)
       return {
         success: false,
-        error: error.message || 'Failed to update order'
-      };
+        error: error.message || 'Failed to update order',
+      }
     }
 
     return {
       success: true,
-      error: null
-    };
+      error: null,
+    }
   } catch (err) {
-    logger.error('Unexpected error in updateOrderStatus:', err);
+    logger.error('Unexpected error in updateOrderStatus:', err)
     return {
       success: false,
-      error: 'An unexpected error occurred'
-    };
+      error: 'An unexpected error occurred',
+    }
   }
 }
 
@@ -500,5 +499,5 @@ export default {
   getGuestOrders,
   getOrderById,
   getAllOrders,
-  updateOrderStatus
-};
+  updateOrderStatus,
+}

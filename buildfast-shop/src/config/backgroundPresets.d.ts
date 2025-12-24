@@ -1,26 +1,31 @@
-/**
- * Type declarations for background presets
- */
-export interface Preset {
+export interface ColorPreset {
   id: string;
   name: string;
+  color: string;
   description: string;
-  color?: string;
-  gradient?: string;
-  url?: string;
-  category?: string;
-  source?: string;
 }
 
-export const solidColorPresets: Preset[];
-export const gradientPresets: Preset[];
-export const restaurantInteriorImages: Preset[];
-export const tableSettingsImages: Preset[];
-export const subtleTextureImages: Preset[];
-export const additionalImages: Preset[];
-export const imagePresets: Preset[];
+export interface GradientPreset {
+  id: string;
+  name: string;
+  gradient: string;
+  description: string;
+}
 
-export function getPresetsByType(type: 'solid' | 'gradient' | 'image'): Preset[];
-export function findPresetById(id: string): Preset | undefined;
-export function getPresetPreview(preset: Preset): Record<string, string>;
+export interface ImagePreset {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+}
 
+export const solidColorPresets: ColorPreset[];
+export const gradientPresets: GradientPreset[];
+export const restaurantInteriorImages: ImagePreset[];
+export const tableSettingsImages: ImagePreset[];
+export const subtleTextureImages: ImagePreset[];
+export const additionalImages: ImagePreset[];
+export const imagePresets: ImagePreset[];
+export function getPresetsByType(type: string): unknown[];
+export function findPresetById(id: string): unknown | undefined;
+export function getPresetPreview(preset: unknown): Record<string, string>;

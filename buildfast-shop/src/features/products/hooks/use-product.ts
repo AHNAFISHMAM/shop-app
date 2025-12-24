@@ -14,7 +14,6 @@ import { useEffect } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { queryKeys } from '../../../shared/lib/query-keys'
 import { supabase } from '../../../lib/supabase'
-import { logger } from '../../../utils/logger'
 import { logError } from '../../../lib/error-handler'
 import { defaultQueryConfig } from '../../../shared/lib/query-config'
 import { addToRecentlyViewed } from '../../../lib/recentlyViewedUtils'
@@ -27,7 +26,16 @@ type MenuItem = Database['public']['Tables']['menu_items']['Row'] & {
   } | null
 }
 
-type Dish = Database['public']['Tables']['dishes']['Row']
+// Note: dishes table may not exist in all database schemas
+type Dish = {
+  id: string
+  name: string
+  description: string | null
+  price: number | string
+  image_url: string | null
+  stock_quantity?: number | null
+  [key: string]: unknown
+}
 
 interface NormalizedProduct {
   id: string
@@ -72,17 +80,24 @@ function normalizeMenuItem(menuItem: MenuItem | null): NormalizedProduct | null 
   if (!menuItem) return null
 
   const priceValue =
-    typeof menuItem.price === 'number' ? menuItem.price : parseFloat(String(menuItem.price || '0')) || 0
+    typeof menuItem.price === 'number'
+      ? menuItem.price
+      : parseFloat(String(menuItem.price || '0')) || 0
 
+  const menuItemRecord = menuItem as Record<string, unknown>
   return {
-    ...menuItem,
+    id: menuItem.id,
+    name: menuItem.name || '',
+    description: menuItem.description || null,
+    price: priceValue,
+    image_url: menuItem.image_url || null,
     isMenuItem: true,
     category: menuItem.menu_categories?.name || null,
     images: menuItem.image_url ? [menuItem.image_url] : [],
     stock_quantity: menuItem.is_available === false ? 0 : null,
-    price: priceValue,
     currency: '৳',
-  }
+    ...menuItemRecord,
+  } as NormalizedProduct
 }
 
 /**
@@ -132,7 +147,7 @@ async function fetchProduct(productId: string): Promise<ProductData> {
 
     // Fall back to dishes table
     const { data: dish, error: dishError } = await supabase
-      .from('menu_items')
+      .from('dishes')
       .select('*')
       .eq('id', productId)
       .maybeSingle()
@@ -147,8 +162,25 @@ async function fetchProduct(productId: string): Promise<ProductData> {
     }
 
     addToRecentlyViewed(productId, 'product')
+    
+    // Normalize dish to product format
+    const dishRecord = dish as Dish & Record<string, unknown>
+    const normalizedDish: NormalizedProduct = {
+      ...dishRecord,
+      id: dishRecord.id,
+      name: dishRecord.name || '',
+      description: dishRecord.description || null,
+      price: typeof dishRecord.price === 'number' ? dishRecord.price : parseFloat(String(dishRecord.price || '0')) || 0,
+      image_url: dishRecord.image_url || null,
+      isMenuItem: false,
+      category: null,
+      images: dishRecord.image_url ? [dishRecord.image_url] : [],
+      stock_quantity: dishRecord.stock_quantity || null,
+      currency: '৳',
+    }
+    
     return {
-      product: { ...dish, isMenuItem: false } as NormalizedProduct,
+      product: normalizedDish,
       source: 'dishes',
       isMenuItem: false,
     }
@@ -168,7 +200,10 @@ async function fetchProduct(productId: string): Promise<ProductData> {
  * @param {boolean} options.enabled - Whether to enable the query
  * @returns {UseProductReturn} Product, loading state, and error
  */
-export function useProduct(productId: string | undefined, options: UseProductOptions = {}): UseProductReturn {
+export function useProduct(
+  productId: string | undefined,
+  options: UseProductOptions = {}
+): UseProductReturn {
   const { enabled = true } = options
 
   const {
@@ -188,7 +223,8 @@ export function useProduct(productId: string | undefined, options: UseProductOpt
     if (!productId || !productData || !enabled) return
 
     const source = productData.source
-    const channelName = source === 'menu_items' ? `menu-item-${productId}-changes` : `product-${productId}-changes`
+    const channelName =
+      source === 'menu_items' ? `menu-item-${productId}-changes` : `product-${productId}-changes`
 
     const channel = supabase
       .channel(channelName)
@@ -222,4 +258,3 @@ export function useProduct(productId: string | undefined, options: UseProductOpt
     },
   }
 }
-

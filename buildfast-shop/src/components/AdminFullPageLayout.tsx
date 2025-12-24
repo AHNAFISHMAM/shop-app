@@ -3,19 +3,23 @@ import { useAuth } from '../contexts/AuthContext'
 import { useEffect, useRef, ReactNode } from 'react'
 
 interface AdminFullPageLayoutProps {
-  children: ReactNode;
-  backPath?: string;
-  title?: string;
+  children: ReactNode
+  backPath?: string
+  title?: string
 }
 
 /**
  * AdminFullPageLayout Component
- * 
+ *
  * Minimal layout for full-page admin views without sidebar or navbar.
  * Provides a back button to return to the admin dashboard.
  * Best practice: Use for content-heavy pages that need maximum screen space.
  */
-function AdminFullPageLayout({ children, backPath = '/admin', title = 'Admin' }: AdminFullPageLayoutProps): JSX.Element {
+function AdminFullPageLayout({
+  children,
+  backPath = '/admin',
+  title = 'Admin',
+}: AdminFullPageLayoutProps): JSX.Element {
   const navigate = useNavigate()
   const { user } = useAuth()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -28,15 +32,18 @@ function AdminFullPageLayout({ children, backPath = '/admin', title = 'Admin' }:
     const handleWheel = (e: WheelEvent) => {
       // Prevent scroll bubbling from scrollable children
       const target = e.target as HTMLElement
-      const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]')
+      const scrollableParent = target.closest(
+        '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
+      )
       if (scrollableParent) {
         // Check if element is actually scrollable (not just overflow-hidden)
         const style = window.getComputedStyle(scrollableParent)
-        const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-                             (style.overflow === 'auto' || 
-                              style.overflow === 'scroll' || 
-                              style.overflowY === 'auto' || 
-                              style.overflowY === 'scroll')
+        const isScrollable =
+          scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+          (style.overflow === 'auto' ||
+            style.overflow === 'scroll' ||
+            style.overflowY === 'auto' ||
+            style.overflowY === 'scroll')
         if (isScrollable) {
           e.stopPropagation()
         }
@@ -45,15 +52,18 @@ function AdminFullPageLayout({ children, backPath = '/admin', title = 'Admin' }:
 
     const handleTouchMove = (e: TouchEvent) => {
       const target = e.target as HTMLElement
-      const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]')
+      const scrollableParent = target.closest(
+        '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
+      )
       if (scrollableParent) {
         // Check if element is actually scrollable (not just overflow-hidden)
         const style = window.getComputedStyle(scrollableParent)
-        const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-                             (style.overflow === 'auto' || 
-                              style.overflow === 'scroll' || 
-                              style.overflowY === 'auto' || 
-                              style.overflowY === 'scroll')
+        const isScrollable =
+          scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+          (style.overflow === 'auto' ||
+            style.overflow === 'scroll' ||
+            style.overflowY === 'auto' ||
+            style.overflowY === 'scroll')
         if (isScrollable) {
           e.stopPropagation()
         }
@@ -70,36 +80,42 @@ function AdminFullPageLayout({ children, backPath = '/admin', title = 'Admin' }:
   }, [])
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="min-h-screen bg-[var(--bg-main)]"
-      onWheel={(e) => {
+      onWheel={e => {
         const target = e.target as HTMLElement
-        const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]')
+        const scrollableParent = target.closest(
+          '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
+        )
         if (scrollableParent) {
           // Check if element is actually scrollable (not just overflow-hidden)
           const style = window.getComputedStyle(scrollableParent)
-          const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-                               (style.overflow === 'auto' || 
-                                style.overflow === 'scroll' || 
-                                style.overflowY === 'auto' || 
-                                style.overflowY === 'scroll')
+          const isScrollable =
+            scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+            (style.overflow === 'auto' ||
+              style.overflow === 'scroll' ||
+              style.overflowY === 'auto' ||
+              style.overflowY === 'scroll')
           if (isScrollable) {
             e.stopPropagation()
           }
         }
       }}
-      onTouchMove={(e) => {
+      onTouchMove={e => {
         const target = e.target as HTMLElement
-        const scrollableParent = target.closest('[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]')
+        const scrollableParent = target.closest(
+          '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
+        )
         if (scrollableParent) {
           // Check if element is actually scrollable (not just overflow-hidden)
           const style = window.getComputedStyle(scrollableParent)
-          const isScrollable = scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-                               (style.overflow === 'auto' || 
-                                style.overflow === 'scroll' || 
-                                style.overflowY === 'auto' || 
-                                style.overflowY === 'scroll')
+          const isScrollable =
+            scrollableParent.scrollHeight > scrollableParent.clientHeight &&
+            (style.overflow === 'auto' ||
+              style.overflow === 'scroll' ||
+              style.overflowY === 'auto' ||
+              style.overflowY === 'scroll')
           if (isScrollable) {
             e.stopPropagation()
           }
@@ -134,18 +150,14 @@ function AdminFullPageLayout({ children, backPath = '/admin', title = 'Admin' }:
             </button>
 
             {/* Title */}
-            <h1 className="text-lg font-semibold text-[var(--text-main)] sm:text-xl">
-              {title}
-            </h1>
+            <h1 className="text-lg font-semibold text-[var(--text-main)] sm:text-xl">{title}</h1>
 
             {/* User Info (Optional) */}
             {user && (
               <div className="flex items-center gap-3">
                 <div className="hidden text-right sm:block">
                   <div className="text-xs text-muted">Logged in as</div>
-                  <div className="text-sm font-medium text-[var(--text-main)]">
-                    {user.email}
-                  </div>
+                  <div className="text-sm font-medium text-[var(--text-main)]">{user.email}</div>
                 </div>
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)]/20 text-sm font-semibold text-[var(--accent)]">
                   {user.email?.charAt(0).toUpperCase()}
@@ -165,4 +177,3 @@ function AdminFullPageLayout({ children, backPath = '/admin', title = 'Admin' }:
 }
 
 export default AdminFullPageLayout
-

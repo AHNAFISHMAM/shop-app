@@ -5,7 +5,15 @@
  * Handles user sessions, admin status, and auth operations.
  */
 
-import { createContext, useContext, useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { clearInvalidAuthTokens } from '../lib/authUtils'
@@ -31,7 +39,11 @@ export interface AuthContextType {
   loading: boolean
   isAdmin: boolean
   isAuthenticated: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ data: any; error: Error | null }>
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<{ data: any; error: Error | null }>
   signIn: (email: string, password: string) => Promise<{ data: any; error: Error | null }>
   signOut: () => Promise<void>
   refreshAdminStatus: () => Promise<void>
@@ -68,7 +80,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   // Cache admin status per user ID to avoid refetching unnecessarily
-  const adminStatusCache = useRef<AdminStatusCache>({ userId: null, isAdmin: false, fetched: false })
+  const adminStatusCache = useRef<AdminStatusCache>({
+    userId: null,
+    isAdmin: false,
+    fetched: false,
+  })
 
   /**
    * Get persisted admin status from sessionStorage
@@ -110,118 +126,128 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Fetch admin status from customers table (cached per user ID)
    */
-  const fetchAdminStatus = useCallback(async (userId: string, forceRefresh = false): Promise<void> => {
-    if (!userId) {
-      setIsAdmin(false)
-      adminStatusCache.current = { userId: null, isAdmin: false, fetched: false }
-      return
-    }
-
-    // Check persisted status first (if available and same user)
-    if (!forceRefresh && adminStatusCache.current.userId === userId) {
-      const persistedStatus = getPersistedAdminStatus(userId)
-      if (persistedStatus !== null && adminStatusCache.current.fetched) {
-        setIsAdmin(persistedStatus)
-        adminStatusCache.current = { userId, isAdmin: persistedStatus, fetched: true }
+  const fetchAdminStatus = useCallback(
+    async (userId: string, forceRefresh = false): Promise<void> => {
+      if (!userId) {
+        setIsAdmin(false)
+        adminStatusCache.current = { userId: null, isAdmin: false, fetched: false }
         return
       }
-    }
 
-    // Use cached value if available and same user (unless forcing refresh)
-    if (
-      !forceRefresh &&
-      adminStatusCache.current.fetched &&
-      adminStatusCache.current.userId === userId
-    ) {
-      setIsAdmin(adminStatusCache.current.isAdmin)
-      setPersistedAdminStatus(userId, adminStatusCache.current.isAdmin)
-      return
-    }
+      // Check persisted status first (if available and same user)
+      if (!forceRefresh && adminStatusCache.current.userId === userId) {
+        const persistedStatus = getPersistedAdminStatus(userId)
+        if (persistedStatus !== null && adminStatusCache.current.fetched) {
+          setIsAdmin(persistedStatus)
+          adminStatusCache.current = { userId, isAdmin: persistedStatus, fetched: true }
+          return
+        }
+      }
 
-    try {
-      // Increased timeout for admin status check (critical for access control)
-      // Using 10 seconds to handle slow connections and database latency
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Admin status fetch timeout after 10 seconds')), 10000)
-      )
+      // Use cached value if available and same user (unless forcing refresh)
+      if (
+        !forceRefresh &&
+        adminStatusCache.current.fetched &&
+        adminStatusCache.current.userId === userId
+      ) {
+        setIsAdmin(adminStatusCache.current.isAdmin)
+        setPersistedAdminStatus(userId, adminStatusCache.current.isAdmin)
+        return
+      }
 
-      const fetchPromise = supabase
-        .from('customers')
-        .select('is_admin')
-        .eq('id', userId)
-        .maybeSingle()
+      try {
+        // Increased timeout for admin status check (critical for access control)
+        // Using 10 seconds to handle slow connections and database latency
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Admin status fetch timeout after 10 seconds')), 10000)
+        )
 
-      const result = await Promise.race([fetchPromise, timeoutPromise])
-      const { data, error } = result || { data: null, error: null }
+        const fetchPromise = supabase
+          .from('customers')
+          .select('is_admin')
+          .eq('id', userId)
+          .maybeSingle()
 
-      if (error) {
-        logError(error, 'AuthContext.fetchAdminStatus')
-        // Only trust persisted TRUE status on error (don't trust false - might be stale)
+        const result = await Promise.race([fetchPromise, timeoutPromise]) as { data: { is_admin: boolean } | null; error: unknown } | { data: null; error: Error }
+        const { data, error } = result || { data: null, error: null }
+
+        if (error) {
+          logError(error, 'AuthContext.fetchAdminStatus')
+          // Only trust persisted TRUE status on error (don't trust false - might be stale)
+          const persistedStatus = getPersistedAdminStatus(userId)
+          if (persistedStatus === true) {
+            // Trust persisted true status
+            setIsAdmin(true)
+            adminStatusCache.current = { userId, isAdmin: true, fetched: true }
+          } else {
+            // On error with no persisted true status, default to false but mark as not fetched
+            // This allows retry on next check
+            logger.warn(
+              'Admin status check failed - defaulting to false. Error may indicate missing customer record or RLS issue.'
+            )
+            setIsAdmin(false)
+            adminStatusCache.current = { userId, isAdmin: false, fetched: false }
+          }
+          return
+        }
+
+        // Handle case where customer record doesn't exist (data is null)
+        if (data === null) {
+          logger.warn(
+            `No customer record found for user ${userId}. User may need to be added to customers table.`
+          )
+          setIsAdmin(false)
+          adminStatusCache.current = { userId, isAdmin: false, fetched: true }
+          setPersistedAdminStatus(userId, false)
+          return
+        }
+
+        const adminStatus = data?.is_admin ?? false
+
+        logger.log('AuthContext: Admin status fetched', { userId, adminStatus, data })
+
+        setIsAdmin(adminStatus)
+        // Cache the result in memory and sessionStorage
+        adminStatusCache.current = { userId, isAdmin: adminStatus, fetched: true }
+        setPersistedAdminStatus(userId, adminStatus)
+      } catch (error) {
+        // Handle timeout or other errors
+        // Only log error if it's not a timeout (timeouts are expected in some cases)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        if (!errorMessage.includes('timeout')) {
+          logError(error, 'AuthContext.fetchAdminStatus.exception')
+        }
+
+        // Only trust persisted TRUE status on exception (don't trust false - might be stale)
         const persistedStatus = getPersistedAdminStatus(userId)
         if (persistedStatus === true) {
-          // Trust persisted true status
           setIsAdmin(true)
           adminStatusCache.current = { userId, isAdmin: true, fetched: true }
         } else {
-          // On error with no persisted true status, default to false but mark as not fetched
-          // This allows retry on next check
-          logger.warn(
-            'Admin status check failed - defaulting to false. Error may indicate missing customer record or RLS issue.'
-          )
+          // Default to false but allow retry
           setIsAdmin(false)
           adminStatusCache.current = { userId, isAdmin: false, fetched: false }
         }
-        return
       }
-
-      // Handle case where customer record doesn't exist (data is null)
-      if (data === null) {
-        logger.warn(`No customer record found for user ${userId}. User may need to be added to customers table.`)
-        setIsAdmin(false)
-        adminStatusCache.current = { userId, isAdmin: false, fetched: true }
-        setPersistedAdminStatus(userId, false)
-        return
-      }
-
-      const adminStatus = data?.is_admin ?? false
-
-      logger.log('AuthContext: Admin status fetched', { userId, adminStatus, data })
-
-      setIsAdmin(adminStatus)
-      // Cache the result in memory and sessionStorage
-      adminStatusCache.current = { userId, isAdmin: adminStatus, fetched: true }
-      setPersistedAdminStatus(userId, adminStatus)
-    } catch (error) {
-      // Handle timeout or other errors
-      // Only log error if it's not a timeout (timeouts are expected in some cases)
-      if (!(error instanceof Error && error.message?.includes('timeout'))) {
-        logError(error, 'AuthContext.fetchAdminStatus.exception')
-      }
-
-      // Only trust persisted TRUE status on exception (don't trust false - might be stale)
-      const persistedStatus = getPersistedAdminStatus(userId)
-      if (persistedStatus === true) {
-        setIsAdmin(true)
-        adminStatusCache.current = { userId, isAdmin: true, fetched: true }
-      } else {
-        // Default to false but allow retry
-        setIsAdmin(false)
-        adminStatusCache.current = { userId, isAdmin: false, fetched: false }
-      }
-    }
-  }, [getPersistedAdminStatus, setPersistedAdminStatus])
+    },
+    [getPersistedAdminStatus, setPersistedAdminStatus]
+  )
 
   // Initialize auth state
   useEffect(() => {
     // Check active sessions and sets the user
     const initAuth = async (): Promise<void> => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
 
         // Handle invalid refresh token errors
         if (
           error &&
-          (error.message?.includes('refresh_token') || error.message?.includes('Invalid Refresh Token'))
+          (error.message?.includes('refresh_token') ||
+            error.message?.includes('Invalid Refresh Token'))
         ) {
           logger.warn('Invalid refresh token detected, clearing all auth data:', error.message)
           // Clear invalid tokens completely
@@ -257,7 +283,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         logError(error, 'AuthContext.initAuth')
         // If it's a refresh token error, clear all auth data
-        if (error instanceof Error && (error.message?.includes('refresh_token') || error.message?.includes('Invalid Refresh Token'))) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        if (errorMessage.includes('refresh_token') || errorMessage.includes('Invalid Refresh Token')) {
           await clearInvalidAuthTokens()
         }
         setUser(null)
@@ -338,7 +365,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         logError(error, 'AuthContext.onAuthStateChange')
         // Handle refresh token errors
-        if (error instanceof Error && (error.message?.includes('refresh_token') || error.message?.includes('Invalid Refresh Token'))) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        if (errorMessage.includes('refresh_token') || errorMessage.includes('Invalid Refresh Token')) {
           await supabase.auth.signOut()
         }
         setIsAdmin(false)
@@ -470,4 +498,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-

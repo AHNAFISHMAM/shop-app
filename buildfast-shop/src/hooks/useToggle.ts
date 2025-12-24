@@ -18,16 +18,11 @@ import { useState, useCallback } from 'react'
  * @param initialValue - Initial value (default: false)
  * @returns Tuple of [value, toggle, setTrue, setFalse]
  */
-export function useToggle(initialValue = false): [
-  boolean,
-  () => void,
-  () => void,
-  () => void,
-] {
+export function useToggle(initialValue = false): [boolean, () => void, () => void, () => void] {
   const [value, setValue] = useState(initialValue)
 
   const toggle = useCallback(() => {
-    setValue((prev) => !prev)
+    setValue(prev => !prev)
   }, [])
 
   const setTrue = useCallback(() => {
@@ -40,4 +35,3 @@ export function useToggle(initialValue = false): [
 
   return [value, toggle, setTrue, setFalse]
 }
-

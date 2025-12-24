@@ -1,25 +1,25 @@
-import { Link, NavLink } from 'react-router-dom';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { useStoreSettings } from '../contexts/StoreSettingsContext';
-import { supabase } from '../lib/supabase';
-import { getFavoritesCount } from '../lib/favoritesUtils';
-import { onFavoritesChanged } from '../lib/favoritesEvents';
-import { logger } from '../utils/logger';
-import SignupPromptModal from './SignupPromptModal';
-import ProfileDropdown from './ProfileDropdown';
+import { Link, NavLink } from 'react-router-dom'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
+import { useStoreSettings } from '../contexts/StoreSettingsContext'
+import { supabase } from '../lib/supabase'
+import { getFavoritesCount } from '../lib/favoritesUtils'
+import { onFavoritesChanged } from '../lib/favoritesEvents'
+import { logger } from '../utils/logger'
+import SignupPromptModal from './SignupPromptModal'
+import ProfileDropdown from './ProfileDropdown'
 
 /**
  * Burger icon component props
  */
 interface BurgerIconProps extends React.SVGProps<SVGSVGElement> {
-  className?: string;
+  className?: string
 }
 
 /**
  * Burger Icon Component
- * 
+ *
  * Custom hamburger menu icon for navigation
  */
 const BurgerIcon = ({ className, ...props }: BurgerIconProps) => (
@@ -39,14 +39,14 @@ const BurgerIcon = ({ className, ...props }: BurgerIconProps) => (
     <path d="M5.5 14.75h13" />
     <path d="M5 17.5c1.6 1.1 3.7 1.75 7 1.75s5.4-.65 7-1.75" />
   </svg>
-);
+)
 
 /**
  * Navigation link interface
  */
 interface NavLinkItem {
-  to: string;
-  label: string;
+  to: string
+  label: string
 }
 
 /**
@@ -57,7 +57,7 @@ const navLinks: NavLinkItem[] = [
   { to: '/order', label: 'ORDER' },
   { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },
-];
+]
 
 /**
  * Navbar Component
@@ -74,59 +74,59 @@ const navLinks: NavLinkItem[] = [
  * - Performance optimized (memoized callbacks, reduced motion support)
  */
 const Navbar = () => {
-  const [open, setOpen] = useState<boolean>(false);
-  const [showSignupModal, setShowSignupModal] = useState<boolean>(false);
-  const { user, isAdmin, loading } = useAuth();
-  const { theme, setTheme } = useTheme();
-  const { settings, loading: settingsLoading } = useStoreSettings();
-  const [favoritesCount, setFavoritesCount] = useState<number>(0);
+  const [open, setOpen] = useState<boolean>(false)
+  const [showSignupModal, setShowSignupModal] = useState<boolean>(false)
+  const { user, isAdmin, loading } = useAuth()
+  const { theme, setTheme } = useTheme()
+  const { settings, loading: settingsLoading } = useStoreSettings()
+  const [favoritesCount, setFavoritesCount] = useState<number>(0)
 
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Fetch favorites count
   useEffect(() => {
     const fetchCount = async () => {
       try {
         if (user) {
-          const count = await getFavoritesCount(user.id);
-          setFavoritesCount(count);
+          const count = await getFavoritesCount(user.id)
+          setFavoritesCount(count)
         } else {
-          setFavoritesCount(0);
+          setFavoritesCount(0)
         }
       } catch (error) {
-        logger.error('Error fetching favorites count:', error);
-        setFavoritesCount(0);
+        logger.error('Error fetching favorites count:', error)
+        setFavoritesCount(0)
       }
-    };
+    }
 
-    fetchCount();
+    fetchCount()
 
     // Listen for favorites changes
     const cleanup = onFavoritesChanged(() => {
-      fetchCount();
-    });
+      fetchCount()
+    })
 
     // Real-time subscription for favorites
     if (user) {
@@ -138,70 +138,71 @@ const Navbar = () => {
             event: '*',
             schema: 'public',
             table: 'favorites',
-            filter: `user_id=eq.${user.id}`
+            filter: `user_id=eq.${user.id}`,
           },
           () => {
-            fetchCount();
+            fetchCount()
           }
         )
-        .subscribe();
+        .subscribe()
 
       return () => {
-        cleanup();
-        supabase.removeChannel(channel);
-      };
+        cleanup()
+        supabase.removeChannel(channel)
+      }
     }
 
-    return cleanup;
-  }, [user]);
+    return cleanup
+  }, [user])
 
   // Memoized computed values
   const adminPath = useMemo(() => {
-    return isAdmin ? '/admin' : '/login';
-  }, [isAdmin]);
+    return isAdmin ? '/admin' : '/login'
+  }, [isAdmin])
 
   const adminLabel = useMemo(() => {
-    return isAdmin ? 'Admin' : 'Log In';
-  }, [isAdmin]);
+    return isAdmin ? 'Admin' : 'Log In'
+  }, [isAdmin])
 
   const showThemeToggle = useMemo(() => {
-    return settings?.show_theme_toggle !== false;
-  }, [settings]);
+    return settings?.show_theme_toggle !== false
+  }, [settings])
 
   const enableReservations = useMemo(() => {
-    return settingsLoading ? false : (settings?.enable_reservations ?? true);
-  }, [settings, settingsLoading]);
+    return settingsLoading ? false : (settings?.enable_reservations ?? true)
+  }, [settings, settingsLoading])
 
   // Memoized callbacks
   const handleToggleMenu = useCallback(() => {
-    setOpen(prev => !prev);
-  }, []);
+    setOpen(prev => !prev)
+  }, [])
 
   const handleCloseMenu = useCallback(() => {
-    setOpen(false);
-  }, []);
+    setOpen(false)
+  }, [])
 
   const handleThemeToggle = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  }, [theme, setTheme]);
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }, [theme, setTheme])
 
   const handleShowSignupModal = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowSignupModal(true);
-  }, []);
+    e.preventDefault()
+    e.stopPropagation()
+    setShowSignupModal(true)
+  }, [])
 
   const handleCloseSignupModal = useCallback(() => {
-    setShowSignupModal(false);
-  }, []);
+    setShowSignupModal(false)
+  }, [])
 
   // Memoized hover handlers for better performance
-  const getHoverBackgroundColor = useCallback((isHover: boolean) => {
-    if (!isHover) return 'transparent';
-    return isLightTheme
-      ? 'rgba(var(--bg-dark-rgb), 0.08)'
-      : 'rgba(var(--text-main-rgb), 0.1)';
-  }, [isLightTheme]);
+  const getHoverBackgroundColor = useCallback(
+    (isHover: boolean) => {
+      if (!isHover) return 'transparent'
+      return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.08)' : 'rgba(var(--text-main-rgb), 0.1)'
+    },
+    [isLightTheme]
+  )
 
   return (
     <header
@@ -209,7 +210,7 @@ const Navbar = () => {
       style={{
         backgroundColor: isLightTheme
           ? 'rgba(var(--text-main-rgb), 0.8)'
-          : 'rgba(var(--bg-dark-rgb), 0.8)'
+          : 'rgba(var(--bg-dark-rgb), 0.8)',
       }}
       role="banner"
     >
@@ -217,8 +218,8 @@ const Navbar = () => {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(var(--text-main-rgb),0.2),transparent_60%)] opacity-60"
         aria-hidden="true"
       />
-      <nav 
-        className="relative z-10 py-3 flex items-center justify-between" 
+      <nav
+        className="relative z-10 py-3 flex items-center justify-between"
         style={{
           // Add padding to match page spacing (consistent side spacing)
           paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -226,9 +227,9 @@ const Navbar = () => {
           // Ensure no overflow constraints
           overflow: 'visible',
           overflowX: 'visible',
-          overflowY: 'visible'
+          overflowY: 'visible',
         }}
-        role="navigation" 
+        role="navigation"
         aria-label="Main navigation"
       >
         <Link to="/" className="flex items-baseline gap-2" aria-label="Star Café home">
@@ -248,7 +249,9 @@ const Navbar = () => {
               to={link.to}
               className={({ isActive }: { isActive: boolean }) =>
                 `text-sm uppercase tracking-wide min-h-[44px] flex items-center ${
-                  isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  isActive
+                    ? 'text-[var(--accent)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
                 } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2`
               }
             >
@@ -271,13 +274,13 @@ const Navbar = () => {
               to="/favorites"
               className="relative p-3 min-h-[44px] min-w-[44px] rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] group"
               style={{
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = getHoverBackgroundColor(true);
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = getHoverBackgroundColor(true)
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
               }}
               title="View your favorite dishes"
               aria-label={`Go to favorites page${favoritesCount > 0 ? ` (${favoritesCount} items)` : ''}`}
@@ -298,13 +301,13 @@ const Navbar = () => {
               onClick={handleShowSignupModal}
               className="relative p-3 min-h-[44px] min-w-[44px] rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] group"
               style={{
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = getHoverBackgroundColor(true);
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = getHoverBackgroundColor(true)
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
               }}
               title="Save your favorite dishes - Sign up required"
               aria-label="Open favorites signup prompt"
@@ -312,7 +315,11 @@ const Navbar = () => {
               <BurgerIcon className="w-5 h-5 text-[var(--accent)] group-hover:scale-110 transition-transform" />
             </button>
           ) : (
-            <div className="relative p-2 w-9 h-9 min-h-[44px] min-w-[44px]" aria-label="Loading favorites" aria-busy="true">
+            <div
+              className="relative p-2 w-9 h-9 min-h-[44px] min-w-[44px]"
+              aria-label="Loading favorites"
+              aria-busy="true"
+            >
               <BurgerIcon className="w-5 h-5 text-[var(--accent)]/50" />
             </div>
           )}
@@ -323,24 +330,46 @@ const Navbar = () => {
               onClick={handleThemeToggle}
               className="p-3 min-h-[44px] min-w-[44px] rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
               style={{
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = getHoverBackgroundColor(true);
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = getHoverBackgroundColor(true)
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
               }}
               aria-label={`Toggle theme. Current: ${theme === 'dark' ? 'Dark' : 'Light'}`}
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
             >
               {theme === 'light' ? (
-                <svg className="w-5 h-5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                <svg
+                  className="w-5 h-5 text-[var(--accent)]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                <svg
+                  className="w-5 h-5 text-[var(--accent)]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                  />
                 </svg>
               )}
             </button>
@@ -372,17 +401,17 @@ const Navbar = () => {
           style={{
             backgroundColor: isLightTheme
               ? 'rgba(var(--text-main-rgb), 0.95)'
-              : 'rgba(var(--bg-dark-rgb), 0.95)'
+              : 'rgba(var(--bg-dark-rgb), 0.95)',
           }}
           role="region"
           aria-label="Mobile navigation menu"
         >
-          <div 
+          <div
             className="py-3 flex flex-col gap-2"
             style={{
               // Add padding to match page spacing (consistent side spacing)
               paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
-              paddingRight: 'clamp(1rem, 3vw, 3.5rem)'
+              paddingRight: 'clamp(1rem, 3vw, 3.5rem)',
             }}
           >
             {navLinks.map(link => (
@@ -434,9 +463,9 @@ const Navbar = () => {
             ) : !loading && !user ? (
               <button
                 type="button"
-                onClick={(e) => {
-                  handleShowSignupModal(e);
-                  handleCloseMenu();
+                onClick={e => {
+                  handleShowSignupModal(e)
+                  handleCloseMenu()
                 }}
                 className="mt-4 pt-4 border-t border-[var(--border-default)] w-full flex items-center justify-between py-3 text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] transition min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
                 aria-label="Open favorites signup prompt"
@@ -450,8 +479,8 @@ const Navbar = () => {
             {showThemeToggle && (
               <button
                 onClick={() => {
-                  handleThemeToggle();
-                  handleCloseMenu();
+                  handleThemeToggle()
+                  handleCloseMenu()
                 }}
                 className="mt-4 pt-4 border-t border-[var(--border-default)] w-full flex items-center justify-between py-3 text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] transition min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
                 aria-label={`Toggle theme. Current: ${theme === 'dark' ? 'Dark' : 'Light'}`}
@@ -461,15 +490,37 @@ const Navbar = () => {
                   {theme === 'light' ? (
                     <>
                       <span className="text-xs font-medium">Light</span>
-                      <svg className="w-4 h-4 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                      <svg
+                        className="w-4 h-4 text-[var(--accent)]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                        />
                       </svg>
                     </>
                   ) : (
                     <>
                       <span className="text-xs font-medium">Dark</span>
-                      <svg className="w-4 h-4 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      <svg
+                        className="w-4 h-4 text-[var(--accent)]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                        />
                       </svg>
                     </>
                   )}
@@ -490,13 +541,9 @@ const Navbar = () => {
       )}
 
       {/* Signup Prompt Modal */}
-      <SignupPromptModal
-        isOpen={showSignupModal}
-        onClose={handleCloseSignupModal}
-      />
+      <SignupPromptModal isOpen={showSignupModal} onClose={handleCloseSignupModal} />
     </header>
-  );
-};
+  )
+}
 
-export default Navbar;
-
+export default Navbar

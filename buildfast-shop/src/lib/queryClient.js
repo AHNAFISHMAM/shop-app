@@ -1,7 +1,7 @@
 /**
  * React Query Client Configuration
  * Centralized configuration for data fetching, caching, and synchronization
- * 
+ *
  * React Query v5 API:
  * - gcTime: Garbage collection time (replaces cacheTime)
  * - staleTime: Time before data is considered stale
@@ -9,11 +9,11 @@
  * - retry: Number of retry attempts
  */
 
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query'
 
 /**
  * Create and configure React Query client
- * 
+ *
  * Default options:
  * - staleTime: 5 minutes - Data is considered fresh for 5 minutes
  * - gcTime: 10 minutes - Unused data stays in cache for 10 minutes (v5 API)
@@ -29,12 +29,11 @@ export const queryClient = new QueryClient({
       refetchOnMount: true,
       refetchOnReconnect: true,
       retry: 1,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
       retry: 1,
       retryDelay: 1000,
     },
   },
-});
-
+})

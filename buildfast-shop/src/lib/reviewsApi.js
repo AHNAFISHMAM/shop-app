@@ -10,23 +10,17 @@ import { logger } from '../utils/logger'
  * @param {number} options.offset - Offset for pagination
  * @returns {Object} Result object with reviews data
  */
-export async function fetchProductReviews(itemId, {
-  itemType = 'product',
-  sortBy = 'recent',
-  limit = 10,
-  offset = 0,
-  source
-} = {}) {
+export async function fetchProductReviews(
+  itemId,
+  { itemType = 'product', sortBy = 'recent', limit = 10, offset = 0, source } = {}
+) {
   try {
     logger.log('=== FETCHING PRODUCT REVIEWS ===')
     logger.log('Item ID:', itemId)
     logger.log('Item Type:', itemType)
     logger.log('Sort:', sortBy, 'Limit:', limit, 'Offset:', offset)
 
-    let query = supabase
-      .from('product_reviews')
-      .select('*')
-      .eq('is_hidden', false)
+    let query = supabase.from('product_reviews').select('*').eq('is_hidden', false)
 
     if (itemType === 'menu_item') {
       query = query.eq('menu_item_id', itemId)
@@ -43,7 +37,9 @@ export async function fetchProductReviews(itemId, {
     // Apply sorting
     switch (sortBy) {
       case 'highest':
-        query = query.order('rating', { ascending: false }).order('created_at', { ascending: false })
+        query = query
+          .order('rating', { ascending: false })
+          .order('created_at', { ascending: false })
         break
       case 'lowest':
         query = query.order('rating', { ascending: true }).order('created_at', { ascending: false })
@@ -86,16 +82,18 @@ export async function getProductRatingStats(itemId) {
     logger.log('Item ID:', itemId)
 
     // Use RPC function for average rating
-    const { data: avgData, error: avgError } = await supabase
-      .rpc('get_product_average_rating', { p_product_id: itemId })
+    const { data: avgData, error: avgError } = await supabase.rpc('get_product_average_rating', {
+      p_product_id: itemId,
+    })
 
     logger.log('Average rating RPC result:', { avgData, avgError })
 
     if (avgError) throw avgError
 
     // Use RPC function for review count
-    const { data: countData, error: countError } = await supabase
-      .rpc('get_product_review_count', { p_product_id: itemId })
+    const { data: countData, error: countError } = await supabase.rpc('get_product_review_count', {
+      p_product_id: itemId,
+    })
 
     logger.log('Review count RPC result:', { countData, countError })
 
@@ -104,7 +102,7 @@ export async function getProductRatingStats(itemId) {
     const result = {
       success: true,
       averageRating: avgData || 0,
-      totalReviews: countData || 0
+      totalReviews: countData || 0,
     }
 
     logger.log('Rating stats result:', result)
@@ -123,8 +121,9 @@ export async function getProductRatingStats(itemId) {
  */
 export async function getProductRatingDistribution(itemId) {
   try {
-    const { data, error } = await supabase
-      .rpc('get_product_rating_distribution', { p_product_id: itemId })
+    const { data, error } = await supabase.rpc('get_product_rating_distribution', {
+      p_product_id: itemId,
+    })
 
     if (error) throw error
 
@@ -143,11 +142,10 @@ export async function getProductRatingDistribution(itemId) {
  */
 export async function canUserReviewProduct(productId, userId) {
   try {
-    const { data, error } = await supabase
-      .rpc('verify_user_purchased_product', {
-        p_user_id: userId,
-        p_product_id: productId
-      })
+    const { data, error } = await supabase.rpc('verify_user_purchased_product', {
+      p_user_id: userId,
+      p_product_id: productId,
+    })
 
     if (error) throw error
 
@@ -156,7 +154,7 @@ export async function canUserReviewProduct(productId, userId) {
       success: true,
       canReview,
       orderItemId: canReview ? data[0].order_item_id : null,
-      orderId: canReview ? data[0].order_id : null
+      orderId: canReview ? data[0].order_id : null,
     }
   } catch (error) {
     logger.error('Error checking review eligibility:', error)
@@ -190,7 +188,7 @@ export async function createReview({
   reviewImages = [],
   source = 'purchase',
   favoriteIsGeneral = false,
-  favoriteTargetLabel = null
+  favoriteTargetLabel = null,
 }) {
   try {
     logger.log('=== CREATE REVIEW API CALL ===')
@@ -204,7 +202,7 @@ export async function createReview({
       rating,
       review_text: reviewText,
       review_images: reviewImages,
-      is_verified_purchase: true
+      is_verified_purchase: true,
     })
 
     if (source === 'purchase' && (!rating || !orderId || !orderItemId)) {
@@ -212,10 +210,8 @@ export async function createReview({
     }
 
     const isMenuItem = itemType === 'menu_item'
-    const resolvedProductId = source === 'favorite' ? null : (isMenuItem ? null : productId)
-    const resolvedMenuItemId = isMenuItem
-      ? (menuItemId || productId)
-      : (menuItemId || null)
+    const resolvedProductId = source === 'favorite' ? null : isMenuItem ? null : productId
+    const resolvedMenuItemId = isMenuItem ? menuItemId || productId : menuItemId || null
 
     const payload = {
       product_id: resolvedProductId,
@@ -229,14 +225,10 @@ export async function createReview({
       is_verified_purchase: source === 'purchase',
       source,
       favorite_is_general: source === 'favorite' ? favoriteIsGeneral : false,
-      favorite_target_label: source === 'favorite' ? favoriteTargetLabel : null
+      favorite_target_label: source === 'favorite' ? favoriteTargetLabel : null,
     }
 
-    const { data, error } = await supabase
-      .from('product_reviews')
-      .insert(payload)
-      .select()
-      .single()
+    const { data, error } = await supabase.from('product_reviews').insert(payload).select().single()
 
     if (error) {
       logger.error('=== SUPABASE INSERT ERROR ===')
@@ -252,7 +244,7 @@ export async function createReview({
           success: false,
           alreadyExists: true,
           message: 'You have already reviewed this product from this purchase',
-          error
+          error,
         }
       }
 
@@ -262,7 +254,7 @@ export async function createReview({
           success: false,
           tableMissing: true,
           message: 'Reviews table not found. Please contact support to set up the database.',
-          error
+          error,
         }
       }
 
@@ -271,8 +263,9 @@ export async function createReview({
         return {
           success: false,
           permissionDenied: true,
-          message: 'You do not have permission to review this product. Only verified purchasers can leave reviews.',
-          error
+          message:
+            'You do not have permission to review this product. Only verified purchasers can leave reviews.',
+          error,
         }
       }
 
@@ -331,10 +324,7 @@ export async function updateReview(reviewId, { rating, reviewText, reviewImages 
  */
 export async function deleteReview(reviewId) {
   try {
-    const { error } = await supabase
-      .from('product_reviews')
-      .delete()
-      .eq('id', reviewId)
+    const { error } = await supabase.from('product_reviews').delete().eq('id', reviewId)
 
     if (error) throw error
 
@@ -368,12 +358,10 @@ export async function uploadReviewImage(file, userId) {
     const fileExt = file.name.split('.').pop()
     const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
 
-    const { data, error } = await supabase.storage
-      .from('review-images')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
+    const { data, error } = await supabase.storage.from('review-images').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+    })
 
     if (error) {
       // Check if bucket doesn't exist
@@ -381,16 +369,14 @@ export async function uploadReviewImage(file, userId) {
         return {
           success: false,
           error: new Error('Image storage not configured. Please contact support.'),
-          bucketMissing: true
+          bucketMissing: true,
         }
       }
       throw error
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('review-images')
-      .getPublicUrl(data.path)
+    const { data: urlData } = supabase.storage.from('review-images').getPublicUrl(data.path)
 
     return { success: true, url: urlData.publicUrl }
   } catch (error) {
@@ -398,7 +384,7 @@ export async function uploadReviewImage(file, userId) {
     return {
       success: false,
       error: error.message || 'Failed to upload image',
-      bucketMissing: error.message?.includes('Bucket') || error.message?.includes('not found')
+      bucketMissing: error.message?.includes('Bucket') || error.message?.includes('not found'),
     }
   }
 }
@@ -416,11 +402,15 @@ export async function uploadReviewImage(file, userId) {
  * @param {number} options.offset - Offset for pagination
  * @returns {Object} Result object with reviews data
  */
-export async function fetchAllReviews({ filter = 'all', sortBy = 'recent', limit = 20, offset = 0, source } = {}) {
+export async function fetchAllReviews({
+  filter = 'all',
+  sortBy = 'recent',
+  limit = 20,
+  offset = 0,
+  source,
+} = {}) {
   try {
-    let query = supabase
-      .from('product_reviews')
-      .select(`
+    let query = supabase.from('product_reviews').select(`
         *,
         products (
           name,
@@ -447,7 +437,9 @@ export async function fetchAllReviews({ filter = 'all', sortBy = 'recent', limit
     // Apply sorting
     switch (sortBy) {
       case 'highest':
-        query = query.order('rating', { ascending: false }).order('created_at', { ascending: false })
+        query = query
+          .order('rating', { ascending: false })
+          .order('created_at', { ascending: false })
         break
       case 'lowest':
         query = query.order('rating', { ascending: true }).order('created_at', { ascending: false })
@@ -497,7 +489,8 @@ export async function fetchUserFavoriteReviews({ userId, timeframe = 'current' }
 
     let query = supabase
       .from('product_reviews')
-      .select(`
+      .select(
+        `
         *,
         menu_items (
           id,
@@ -506,7 +499,8 @@ export async function fetchUserFavoriteReviews({ userId, timeframe = 'current' }
           price,
           currency
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .eq('source', 'favorite')
       .order('created_at', { ascending: false })
@@ -522,7 +516,7 @@ export async function fetchUserFavoriteReviews({ userId, timeframe = 'current' }
     return {
       success: true,
       data: data || [],
-      count: data?.length || 0
+      count: data?.length || 0,
     }
   } catch (error) {
     logger.error('Error fetching user favorite reviews:', error)
@@ -536,14 +530,16 @@ export async function fetchAdminFavoriteReviews({ timeframe = 'current', limit =
 
     let query = supabase
       .from('product_reviews')
-      .select(`
+      .select(
+        `
         *,
         menu_items (
           id,
           name,
           image_url
         )
-      `)
+      `
+      )
       .eq('source', 'favorite')
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -560,13 +556,18 @@ export async function fetchAdminFavoriteReviews({ timeframe = 'current', limit =
     const stats = {
       total: rows.length,
       timeframeCount: rows.length,
-      uniqueUsers: new Set(rows.map(row => row.user_id)).size
+      uniqueUsers: new Set(rows.map(row => row.user_id)).size,
     }
 
     return { success: true, data: rows, stats }
   } catch (error) {
     logger.error('Error fetching favorite reviews (admin):', error)
-    return { success: false, error, data: [], stats: { total: 0, timeframeCount: 0, uniqueUsers: 0 } }
+    return {
+      success: false,
+      error,
+      data: [],
+      stats: { total: 0, timeframeCount: 0, uniqueUsers: 0 },
+    }
   }
 }
 

@@ -21,39 +21,39 @@ export interface CheckoutState {
   showConversionModal: boolean
   guestCheckoutData: unknown | null
   continueAsGuest: boolean
-  
+
   // Fulfillment
   fulfillmentMode: FulfillmentMode
   scheduledSlot: ScheduledSlot
-  
+
   // Address
   selectedSavedAddress: unknown | null
   useManualAddress: boolean
   shippingAddress: ShippingAddress
-  
+
   // Order
   placingOrder: boolean
   orderSuccess: boolean
   orderError: string
-  
+
   // Payment
   showPayment: boolean
   clientSecret: string
   createdOrderId: string | null
   showSuccessModal: boolean
-  
+
   // Order details
   showOrderNote: boolean
   orderNote: string
-  
+
   // Loyalty
   showRewardsPanel: boolean
   trackingStatus: unknown | null
-  
+
   // Marketing
   emailUpdatesOptIn: boolean
   smsUpdatesOptIn: boolean
-  
+
   // Discount
   discountCodeInput: string
   appliedDiscountCode: unknown | null
@@ -61,4 +61,3 @@ export interface CheckoutState {
   discountError: string
   validatingDiscount: boolean
 }
-

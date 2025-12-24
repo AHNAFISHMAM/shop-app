@@ -31,10 +31,10 @@ export async function clearInvalidAuthTokens(): Promise<AuthErrorResult> {
 
     // Additionally clear all auth-related localStorage items
     const authKeys = Object.keys(localStorage).filter(
-      (key) => key.includes('supabase') || key.includes('auth')
+      key => key.includes('supabase') || key.includes('auth')
     )
 
-    authKeys.forEach((key) => {
+    authKeys.forEach(key => {
       try {
         localStorage.removeItem(key)
       } catch (err) {
@@ -113,4 +113,3 @@ export async function handleAuthError(
 
   return false
 }
-

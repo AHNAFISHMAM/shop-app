@@ -5,27 +5,27 @@ import GlowPanel from '../ui/GlowPanel'
 import { logger } from '../../utils/logger'
 
 interface CustomerHistoryProps {
-  customerEmail: string;
+  customerEmail: string
 }
 
 interface CustomerStats {
-  total_visits?: number;
-  total_spent?: number;
-  is_vip?: boolean;
-  tags?: string[];
-  dietary_restrictions?: string[];
-  notes?: string;
-  [key: string]: unknown;
+  total_visits?: number
+  total_spent?: number
+  is_vip?: boolean
+  tags?: string[]
+  dietary_restrictions?: string[]
+  notes?: string
+  [key: string]: unknown
 }
 
 interface Reservation {
-  id: string;
-  reservation_date: string;
-  reservation_time: string;
-  party_size: number;
-  table_number?: string;
-  status: string;
-  [key: string]: unknown;
+  id: string
+  reservation_date: string
+  reservation_time: string
+  party_size: number
+  table_number?: string
+  status: string
+  [key: string]: unknown
 }
 
 /**
@@ -80,7 +80,12 @@ function CustomerHistory({ customerEmail }: CustomerHistoryProps): JSX.Element {
 
   if (loading) {
     return (
-      <GlowPanel glow="soft" radius="rounded-lg" padding="p-6" background="bg-[rgba(255,255,255,0.02)]">
+      <GlowPanel
+        glow="soft"
+        radius="rounded-lg"
+        padding="p-6"
+        background="bg-[rgba(255,255,255,0.02)]"
+      >
         <div className="flex items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-[var(--accent)]"></div>
         </div>
@@ -88,7 +93,8 @@ function CustomerHistory({ customerEmail }: CustomerHistoryProps): JSX.Element {
     )
   }
 
-  const totalVisits = customerStats?.total_visits || history.filter(r => r.status === 'completed').length
+  const totalVisits =
+    customerStats?.total_visits || history.filter(r => r.status === 'completed').length
   const totalSpent = customerStats?.total_spent || 0
   const isVIP = customerStats?.is_vip || false
 
@@ -96,15 +102,30 @@ function CustomerHistory({ customerEmail }: CustomerHistoryProps): JSX.Element {
     <div className="space-y-4">
       {/* Customer Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <GlowPanel glow="soft" radius="rounded-lg" padding="p-3" background="bg-[rgba(255,255,255,0.03)]">
+        <GlowPanel
+          glow="soft"
+          radius="rounded-lg"
+          padding="p-3"
+          background="bg-[rgba(255,255,255,0.03)]"
+        >
           <p className="text-xs text-muted">Total Visits</p>
           <p className="text-xl font-bold text-[var(--text-main)]">{totalVisits}</p>
         </GlowPanel>
-        <GlowPanel glow="soft" radius="rounded-lg" padding="p-3" background="bg-[rgba(255,255,255,0.03)]">
+        <GlowPanel
+          glow="soft"
+          radius="rounded-lg"
+          padding="p-3"
+          background="bg-[rgba(255,255,255,0.03)]"
+        >
           <p className="text-xs text-muted">Total Spent</p>
           <p className="text-xl font-bold text-[var(--accent)]">৳{totalSpent.toLocaleString()}</p>
         </GlowPanel>
-        <GlowPanel glow="soft" radius="rounded-lg" padding="p-3" background="bg-[rgba(255,255,255,0.03)]">
+        <GlowPanel
+          glow="soft"
+          radius="rounded-lg"
+          padding="p-3"
+          background="bg-[rgba(255,255,255,0.03)]"
+        >
           <p className="text-xs text-muted">Status</p>
           <p className="text-xl font-bold">
             {isVIP ? (
@@ -144,7 +165,12 @@ function CustomerHistory({ customerEmail }: CustomerHistoryProps): JSX.Element {
                 className="inline-flex items-center gap-1 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-300"
               >
                 <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
                 {restriction}
               </span>
@@ -176,7 +202,7 @@ function CustomerHistory({ customerEmail }: CustomerHistoryProps): JSX.Element {
           <p className="text-center text-sm text-muted">No previous reservations</p>
         ) : (
           <div className="space-y-2">
-            {history.slice(0, 5).map((reservation) => (
+            {history.slice(0, 5).map(reservation => (
               <GlowPanel
                 glow="soft"
                 key={reservation.id}
@@ -187,11 +213,14 @@ function CustomerHistory({ customerEmail }: CustomerHistoryProps): JSX.Element {
               >
                 <div>
                   <p className="font-medium text-[var(--text-main)]">
-                    {new Date(reservation.reservation_date + 'T00:00:00').toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
+                    {new Date(reservation.reservation_date + 'T00:00:00').toLocaleDateString(
+                      'en-US',
+                      {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      }
+                    )}
                   </p>
                   <p className="text-xs text-muted">
                     {reservation.reservation_time} • {reservation.party_size} guests
@@ -222,4 +251,3 @@ function CustomerHistory({ customerEmail }: CustomerHistoryProps): JSX.Element {
 }
 
 export default CustomerHistory
-

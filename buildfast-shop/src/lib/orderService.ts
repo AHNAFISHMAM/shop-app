@@ -7,8 +7,7 @@
 
 import { supabase } from './supabase'
 import { logger } from '../utils/logger'
-import { logError, getUserFriendlyError } from './error-handler'
-import type { Order, OrderItem, CreateOrderResult } from './database.types'
+import type { Order, CreateOrderResult, Database } from './database.types'
 
 /**
  * Order item input type
@@ -105,9 +104,7 @@ export interface OrderFilters {
  * @param orderData - Order details
  * @returns Promise with order ID or error
  */
-export async function createOrderWithItems(
-  orderData: OrderData
-): Promise<OrderResponse> {
+export async function createOrderWithItems(orderData: OrderData): Promise<OrderResponse> {
   try {
     const {
       userId,
@@ -223,7 +220,7 @@ export async function createOrderWithItems(
     }
 
     // Call RPC function
-    const { data, error } = await supabase.rpc('create_order_with_items', {
+    const { data, error } = await (supabase.rpc as any)('create_order_with_items', {
       _user_id: userId || null,
       _customer_email: customerEmail.trim(),
       _customer_name: customerName.trim(),
@@ -347,10 +344,7 @@ export async function getUserOrders(
  * @param sessionId - Guest session ID
  * @returns Promise with orders data or error
  */
-export async function getGuestOrders(
-  email: string,
-  sessionId: string
-): Promise<OrdersResponse> {
+export async function getGuestOrders(email: string, sessionId: string): Promise<OrdersResponse> {
   try {
     if (!email || !sessionId) {
       return {
@@ -411,11 +405,7 @@ export async function getOrderById(orderId: string): Promise<{
       }
     }
 
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('id', orderId)
-      .single()
+    const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single()
 
     if (error) {
       logger.error('Error fetching order:', error)
@@ -454,7 +444,9 @@ export async function getAllOrders(
     // Optimize: Only select needed fields instead of *
     let query = supabase
       .from('orders')
-      .select('id, status, order_total, created_at, customer_email, customer_name, user_id', { count: 'exact' })
+      .select('id, status, order_total, created_at, customer_email, customer_name, user_id', {
+        count: 'exact',
+      })
       .order('created_at', { ascending: false })
 
     if (filters.status) {
@@ -515,10 +507,7 @@ export async function getAllOrders(
  * @param status - New status
  * @returns Promise with success status or error
  */
-export async function updateOrderStatus(
-  orderId: string,
-  status: string
-): Promise<OrderResponse> {
+export async function updateOrderStatus(orderId: string, status: string): Promise<OrderResponse> {
   try {
     if (!orderId || !status) {
       return {
@@ -528,9 +517,10 @@ export async function updateOrderStatus(
       }
     }
 
-    const { data, error } = await supabase
-      .from('orders')
-      .update({ status })
+    const updateData = { status } as Database['public']['Tables']['orders']['Update']
+    const { data, error } = await (supabase
+      .from('orders') as any)
+      .update(updateData)
       .eq('id', orderId)
       .select('id')
       .single()
@@ -559,12 +549,15 @@ export async function updateOrderStatus(
   }
 }
 
+// Export createOrder as alias for createOrderWithItems
+export const createOrder = createOrderWithItems
+
 export default {
   createOrderWithItems,
+  createOrder,
   getUserOrders,
   getGuestOrders,
   getOrderById,
   getAllOrders,
   updateOrderStatus,
 }
-

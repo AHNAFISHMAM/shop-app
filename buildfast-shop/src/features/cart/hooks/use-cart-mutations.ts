@@ -15,7 +15,7 @@ import {
   type CartOperationResult,
 } from '../../../lib/cartUtils'
 import type { MenuItem, CartItem } from '../../../lib/database.types'
-import type { User } from '@supabase/supabase-js'
+import type { User as _User } from '@supabase/supabase-js'
 
 /**
  * Cart item with resolved product data
@@ -62,13 +62,11 @@ export function useAddMenuItemToCart() {
 
       // Optimistically update cart items
       if (previousCartItems) {
-        const existingItem = previousCartItems.find((item) => item.menu_item_id === menuItem.id)
+        const existingItem = previousCartItems.find(item => item.menu_item_id === menuItem.id)
         if (existingItem) {
           // Update quantity if item exists
-          const updatedItems = previousCartItems.map((item) =>
-            item.id === existingItem.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
+          const updatedItems = previousCartItems.map(item =>
+            item.id === existingItem.id ? { ...item, quantity: item.quantity + 1 } : item
           )
           queryClient.setQueryData(queryKeys.cart.items(userId), updatedItems)
         } else {
@@ -96,13 +94,16 @@ export function useAddMenuItemToCart() {
 
       return { previousCartItems, previousCartCount }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, variables, context) => {
       // Rollback on error
       if (context?.previousCartItems !== undefined) {
         queryClient.setQueryData(queryKeys.cart.items(variables.userId), context.previousCartItems)
       }
       if (context?.previousCartCount !== undefined) {
-        queryClient.setQueryData(queryKeys.cart.summary(variables.userId), context.previousCartCount)
+        queryClient.setQueryData(
+          queryKeys.cart.summary(variables.userId),
+          context.previousCartCount
+        )
       }
     },
     onSuccess: (data, variables) => {
@@ -155,13 +156,13 @@ export function useUpdateCartItemQuantity() {
       const previousCartCount = queryClient.getQueryData<number>(queryKeys.cart.summary(userId))
 
       // Find the item being updated
-      const itemToUpdate = previousCartItems?.find((item) => item.id === cartItemId)
+      const itemToUpdate = previousCartItems?.find(item => item.id === cartItemId)
       const oldQuantity = itemToUpdate?.quantity || 0
       const quantityDiff = newQuantity - oldQuantity
 
       // Optimistically update cart items
       if (previousCartItems && itemToUpdate) {
-        const updatedItems = previousCartItems.map((item) =>
+        const updatedItems = previousCartItems.map(item =>
           item.id === cartItemId ? { ...item, quantity: newQuantity } : item
         )
         queryClient.setQueryData(queryKeys.cart.items(userId), updatedItems)
@@ -174,13 +175,16 @@ export function useUpdateCartItemQuantity() {
 
       return { previousCartItems, previousCartCount, quantityDiff }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, variables, context) => {
       // Rollback on error
       if (context?.previousCartItems !== undefined) {
         queryClient.setQueryData(queryKeys.cart.items(variables.userId), context.previousCartItems)
       }
       if (context?.previousCartCount !== undefined) {
-        queryClient.setQueryData(queryKeys.cart.summary(variables.userId), context.previousCartCount)
+        queryClient.setQueryData(
+          queryKeys.cart.summary(variables.userId),
+          context.previousCartCount
+        )
       }
     },
     onSuccess: (data, variables) => {
@@ -232,29 +236,35 @@ export function useRemoveCartItem() {
       const previousCartCount = queryClient.getQueryData<number>(queryKeys.cart.summary(userId))
 
       // Find the item being removed
-      const itemToRemove = previousCartItems?.find((item) => item.id === cartItemId)
+      const itemToRemove = previousCartItems?.find(item => item.id === cartItemId)
       const removedQuantity = itemToRemove?.quantity || 0
 
       // Optimistically remove item from cart
       if (previousCartItems) {
-        const updatedItems = previousCartItems.filter((item) => item.id !== cartItemId)
+        const updatedItems = previousCartItems.filter(item => item.id !== cartItemId)
         queryClient.setQueryData(queryKeys.cart.items(userId), updatedItems)
       }
 
       // Optimistically update cart count
       if (previousCartCount !== undefined) {
-        queryClient.setQueryData(queryKeys.cart.summary(userId), previousCartCount - removedQuantity)
+        queryClient.setQueryData(
+          queryKeys.cart.summary(userId),
+          previousCartCount - removedQuantity
+        )
       }
 
       return { previousCartItems, previousCartCount, removedQuantity }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, variables, context) => {
       // Rollback on error
       if (context?.previousCartItems !== undefined) {
         queryClient.setQueryData(queryKeys.cart.items(variables.userId), context.previousCartItems)
       }
       if (context?.previousCartCount !== undefined) {
-        queryClient.setQueryData(queryKeys.cart.summary(variables.userId), context.previousCartCount)
+        queryClient.setQueryData(
+          queryKeys.cart.summary(variables.userId),
+          context.previousCartCount
+        )
       }
     },
     onSuccess: (data, variables) => {
@@ -266,4 +276,3 @@ export function useRemoveCartItem() {
     },
   })
 }
-

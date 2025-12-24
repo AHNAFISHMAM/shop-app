@@ -1,27 +1,30 @@
 /**
  * PageErrorBoundary Component
- * 
+ *
  * Error boundary specifically for page-level errors.
  * Provides a user-friendly error page.
  */
 
-import { Link } from 'react-router-dom';
-import { ReactNode } from 'react';
-import ErrorBoundary from './ErrorBoundary';
-import { m } from 'framer-motion';
-import { fadeSlideUp } from '../../components/animations/menuAnimations';
+import { Link } from 'react-router-dom'
+import { ReactNode } from 'react'
+import ErrorBoundary from './ErrorBoundary'
+import { m } from 'framer-motion'
+import { fadeSlideUp } from '../../components/animations/menuAnimations'
 
 interface PageErrorBoundaryProps {
-  children: ReactNode;
-  pageName?: string;
+  children: ReactNode
+  pageName?: string
 }
 
 /**
  * PageErrorBoundary Component
- * 
+ *
  * Wraps pages with error boundary and provides page-specific error UI.
  */
-export function PageErrorBoundary({ children, pageName = 'page' }: PageErrorBoundaryProps): JSX.Element {
+export function PageErrorBoundary({
+  children,
+  pageName = 'page',
+}: PageErrorBoundaryProps): JSX.Element {
   const fallback = (error: Error, errorInfo: React.ErrorInfo, resetError: () => void) => (
     <m.div
       className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] px-4"
@@ -30,10 +33,7 @@ export function PageErrorBoundary({ children, pageName = 'page' }: PageErrorBoun
       animate="visible"
     >
       <div className="max-w-md w-full text-center">
-        <m.div
-          className="mb-6"
-          variants={fadeSlideUp}
-        >
+        <m.div className="mb-6" variants={fadeSlideUp}>
           <svg
             className="mx-auto h-24 w-24 text-red-500"
             fill="none"
@@ -48,40 +48,27 @@ export function PageErrorBoundary({ children, pageName = 'page' }: PageErrorBoun
             />
           </svg>
         </m.div>
-        <m.h1
-          className="text-2xl font-bold text-[var(--text-primary)] mb-2"
-          variants={fadeSlideUp}
-        >
+        <m.h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2" variants={fadeSlideUp}>
           Oops! Something went wrong
         </m.h1>
-        <m.p
-          className="text-[var(--text-secondary)] mb-6"
-          variants={fadeSlideUp}
-        >
-          We encountered an error while loading the {pageName}. Please try again or return to the homepage.
+        <m.p className="text-[var(--text-secondary)] mb-6" variants={fadeSlideUp}>
+          We encountered an error while loading the {pageName}. Please try again or return to the
+          homepage.
         </m.p>
         {error && !!(import.meta.env?.DEV ?? false) && (
           <m.details
             className="text-left mb-6 p-4 bg-[var(--bg-hover)] rounded-lg"
             variants={fadeSlideUp}
           >
-            <summary className="cursor-pointer text-sm font-semibold mb-2">
-              Error Details
-            </summary>
+            <summary className="cursor-pointer text-sm font-semibold mb-2">Error Details</summary>
             <pre className="text-xs text-[var(--text-secondary)] overflow-auto">
               {error.toString()}
               {errorInfo?.componentStack || ''}
             </pre>
           </m.details>
         )}
-        <m.div
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-          variants={fadeSlideUp}
-        >
-          <button
-            onClick={resetError}
-            className="btn-primary px-6 py-3"
-          >
+        <m.div className="flex flex-col sm:flex-row gap-4 justify-center" variants={fadeSlideUp}>
+          <button onClick={resetError} className="btn-primary px-6 py-3">
             Try Again
           </button>
           <Link
@@ -93,12 +80,7 @@ export function PageErrorBoundary({ children, pageName = 'page' }: PageErrorBoun
         </m.div>
       </div>
     </m.div>
-  );
+  )
 
-  return (
-    <ErrorBoundary fallback={fallback}>
-      {children}
-    </ErrorBoundary>
-  );
+  return <ErrorBoundary fallback={fallback}>{children}</ErrorBoundary>
 }
-

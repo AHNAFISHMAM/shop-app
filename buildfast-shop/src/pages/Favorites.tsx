@@ -1,42 +1,42 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import { getFavoriteItems, removeFavorite } from '../lib/favoritesUtils';
-import { addProductToCart, addMenuItemToCart } from '../lib/cartUtils';
-import { handleAuthError } from '../lib/authUtils';
-import { parsePrice, formatPrice } from '../lib/priceUtils';
-import FavoriteCommentsPanel from '../components/FavoriteCommentsPanel';
-import FavoriteCard from '../components/favorites/FavoriteCard';
-import EmptyFavoritesState from '../components/favorites/EmptyFavoritesState';
-import { m } from 'framer-motion';
-import { pageFade, staggerContainer } from '../components/animations/menuAnimations';
-import { logger } from '../utils/logger';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { getFavoriteItems, removeFavorite } from '../lib/favoritesUtils'
+// import { addProductToCart, addMenuItemToCart } from '../lib/cartUtils';
+// import { handleAuthError } from '../lib/authUtils';
+import { parsePrice, formatPrice } from '../lib/priceUtils'
+import FavoriteCommentsPanel from '../components/FavoriteCommentsPanel'
+import FavoriteCard from '../components/favorites/FavoriteCard'
+import EmptyFavoritesState from '../components/favorites/EmptyFavoritesState'
+import { m } from 'framer-motion'
+import { pageFade, staggerContainer } from '../components/animations/menuAnimations'
+import { logger } from '../utils/logger'
 
 /**
  * Interface for favorite item structure
  */
 interface FavoriteItem {
-  id: string;
-  menu_item_id?: string | null;
-  product_id?: string | null;
-  product?: Product | null;
-  menu_item?: Product | null;
+  id: string
+  menu_item_id?: string | null
+  product_id?: string | null
+  product?: Product | null
+  menu_item?: Product | null
 }
 
 /**
  * Interface for product structure
  */
 interface Product {
-  id: string;
-  name: string;
-  price: number | string;
-  currency?: string;
-  image_url?: string;
-  images?: string[];
-  is_available?: boolean;
-  stock_quantity?: number;
-  [key: string]: unknown;
+  id: string
+  name: string
+  price: number | string
+  currency?: string
+  image_url?: string
+  images?: string[]
+  is_available?: boolean
+  stock_quantity?: number
+  [key: string]: unknown
 }
 
 /**
@@ -48,98 +48,99 @@ interface Product {
  * @component
  */
 const Favorites = memo(() => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false);
-  const [isLightTheme, setIsLightTheme] = useState<boolean>(false);
-  const timeoutRefs = useRef<Record<string, NodeJS.Timeout>>({});
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
+  // const [isLightTheme, setIsLightTheme] = useState<boolean>(false);
+  const timeoutRefs = useRef<Record<string, NodeJS.Timeout>>({})
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   // Detect reduced motion preference
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return
 
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const handleChange = (e: MediaQueryListEvent | MediaQueryList): void => {
-      setPrefersReducedMotion('matches' in e ? e.matches : mediaQuery.matches);
-    };
-
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } else if (mediaQuery.addListener) {
-      mediaQuery.addListener(handleChange);
-      return () => mediaQuery.removeListener(handleChange);
+      setPrefersReducedMotion('matches' in e ? e.matches : mediaQuery.matches)
     }
 
-    return undefined;
-  }, []);
+    setPrefersReducedMotion(mediaQuery.matches)
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleChange)
+      return () => mediaQuery.removeListener(handleChange)
+    }
+
+    return undefined
+  }, [])
 
   // Detect theme preference
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return
 
     const checkTheme = () => {
-      const isLight = document.documentElement.classList.contains('light') ||
+      const _isLight =
+        document.documentElement.classList.contains('light') ||
         (!document.documentElement.classList.contains('dark') &&
-         window.matchMedia('(prefers-color-scheme: light)').matches);
-      setIsLightTheme(isLight);
-    };
+          window.matchMedia('(prefers-color-scheme: light)').matches)
+      // setIsLightTheme(isLight);
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
-    });
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   const fetchFavorites = useCallback(async (): Promise<void> => {
-    if (!user) return;
+    if (!user) return
 
     try {
-      setLoading(true);
-      setError(null);
-      const result = await getFavoriteItems(user.id);
+      setLoading(true)
+      setError(null)
+      const result = await getFavoriteItems(user.id)
 
       if (result.success) {
-        setFavoriteItems((result.data || []) as FavoriteItem[]);
+        setFavoriteItems((result.data || []) as FavoriteItem[])
       } else if (result.error) {
-        const wasAuthError = await handleAuthError(result.error, navigate);
+        const wasAuthError = await handleAuthError(result.error, navigate)
         if (!wasAuthError) {
-          logger.error('Error fetching favorites:', result.error);
-          setError('Failed to load favorites. Please try again.');
+          logger.error('Error fetching favorites:', result.error)
+          setError('Failed to load favorites. Please try again.')
         }
       }
     } catch (err: unknown) {
-      logger.error('Error fetching favorites:', err);
+      logger.error('Error fetching favorites:', err)
       const wasAuthError = await handleAuthError(
         err as Error | { code?: string; message?: string } | null,
         navigate
-      );
+      )
       if (!wasAuthError) {
-        setError('An unexpected error occurred. Please try again.');
+        setError('An unexpected error occurred. Please try again.')
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [user, navigate]);
+  }, [user, navigate])
 
   useEffect(() => {
     if (!user) {
-      navigate('/login', { state: { from: { pathname: '/favorites' } } });
-      return;
+      navigate('/login', { state: { from: { pathname: '/favorites' } } })
+      return
     }
 
-    fetchFavorites();
+    fetchFavorites()
 
     // Set up realtime subscription
     const channel = supabase
@@ -153,62 +154,62 @@ const Favorites = memo(() => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          fetchFavorites();
+          fetchFavorites()
         }
       )
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR') {
-          logger.warn('Favorites subscription error:', err);
+          logger.warn('Favorites subscription error:', err)
         }
         if (status === 'TIMED_OUT') {
-          logger.warn('Favorites subscription timed out');
+          logger.warn('Favorites subscription timed out')
         }
-      });
+      })
 
-    channelRef.current = channel;
+    channelRef.current = channel
 
     return () => {
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
       }
-    };
-  }, [user, navigate, fetchFavorites]);
+    }
+  }, [user, navigate, fetchFavorites])
 
   const handleRemove = useCallback(
     async (favoriteId: string): Promise<void> => {
-      if (!user) return;
+      if (!user) return
 
       try {
-        await removeFavorite(favoriteId, user.id);
-        setFavoriteItems((prev) => prev.filter((item) => item.id !== favoriteId));
+        await removeFavorite(favoriteId, user.id)
+        setFavoriteItems(prev => prev.filter(item => item.id !== favoriteId))
       } catch (err: unknown) {
-        logger.error('Error removing favorite:', err);
-        setError('Failed to remove favorite. Please try again.');
+        logger.error('Error removing favorite:', err)
+        setError('Failed to remove favorite. Please try again.')
       }
     },
     [user]
-  );
+  )
 
   // Cleanup all timeouts on component unmount
   useEffect(() => {
-    const currentTimeouts = timeoutRefs.current;
+    const currentTimeouts = timeoutRefs.current
     return () => {
-      Object.values(currentTimeouts).forEach((timeoutId) => {
-        if (timeoutId) clearTimeout(timeoutId);
-      });
-    };
-  }, []);
+      Object.values(currentTimeouts).forEach(timeoutId => {
+        if (timeoutId) clearTimeout(timeoutId)
+      })
+    }
+  }, [])
 
   // Memoize processed favorites
   const processedFavorites = useMemo(() => {
     return favoriteItems
-      .map((item) => {
-        const isMenuItem = !!item.menu_item_id;
-        const product = isMenuItem ? item.menu_item : item.product;
+      .map(item => {
+        const isMenuItem = !!item.menu_item_id
+        const product = isMenuItem ? item.menu_item : item.product
 
         if (!product || !product.id || !product.name) {
-          return null;
+          return null
         }
 
         return {
@@ -217,10 +218,10 @@ const Favorites = memo(() => {
           menu_item_id: item.menu_item_id,
           product: isMenuItem ? null : product,
           menu_item: isMenuItem ? product : null,
-        };
+        }
       })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
-  }, [favoriteItems]);
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+  }, [favoriteItems])
 
   if (loading) {
     return (
@@ -229,7 +230,7 @@ const Favorites = memo(() => {
         variants={prefersReducedMotion ? {} : pageFade}
         initial={prefersReducedMotion ? undefined : 'hidden'}
         animate={prefersReducedMotion ? undefined : 'visible'}
-        style={{ 
+        style={{
           pointerEvents: 'auto',
           // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
           paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -237,7 +238,7 @@ const Favorites = memo(() => {
           // Ensure no overflow constraints that break positioning
           overflow: 'visible',
           overflowX: 'visible',
-          overflowY: 'visible'
+          overflowY: 'visible',
         }}
         role="main"
         aria-label="Favorites page"
@@ -255,7 +256,7 @@ const Favorites = memo(() => {
           </div>
         </div>
       </m.main>
-    );
+    )
   }
 
   return (
@@ -265,7 +266,7 @@ const Favorites = memo(() => {
       initial={prefersReducedMotion ? undefined : 'hidden'}
       animate={prefersReducedMotion ? undefined : 'visible'}
       exit={prefersReducedMotion ? undefined : 'exit'}
-      style={{ 
+      style={{
         pointerEvents: 'auto',
         // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
         paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -273,15 +274,12 @@ const Favorites = memo(() => {
         // Ensure no overflow constraints that break positioning
         overflow: 'visible',
         overflowX: 'visible',
-        overflowY: 'visible'
+        overflowY: 'visible',
       }}
       role="main"
       aria-label="Favorites page"
     >
-      <section
-        className="app-container space-y-6 sm:space-y-8"
-        aria-labelledby="favorites-heading"
-      >
+      <section className="app-container space-y-6 sm:space-y-8" aria-labelledby="favorites-heading">
         <m.div
           className="glow-surface glow-soft flex flex-col gap-3 rounded-xl border border-[var(--border-default)] bg-[rgba(255,255,255,0.03)] px-4 py-4 shadow-[0_35px_65px_-55px_rgba(var(--accent-rgb),0.65)] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-2xl sm:px-6 sm:py-6"
           variants={prefersReducedMotion ? {} : pageFade}
@@ -359,9 +357,9 @@ const Favorites = memo(() => {
         )}
       </section>
     </m.main>
-  );
-});
+  )
+})
 
-Favorites.displayName = 'Favorites';
+Favorites.displayName = 'Favorites'
 
-export default Favorites;
+export default Favorites

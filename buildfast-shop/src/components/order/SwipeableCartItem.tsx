@@ -1,44 +1,28 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { m, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import CartItemCard from './CartItemCard';
-
-/**
- * Cart item interface
- */
-interface CartItem {
-  id: string;
-  quantity: number;
-  menu_items?: {
-    name?: string;
-    [key: string]: unknown;
-  };
-  dishes?: {
-    name?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { m, useMotionValue, useTransform, PanInfo } from 'framer-motion'
+import type { CartItem, GetImageUrlFunction } from '../../types/cart'
+import CartItemCard from './CartItemCard'
 
 /**
  * SwipeableCartItem component props
  */
 interface SwipeableCartItemProps {
   /** Cart item data */
-  item: CartItem;
+  item: CartItem
   /** Callback when quantity is updated */
-  onUpdateQuantity: (itemId: string, newQuantity: number) => void;
+  onUpdateQuantity: (itemId: string, newQuantity: number) => void
   /** Callback when item is removed */
-  onRemoveItem: (itemId: string) => void;
+  onRemoveItem: (itemId: string) => void
   /** Optional callback when item is saved for later */
-  onSaveForLater?: (itemId: string) => void;
+  onSaveForLater?: (itemId: string) => void
   /** Optional callback when note is added */
-  onAddNote?: (itemId: string, note: string) => void;
+  onAddNote?: (itemId: string, note: string) => void
   /** Function to get image URL for product */
-  getImageUrl: (product: unknown) => string;
+  getImageUrl: GetImageUrlFunction
   /** Whether item is currently being updated */
-  isUpdating?: boolean;
+  isUpdating?: boolean
   /** Swipe threshold in pixels (default: 100) */
-  swipeThreshold?: number;
+  swipeThreshold?: number
 }
 
 /**
@@ -66,69 +50,71 @@ const SwipeableCartItem = ({
   isUpdating = false,
   swipeThreshold = 100,
 }: SwipeableCartItemProps) => {
-  const x = useMotionValue(0);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const x = useMotionValue(0)
+  const [isDragging, setIsDragging] = useState<boolean>(false)
 
   // Check for reduced motion preference
   const prefersReducedMotion = useMemo(() => {
-    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }, []);
+    return (
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+  }, [])
 
   // Transform values for opacity and scale of action buttons
-  const removeOpacity = useTransform(x, [-swipeThreshold, 0], [1, 0]);
-  const saveOpacity = useTransform(x, [0, swipeThreshold], [0, 1]);
+  const removeOpacity = useTransform(x, [-swipeThreshold, 0], [1, 0])
+  const saveOpacity = useTransform(x, [0, swipeThreshold], [0, 1])
 
   const handleDragEnd = useCallback(
     (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      setIsDragging(false);
-      const offset = info.offset.x;
+      setIsDragging(false)
+      const offset = info.offset.x
 
       if (Math.abs(offset) > swipeThreshold) {
         if (offset < 0 && onRemoveItem) {
           // Swipe left - remove (direct removal, toast shown by cart management)
-          onRemoveItem(item.id);
+          onRemoveItem(item.id)
         } else if (offset > 0 && onSaveForLater) {
           // Swipe right - save for later
-          onSaveForLater(item.id);
-          x.set(0);
+          onSaveForLater(item.id)
+          x.set(0)
         } else {
-          x.set(0);
+          x.set(0)
         }
       } else {
-        x.set(0);
+        x.set(0)
       }
     },
     [item.id, onRemoveItem, onSaveForLater, swipeThreshold, x]
-  );
+  )
 
   const handleDragStart = useCallback(() => {
-    setIsDragging(true);
-  }, []);
+    setIsDragging(true)
+  }, [])
 
   const handleSaveClick = useCallback(() => {
     if (onSaveForLater) {
-      onSaveForLater(item.id);
-      x.set(0);
+      onSaveForLater(item.id)
+      x.set(0)
     }
-  }, [item.id, onSaveForLater, x]);
+  }, [item.id, onSaveForLater, x])
 
   const handleRemoveClick = useCallback(() => {
     if (onRemoveItem) {
-      onRemoveItem(item.id);
+      onRemoveItem(item.id)
     }
-  }, [item.id, onRemoveItem]);
+  }, [item.id, onRemoveItem])
 
   // Reset on item change
   useEffect(() => {
-    x.set(0);
-  }, [item.id, x]);
+    x.set(0)
+  }, [item.id, x])
 
   const productName = useMemo(() => {
-    return item.menu_items?.name || item.dishes?.name || 'item';
-  }, [item.menu_items?.name, item.dishes?.name]);
+    return item.menu_items?.name ?? item.dishes?.name ?? 'item'
+  }, [item.menu_items?.name, item.dishes?.name])
 
-  const saveLabel = useMemo(() => `Save ${productName} for later`, [productName]);
-  const removeLabel = useMemo(() => `Remove ${productName}`, [productName]);
+  const saveLabel = useMemo(() => `Save ${productName} for later`, [productName])
+  const removeLabel = useMemo(() => `Remove ${productName}`, [productName])
 
   return (
     <div className="cart-item-swipeable" role="listitem">
@@ -159,7 +145,7 @@ const SwipeableCartItem = ({
             </svg>
           </m.button>
         ) : null}
-        {onRemoveItem ? (
+        {onRemoveItem !== undefined ? (
           <m.button
             type="button"
             className="cart-swipe-action-btn cart-swipe-action-remove min-h-[44px] min-w-[44px]"
@@ -190,17 +176,21 @@ const SwipeableCartItem = ({
       <m.div
         className="cart-item-swipe-content"
         drag={prefersReducedMotion ? false : 'x'}
-        dragConstraints={prefersReducedMotion ? undefined : { left: -swipeThreshold, right: swipeThreshold }}
+        dragConstraints={
+          prefersReducedMotion ? undefined : { left: -swipeThreshold, right: swipeThreshold }
+        }
         dragElastic={prefersReducedMotion ? 0 : 0.2}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         style={{ x }}
         whileDrag={prefersReducedMotion ? undefined : { cursor: 'grabbing' }}
         animate={prefersReducedMotion ? undefined : { x: isDragging ? undefined : 0 }}
-        transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
+        transition={
+          prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }
+        }
       >
         <CartItemCard
-          item={item as never}
+          item={item}
           onUpdateQuantity={onUpdateQuantity}
           onRemoveItem={onRemoveItem}
           onSaveForLater={onSaveForLater}
@@ -210,8 +200,7 @@ const SwipeableCartItem = ({
         />
       </m.div>
     </div>
-  );
-};
+  )
+}
 
-export default SwipeableCartItem;
-
+export default SwipeableCartItem

@@ -1,44 +1,47 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react'
 
 /**
  * ProductFeature interface
  */
 interface ProductFeature {
-  title: string;
-  description: string;
+  title: string
+  description: string
 }
 
 /**
  * ShowcaseImage interface
  */
 interface ShowcaseImage {
-  src: string;
-  alt: string;
-  offset: string;
-  delay: string;
+  src: string
+  alt: string
+  offset: string
+  delay: string
 }
 
 /**
  * ProductGlideProps interface
  */
 export interface ProductGlideProps {
-  id?: string;
+  id?: string
 }
 
 const PRODUCT_FEATURES: ProductFeature[] = [
   {
     title: 'Layered Heat Management',
-    description: 'Precision searing zones and chilled plating keep every bite perfect from kitchen to table.',
+    description:
+      'Precision searing zones and chilled plating keep every bite perfect from kitchen to table.',
   },
   {
     title: 'Chef-Calibrated Seasons',
-    description: 'Seasonal tasting flights rotate monthly so regulars are first to new flavor drops.',
+    description:
+      'Seasonal tasting flights rotate monthly so regulars are first to new flavor drops.',
   },
   {
     title: 'Private Lounge Mode',
-    description: 'Soft lighting presets and curated playlists adapt instantly for late-night reservations.',
+    description:
+      'Soft lighting presets and curated playlists adapt instantly for late-night reservations.',
   },
-];
+]
 
 const SHOWCASE_IMAGES: ShowcaseImage[] = [
   {
@@ -59,7 +62,7 @@ const SHOWCASE_IMAGES: ShowcaseImage[] = [
     offset: 'translateY(-4%)',
     delay: '300ms',
   },
-];
+]
 
 /**
  * ProductGlide Component
@@ -69,27 +72,27 @@ const SHOWCASE_IMAGES: ShowcaseImage[] = [
 const ProductGlide = ({ id }: ProductGlideProps) => {
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section
@@ -98,25 +101,32 @@ const ProductGlide = ({ id }: ProductGlideProps) => {
       role="region"
       aria-label="Product showcase"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(var(--accent-rgb),0.25),_transparent_58%)] opacity-60" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(var(--accent-rgb),0.25),_transparent_58%)] opacity-60"
+        aria-hidden="true"
+      />
       <div className="relative z-10 grid gap-12 lg:grid-cols-[1.1fr_1.3fr] lg:items-center">
         <div data-animate="fade-rise" data-animate-active="false" className="space-y-6 max-w-xl">
-          <span 
+          <span
             className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] px-5 py-2 text-sm font-medium uppercase tracking-[0.35em] text-[var(--accent)]"
             style={{
-              backgroundColor: isLightTheme 
-                ? 'rgba(var(--bg-dark-rgb), 0.04)' 
+              backgroundColor: isLightTheme
+                ? 'rgba(var(--bg-dark-rgb), 0.04)'
                 : 'rgba(var(--text-main-rgb), 0.05)',
-              borderColor: isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.1)' : undefined
+              borderColor: isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.1)' : undefined,
             }}
           >
             Signature Flow
           </span>
-          <h2 className="text-4xl md:text-5xl font-semibold leading-tight" style={{ color: 'var(--text-main)' }}>
+          <h2
+            className="text-4xl md:text-5xl font-semibold leading-tight"
+            style={{ color: 'var(--text-main)' }}
+          >
             Glide through every moment like a curated Apple launch.
           </h2>
           <p className="text-base md:text-lg text-[var(--text-main)]/70 leading-relaxed">
-            Each step of the Star Café experience choreographs lighting, plating, and service timing so guests move seamlessly from hero dish reveals to after-hours pours.
+            Each step of the Star Café experience choreographs lighting, plating, and service timing
+            so guests move seamlessly from hero dish reveals to after-hours pours.
           </p>
           <div className="mt-8 grid gap-6">
             {PRODUCT_FEATURES.map((feature, index) => (
@@ -146,7 +156,10 @@ const ProductGlide = ({ id }: ProductGlideProps) => {
         </div>
 
         <div className="relative">
-          <div className="absolute inset-y-[-12%] left-[6%] w-[88%] rounded-full bg-gradient-to-r from-[var(--accent)]/25 via-[var(--accent)]/0 to-transparent blur-3xl" aria-hidden="true" />
+          <div
+            className="absolute inset-y-[-12%] left-[6%] w-[88%] rounded-full bg-gradient-to-r from-[var(--accent)]/25 via-[var(--accent)]/0 to-transparent blur-3xl"
+            aria-hidden="true"
+          />
           <div
             data-animate="glide-horizontal"
             data-animate-active="false"
@@ -159,31 +172,32 @@ const ProductGlide = ({ id }: ProductGlideProps) => {
                   data-animate-active="false"
                   className="group relative aspect-[9/13] w-48 shrink-0 overflow-hidden rounded-[26px] border border-[var(--border-default)] transition-all duration-[1100ms] ease-[var(--ease-soft)] hover:z-10 hover:scale-105 hover:border-[var(--accent)]/50 md:w-56 lg:w-64"
                   style={{
-                    backgroundColor: isLightTheme 
-                      ? 'rgba(255, 255, 255, 0.4)' 
+                    backgroundColor: isLightTheme
+                      ? 'rgba(255, 255, 255, 0.4)'
                       : 'rgba(5, 5, 9, 0.4)',
                     transitionDelay: delay,
                     transformOrigin: 'center',
                     boxShadow: isLightTheme
                       ? '0 25px 60px -30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1)'
                       : '0 25px 60px -30px rgba(0, 0, 0, 0.8)',
-                    borderColor: isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.1)' : undefined
+                    borderColor: isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.1)' : undefined,
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={e => {
                     e.currentTarget.style.boxShadow = isLightTheme
                       ? '0 35px 70px -25px rgba(var(--accent-rgb), 0.3), 0 0 0 1px rgba(var(--accent-rgb), 0.4)'
-                      : '0 35px 70px -25px rgba(var(--accent-rgb), 0.45)';
+                      : '0 35px 70px -25px rgba(var(--accent-rgb), 0.45)'
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={e => {
                     e.currentTarget.style.boxShadow = isLightTheme
                       ? '0 25px 60px -30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1)'
-                      : '0 25px 60px -30px rgba(0, 0, 0, 0.8)';
+                      : '0 25px 60px -30px rgba(0, 0, 0, 0.8)'
                   }}
                 >
                   <div
                     className="absolute inset-0 opacity-40 transition duration-500 group-hover:opacity-70"
                     style={{
-                      background: 'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(5,5,9,0.65) 100%)',
+                      background:
+                        'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(5,5,9,0.65) 100%)',
                     }}
                     aria-hidden="true"
                   />
@@ -196,7 +210,10 @@ const ProductGlide = ({ id }: ProductGlideProps) => {
                   />
                 </div>
                 {index < SHOWCASE_IMAGES.length - 1 && (
-                  <div className="hidden h-full w-px shrink-0 bg-gradient-to-b from-[var(--accent)]/40 via-transparent to-transparent md:block" aria-hidden="true" />
+                  <div
+                    className="hidden h-full w-px shrink-0 bg-gradient-to-b from-[var(--accent)]/40 via-transparent to-transparent md:block"
+                    aria-hidden="true"
+                  />
                 )}
               </Fragment>
             ))}
@@ -204,8 +221,7 @@ const ProductGlide = ({ id }: ProductGlideProps) => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default ProductGlide;
-
+export default ProductGlide

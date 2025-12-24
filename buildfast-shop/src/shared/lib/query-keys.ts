@@ -126,4 +126,3 @@ export const queryKeys = {
     category: (id: string) => [...queryKeys.admin.categories(), id] as const,
   },
 } as const
-

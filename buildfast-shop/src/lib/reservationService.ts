@@ -7,7 +7,8 @@
 
 import { supabase } from './supabase'
 import { logger } from '../utils/logger'
-import type { Reservation, CreateReservationResult } from './database.types'
+import type { Reservation, CreateReservationResult, Updates } from './database.types'
+import type { PostgrestError } from '@supabase/supabase-js'
 
 /**
  * Reservation creation data
@@ -135,8 +136,7 @@ export async function createReservation(
       }
     }
 
-    const normalizedTime =
-      reservationTime.length === 5 ? `${reservationTime}:00` : reservationTime
+    const normalizedTime = reservationTime.length === 5 ? `${reservationTime}:00` : reservationTime
 
     if (!partySize || partySize < 1 || partySize > 20) {
       return {
@@ -157,29 +157,33 @@ export async function createReservation(
       _reservation_time: normalizedTime,
       _party_size: parseInt(String(partySize), 10),
       _special_requests: specialRequests?.trim() || null,
-    })
+    } as any)
 
-    let error = rpcError
+    let error: PostgrestError | null = rpcError
     let finalReservationId: string | null = null
 
     if (data) {
       const result = data as CreateReservationResult
       finalReservationId = result.reservation_id
-      error = result.error ? new Error(result.error) : null
+      if (result.error) {
+        error = {
+          message: result.error,
+          details: result.error,
+          hint: null,
+          code: 'PGRST_ERROR',
+        } as unknown as PostgrestError
+      } else {
+        error = null
+      }
     }
 
     // If RPC succeeded and we have additional fields not supported by RPC, update the reservation
     if (
       !error &&
       finalReservationId &&
-      (occasion ||
-        tablePreference ||
-        checkInDate ||
-        checkOutDate ||
-        roomType ||
-        guestNotes)
+      (occasion || tablePreference || checkInDate || checkOutDate || roomType || guestNotes)
     ) {
-      const updateData: Partial<Reservation> = {}
+      const updateData: Updates<'table_reservations'> = {}
       if (occasion) updateData.occasion = occasion
       if (tablePreference) updateData.table_preference = tablePreference
       if (checkInDate) updateData.check_in_date = checkInDate
@@ -189,6 +193,7 @@ export async function createReservation(
 
       const { error: updateError } = await supabase
         .from('table_reservations')
+        // @ts-expect-error - Supabase types don't properly infer Updates type
         .update(updateData)
         .eq('id', finalReservationId)
 
@@ -311,9 +316,7 @@ export async function getUserReservations(
  * @param reservationId - Reservation ID
  * @returns Promise with reservation data or error
  */
-export async function getReservationById(
-  reservationId: string
-): Promise<{
+export async function getReservationById(reservationId: string): Promise<{
   success: boolean
   data: Reservation | null
   error: string | null
@@ -366,7 +369,7 @@ export async function getReservationById(
  */
 export async function cancelReservation(
   reservationId: string,
-  userId: string | null = null
+  _userId: string | null = null
 ): Promise<ReservationResponse> {
   try {
     if (!reservationId) {
@@ -379,6 +382,7 @@ export async function cancelReservation(
 
     const { data, error } = await supabase
       .from('table_reservations')
+      // @ts-expect-error - Supabase types don't properly infer Updates type
       .update({ status: 'cancelled' })
       .eq('id', reservationId)
       .select('id')
@@ -395,7 +399,7 @@ export async function cancelReservation(
 
     return {
       success: true,
-      reservationId: data?.id || null,
+      reservationId: (data as { id: string } | null)?.id || null,
       error: null,
     }
   } catch (err) {
@@ -495,13 +499,14 @@ export async function updateReservationStatus(
       }
     }
 
-    const updateData: Partial<Reservation> = { status }
+    const updateData: any = { status }
     if (adminNotes) {
       updateData.guest_notes = adminNotes
     }
 
     const { data, error } = await supabase
       .from('table_reservations')
+      // @ts-expect-error - Supabase types don't properly infer Updates type
       .update(updateData)
       .eq('id', reservationId)
       .select('id')
@@ -518,7 +523,7 @@ export async function updateReservationStatus(
 
     return {
       success: true,
-      reservationId: data?.id || null,
+      reservationId: (data as { id: string } | null)?.id || null,
       error: null,
     }
   } catch (err) {
@@ -539,4 +544,3 @@ export default {
   getAllReservations,
   updateReservationStatus,
 }
-

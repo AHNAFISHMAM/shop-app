@@ -1,13 +1,11 @@
-/**
- * Type declarations for recently viewed utilities
- */
-export interface RecentlyViewedEntry {
+export interface RecentlyViewedItem {
   productId: string;
-  itemType?: 'product' | 'menu_item';
+  itemType?: string;
   timestamp: number;
+  [key: string]: unknown;
 }
 
-export function getRecentlyViewed(): RecentlyViewedEntry[];
-export function addToRecentlyViewed(productId: string, itemType?: 'product' | 'menu_item'): void;
+export function getRecentlyViewed(): RecentlyViewedItem[];
+export function addToRecentlyViewed(productId: string, itemType?: string): void;
 export function clearRecentlyViewed(): void;
 

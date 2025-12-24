@@ -12,4 +12,3 @@ export * from './type-utils'
 
 // Database types
 export type { Database } from './database.types'
-

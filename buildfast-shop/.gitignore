@@ -86,6 +86,16 @@ jspm_packages/
 # Optional eslint cache
 .eslintcache
 
+# TypeScript build info (incremental compilation)
+.tsbuildinfo
+.tsbuildinfo.*
+
+# Generated error reports and fix scripts
+error-report.json
+parallel-fix-commands.sh
+parallel-fix-commands.ps1
+parallel-batches/
+
 # Optional REPL history
 .node_repl_history
 

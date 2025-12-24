@@ -1,6 +1,6 @@
 /**
  * Supabase Mock Utilities
- * 
+ *
  * Helpers for mocking Supabase client in tests.
  */
 
@@ -44,7 +44,9 @@ export function createMockSupabaseClient() {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
       getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      signInWithPassword: vi.fn().mockResolvedValue({ data: { user: null, session: null }, error: null }),
+      signInWithPassword: vi
+        .fn()
+        .mockResolvedValue({ data: { user: null, session: null }, error: null }),
       signUp: vi.fn().mockResolvedValue({ data: { user: null, session: null }, error: null }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
     },
@@ -56,10 +58,11 @@ export function createMockSupabaseClient() {
     storage: {
       from: vi.fn().mockReturnValue({
         upload: vi.fn().mockResolvedValue({ data: { path: 'test.jpg' }, error: null }),
-        getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/test.jpg' } }),
+        getPublicUrl: vi
+          .fn()
+          .mockReturnValue({ data: { publicUrl: 'https://example.com/test.jpg' } }),
       }),
     },
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   }
 }
-

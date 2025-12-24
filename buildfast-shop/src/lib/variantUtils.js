@@ -83,7 +83,8 @@ export async function getVariantById(variantId) {
  */
 export function calculateVariantPrice(basePrice, priceAdjustment) {
   const base = typeof basePrice === 'number' ? basePrice : parseFloat(basePrice || 0)
-  const adjustment = typeof priceAdjustment === 'number' ? priceAdjustment : parseFloat(priceAdjustment || 0)
+  const adjustment =
+    typeof priceAdjustment === 'number' ? priceAdjustment : parseFloat(priceAdjustment || 0)
   return base + adjustment
 }
 
@@ -103,7 +104,7 @@ export async function createVariant(variantData) {
         price_adjustment: variantData.price_adjustment || 0,
         // Note: stock_quantity removed - table may not have this column in restaurant context
         sku: variantData.sku || null,
-        is_active: variantData.is_active !== false
+        is_active: variantData.is_active !== false,
       })
       .select()
       .single()
@@ -129,7 +130,7 @@ export async function updateVariant(variantId, updates) {
       .from('product_variants')
       .update({
         ...updates,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', variantId)
       .select()
@@ -151,10 +152,7 @@ export async function updateVariant(variantId, updates) {
  */
 export async function deleteVariant(variantId) {
   try {
-    const { error } = await supabase
-      .from('product_variants')
-      .delete()
-      .eq('id', variantId)
+    const { error } = await supabase.from('product_variants').delete().eq('id', variantId)
 
     if (error) throw error
 
@@ -221,9 +219,7 @@ export function formatVariantDisplay(variantDetails) {
 
   // If it's an array of variants
   if (Array.isArray(variantDetails)) {
-    return variantDetails
-      .map(v => `${v.variant_type}: ${v.variant_value}`)
-      .join(', ')
+    return variantDetails.map(v => `${v.variant_type}: ${v.variant_value}`).join(', ')
   }
 
   // If it's a single variant object
@@ -246,7 +242,6 @@ export function createVariantSnapshot(variant) {
     variant_type: variant.variant_type,
     variant_value: variant.variant_value,
     price_adjustment: variant.price_adjustment || 0,
-    sku: variant.sku || null
+    sku: variant.sku || null,
   }
 }
-

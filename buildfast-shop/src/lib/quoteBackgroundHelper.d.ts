@@ -1,6 +1,7 @@
-/**
- * Type declarations for quote background helper
- */
-export function getQuoteBackgroundUrl(settings: Record<string, any>): string;
-export function getDefaultBackgroundUrl(): string;
+export interface Settings {
+  hero_quote_bg_url?: string | null;
+  [key: string]: unknown;
+}
+
+export function getQuoteBackgroundUrl(settings: Settings | null | undefined): string;
 

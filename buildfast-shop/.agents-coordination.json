@@ -1,0 +1,54 @@
+{
+  "totalAgents": 8,
+  "agents": [
+    {
+      "id": 1,
+      "task": "TS6133 - Unused Variables",
+      "description": "Fix all TS6133 errors (unused variables) - Quick wins",
+      "strategy": "Remove unused imports/variables, prefix intentionally unused with _"
+    },
+    {
+      "id": 2,
+      "task": "TS2322 - Type Mismatches",
+      "description": "Fix all TS2322 errors (type mismatches) - Most common",
+      "strategy": "Use asUpdate/asInsert helpers, add proper type assertions"
+    },
+    {
+      "id": 3,
+      "task": "TS2345 - Argument Types",
+      "description": "Fix all TS2345 errors (argument type mismatches)",
+      "strategy": "Add explicit type annotations, use type guards"
+    },
+    {
+      "id": 4,
+      "task": "TS7006 - Implicit Any",
+      "description": "Fix all TS7006 errors (implicit any)",
+      "strategy": "Add explicit type annotations, avoid any type"
+    },
+    {
+      "id": 5,
+      "task": "TS18046 - Null Checks",
+      "description": "Fix all TS18046 errors (null/undefined checks)",
+      "strategy": "Add type guards, use optional chaining"
+    },
+    {
+      "id": 6,
+      "task": "TS2339 - Property Missing",
+      "description": "Fix all TS2339 errors (property does not exist)",
+      "strategy": "Add properties to type definitions, use type assertions"
+    },
+    {
+      "id": 7,
+      "task": "TS7053 - Index Signatures",
+      "description": "Fix all TS7053 errors (index signature missing)",
+      "strategy": "Add index signature to types"
+    },
+    {
+      "id": 8,
+      "task": "Verification & Remaining",
+      "description": "Fix remaining errors and verify all fixes",
+      "strategy": "Run typecheck, ensure all files pass"
+    }
+  ],
+  "createdAt": "2025-12-23T06:32:27.316Z"
+}

@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 /**
  * OrderStage interface
  */
 interface OrderStage {
-  id: string;
-  label: string;
-  icon: string;
+  id: string
+  label: string
+  icon: string
 }
 
 /**
  * OrderTimelineProps interface
  */
 export interface OrderTimelineProps {
-  status: string;
+  status: string
 }
 
 /**
@@ -26,91 +26,96 @@ export interface OrderTimelineProps {
 function OrderTimeline({ status }: OrderTimelineProps) {
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Define the order stages in sequence
   const stages: OrderStage[] = [
     { id: 'pending', label: 'Order Placed', icon: '📝' },
     { id: 'processing', label: 'Processing', icon: '⚙️' },
     { id: 'shipped', label: 'Shipped', icon: '🚚' },
-    { id: 'delivered', label: 'Delivered', icon: '✅' }
-  ];
+    { id: 'delivered', label: 'Delivered', icon: '✅' },
+  ]
 
   // Find current stage index
-  const currentIndex = stages.findIndex(s => s.id === status);
-  const isCancelled = status === 'cancelled';
-  const isFailed = status === 'failed';
+  const currentIndex = stages.findIndex(s => s.id === status)
+  const isCancelled = status === 'cancelled'
+  const isFailed = status === 'failed'
 
   // If order is cancelled or failed, show special state
   if (isCancelled || isFailed) {
     return (
-      <div 
+      <div
         className="border rounded-lg p-4"
         style={{
-          backgroundColor: isLightTheme 
-            ? 'rgba(var(--color-red-rgb), 0.1)' 
+          backgroundColor: isLightTheme
+            ? 'rgba(var(--color-red-rgb), 0.1)'
             : 'rgba(var(--color-red-rgb), 0.2)',
-          borderColor: isLightTheme 
-            ? 'rgba(var(--color-red-rgb), 0.3)' 
-            : 'rgba(var(--color-red-rgb), 0.4)'
+          borderColor: isLightTheme
+            ? 'rgba(var(--color-red-rgb), 0.3)'
+            : 'rgba(var(--color-red-rgb), 0.4)',
         }}
         role="alert"
         aria-live="polite"
       >
-        <div 
+        <div
           className="flex items-center justify-center gap-2"
           style={{
-            color: isLightTheme 
-              ? 'rgb(185, 28, 28)' 
-              : 'rgb(254, 202, 202)'
+            color: isLightTheme ? 'rgb(185, 28, 28)' : 'rgb(254, 202, 202)',
           }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
-          <span className="font-semibold">
-            {isCancelled ? 'Order Cancelled' : 'Order Failed'}
-          </span>
+          <span className="font-semibold">{isCancelled ? 'Order Cancelled' : 'Order Failed'}</span>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div 
+    <div
       className="rounded-lg p-4 border border-[var(--border-default)]"
       style={{
-        backgroundColor: isLightTheme 
-          ? 'rgba(255, 255, 255, 0.95)' 
-          : 'rgba(5, 5, 9, 0.95)'
+        backgroundColor: isLightTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(5, 5, 9, 0.95)',
       }}
       role="region"
       aria-label="Order status timeline"
     >
       <div className="flex items-center justify-between" role="list">
         {stages.map((stage, index) => {
-          const isCompleted = index < currentIndex;
-          const isCurrent = index === currentIndex;
+          const isCompleted = index < currentIndex
+          const isCurrent = index === currentIndex
 
           return (
             <div key={stage.id} className="flex items-center flex-1" role="listitem">
@@ -121,8 +126,8 @@ function OrderTimeline({ status }: OrderTimelineProps) {
                     isCompleted
                       ? 'bg-[var(--color-emerald)] border-[var(--color-emerald)] text-black'
                       : isCurrent
-                      ? 'bg-[var(--color-blue)] border-[var(--color-blue)] text-black animate-pulse'
-                      : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-muted)]'
+                        ? 'bg-[var(--color-blue)] border-[var(--color-blue)] text-black animate-pulse'
+                        : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-muted)]'
                   }`}
                   aria-label={`${stage.label} - ${isCompleted ? 'Completed' : isCurrent ? 'Current' : 'Pending'}`}
                 >
@@ -131,14 +136,18 @@ function OrderTimeline({ status }: OrderTimelineProps) {
                 {/* Stage Label */}
                 <p
                   className={`mt-2 text-sm font-medium text-center ${
-                    isCompleted || isCurrent ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'
+                    isCompleted || isCurrent
+                      ? 'text-[var(--text-main)]'
+                      : 'text-[var(--text-muted)]'
                   }`}
                 >
                   {stage.label}
                 </p>
                 {/* Current stage indicator */}
                 {isCurrent && (
-                  <span className="mt-1 text-sm text-[var(--color-blue)] font-semibold">Current</span>
+                  <span className="mt-1 text-sm text-[var(--color-blue)] font-semibold">
+                    Current
+                  </span>
                 )}
               </div>
 
@@ -148,15 +157,18 @@ function OrderTimeline({ status }: OrderTimelineProps) {
                   <div
                     className="h-full"
                     style={{
-                      backgroundColor: index < currentIndex 
-                        ? 'var(--color-emerald)' 
-                        : (isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.08)' : 'rgba(var(--text-main-rgb), 0.1)')
+                      backgroundColor:
+                        index < currentIndex
+                          ? 'var(--color-emerald)'
+                          : isLightTheme
+                            ? 'rgba(var(--bg-dark-rgb), 0.08)'
+                            : 'rgba(var(--text-main-rgb), 0.1)',
                     }}
                   />
                 </div>
               )}
             </div>
-          );
+          )
         })}
       </div>
 
@@ -171,8 +183,7 @@ function OrderTimeline({ status }: OrderTimelineProps) {
         </p>
       </div>
     </div>
-  );
+  )
 }
 
-export default OrderTimeline;
-
+export default OrderTimeline

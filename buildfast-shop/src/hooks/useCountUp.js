@@ -28,7 +28,7 @@ export function useCountUp(end, duration = 1500, delay = 0) {
       const startValue = 0
 
       // Easing function for smooth animation (ease-out cubic)
-      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3)
+      const easeOutCubic = t => 1 - Math.pow(1 - t, 3)
 
       const animate = () => {
         const currentTime = Date.now()

@@ -1,6 +1,6 @@
 /**
  * Checkout Calculations Tests
- * 
+ *
  * Unit tests for checkout calculation utilities.
  */
 
@@ -115,4 +115,3 @@ describe('calculateGrandTotal', () => {
     expect(calculateGrandTotal(subtotal, shipping, tax, 0)).toBe(subtotal + shipping + tax)
   })
 })
-

@@ -1,38 +1,38 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { m } from 'framer-motion';
-import { supabase } from '../../lib/supabase';
-import { useStoreSettings } from '../../contexts/StoreSettingsContext';
-import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger';
-import { pageFade } from '../../components/animations/menuAnimations';
-import { logger } from '../../utils/logger';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { m } from 'framer-motion'
+import { supabase } from '../../lib/supabase'
+import { useStoreSettings } from '../../contexts/StoreSettingsContext'
+import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTrigger'
+import { pageFade } from '../../components/animations/menuAnimations'
+import { logger } from '../../utils/logger'
 
 interface FeatureFlagStatus {
-  saving: boolean;
-  message: string;
-  type: 'idle' | 'success' | 'error';
+  saving: boolean
+  message: string
+  type: 'idle' | 'success' | 'error'
 }
 
 interface FeatureFlagStatuses {
-  enable_loyalty_program: FeatureFlagStatus;
-  enable_reservations: FeatureFlagStatus;
-  enable_menu_filters: FeatureFlagStatus;
-  enable_product_customization: FeatureFlagStatus;
-  enable_order_tracking: FeatureFlagStatus;
-  enable_order_feedback: FeatureFlagStatus;
-  enable_marketing_optins: FeatureFlagStatus;
-  enable_quick_reorder: FeatureFlagStatus;
+  enable_loyalty_program: FeatureFlagStatus
+  enable_reservations: FeatureFlagStatus
+  enable_menu_filters: FeatureFlagStatus
+  enable_product_customization: FeatureFlagStatus
+  enable_order_tracking: FeatureFlagStatus
+  enable_order_feedback: FeatureFlagStatus
+  enable_marketing_optins: FeatureFlagStatus
+  enable_quick_reorder: FeatureFlagStatus
 }
 
 interface FormData {
-  enable_loyalty_program: boolean;
-  enable_reservations: boolean;
-  enable_menu_filters: boolean;
-  enable_product_customization: boolean;
-  enable_order_tracking: boolean;
-  enable_order_feedback: boolean;
-  enable_marketing_optins: boolean;
-  enable_quick_reorder: boolean;
+  enable_loyalty_program: boolean
+  enable_reservations: boolean
+  enable_menu_filters: boolean
+  enable_product_customization: boolean
+  enable_order_tracking: boolean
+  enable_order_feedback: boolean
+  enable_marketing_optins: boolean
+  enable_quick_reorder: boolean
 }
 
 const createFeatureFlagStatus = (): FeatureFlagStatuses => ({
@@ -43,16 +43,16 @@ const createFeatureFlagStatus = (): FeatureFlagStatuses => ({
   enable_order_tracking: { saving: false, message: '', type: 'idle' },
   enable_order_feedback: { saving: false, message: '', type: 'idle' },
   enable_marketing_optins: { saving: false, message: '', type: 'idle' },
-  enable_quick_reorder: { saving: false, message: '', type: 'idle' }
-});
+  enable_quick_reorder: { saving: false, message: '', type: 'idle' },
+})
 
 function AdminFeatureFlags(): JSX.Element {
-  const navigate = useNavigate();
-  const containerRef = useViewportAnimationTrigger();
-  const { settings, loading: contextLoading, updateSettings } = useStoreSettings();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [verifying, setVerifying] = useState(true);
-  const [error, setError] = useState('');
+  const navigate = useNavigate()
+  const containerRef = useViewportAnimationTrigger()
+  const { settings, loading: contextLoading, updateSettings } = useStoreSettings()
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [verifying, setVerifying] = useState(true)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState<FormData>({
     enable_loyalty_program: true,
     enable_reservations: true,
@@ -61,50 +61,54 @@ function AdminFeatureFlags(): JSX.Element {
     enable_order_tracking: true,
     enable_order_feedback: true,
     enable_marketing_optins: true,
-    enable_quick_reorder: true
-  });
-  const [featureFlagStatus, setFeatureFlagStatus] = useState<FeatureFlagStatuses>(createFeatureFlagStatus);
+    enable_quick_reorder: true,
+  })
+  const [featureFlagStatus, setFeatureFlagStatus] =
+    useState<FeatureFlagStatuses>(createFeatureFlagStatus)
 
   // Check admin status
   useEffect(() => {
     const checkAdminStatus = async (): Promise<void> => {
-      setVerifying(true);
+      setVerifying(true)
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         if (!user) {
-          setError('Log in to access admin tools.');
-          setIsAdmin(false);
-          navigate('/login');
-          return;
+          setError('Log in to access admin tools.')
+          setIsAdmin(false)
+          navigate('/login')
+          return
         }
 
         const { data, error: customerError } = await supabase
           .from('customers')
           .select('is_admin')
           .eq('id', user.id)
-          .single();
+          .single()
 
-        if (customerError || !data?.is_admin) {
-          setError('Access denied. Administrator role required.');
-          setIsAdmin(false);
-          navigate('/admin');
-          return;
+        const customerData = data as { is_admin?: boolean } | null
+        if (customerError || !customerData?.is_admin) {
+          setError('Access denied. Administrator role required.')
+          setIsAdmin(false)
+          navigate('/admin')
+          return
         }
 
-        setIsAdmin(true);
-        setError('');
+        setIsAdmin(true)
+        setError('')
       } catch (err) {
-        logger.error(err);
-        setError('Unable to verify admin permissions.');
-        setIsAdmin(false);
-        navigate('/admin');
+        logger.error(err)
+        setError('Unable to verify admin permissions.')
+        setIsAdmin(false)
+        navigate('/admin')
       } finally {
-        setVerifying(false);
+        setVerifying(false)
       }
-    };
+    }
 
-    checkAdminStatus();
-  }, [navigate]);
+    checkAdminStatus()
+  }, [navigate])
 
   // Load settings into form when they're available
   useEffect(() => {
@@ -117,11 +121,11 @@ function AdminFeatureFlags(): JSX.Element {
         enable_order_tracking: settings.enable_order_tracking ?? true,
         enable_order_feedback: settings.enable_order_feedback ?? true,
         enable_marketing_optins: settings.enable_marketing_optins ?? true,
-        enable_quick_reorder: settings.enable_quick_reorder ?? true
-      });
-      setFeatureFlagStatus(createFeatureFlagStatus());
+        enable_quick_reorder: settings.enable_quick_reorder ?? true,
+      })
+      setFeatureFlagStatus(createFeatureFlagStatus())
     }
-  }, [settings]);
+  }, [settings])
 
   const handleFeatureFlagToggle = async (field: keyof FormData): Promise<void> => {
     const nextValue = !formData[field]
@@ -129,12 +133,12 @@ function AdminFeatureFlags(): JSX.Element {
 
     setFormData(prev => ({
       ...prev,
-      [field]: nextValue
+      [field]: nextValue,
     }))
 
     setFeatureFlagStatus(prev => ({
       ...prev,
-      [field]: { saving: true, message: '', type: 'idle' }
+      [field]: { saving: true, message: '', type: 'idle' },
     }))
 
     const result = await updateSettings({ [field]: nextValue })
@@ -145,31 +149,31 @@ function AdminFeatureFlags(): JSX.Element {
         [field]: {
           saving: false,
           message: nextValue ? 'Enabled' : 'Disabled',
-          type: 'success'
-        }
+          type: 'success',
+        },
       }))
 
       setTimeout(() => {
         setFeatureFlagStatus(prev => ({
           ...prev,
-          [field]: { saving: false, message: '', type: 'idle' }
+          [field]: { saving: false, message: '', type: 'idle' },
         }))
       }, 2000)
     } else {
       setFormData(prev => ({
         ...prev,
-        [field]: previousValue
+        [field]: previousValue,
       }))
       setFeatureFlagStatus(prev => ({
         ...prev,
         [field]: {
           saving: false,
           message: result.error || 'Update failed',
-          type: 'error'
-        }
+          type: 'error',
+        },
       }))
     }
-  };
+  }
 
   if (verifying || contextLoading) {
     return (
@@ -179,16 +183,18 @@ function AdminFeatureFlags(): JSX.Element {
           <p className="text-muted">Loading...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (!isAdmin) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center shadow-[0_25px_60px_-45px_rgba(248,113,113,0.6)]">
-        <h2 className="text-2xl font-semibold mb-2 text-[var(--text-main)]">Admin Access Required</h2>
+        <h2 className="text-2xl font-semibold mb-2 text-[var(--text-main)]">
+          Admin Access Required
+        </h2>
         <p className="text-sm text-red-400">{error}</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -199,7 +205,7 @@ function AdminFeatureFlags(): JSX.Element {
       initial="hidden"
       animate="visible"
       exit="exit"
-      style={{ 
+      style={{
         pointerEvents: 'auto',
         // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
         paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -207,13 +213,19 @@ function AdminFeatureFlags(): JSX.Element {
         // Ensure no overflow constraints that break positioning
         overflow: 'visible',
         overflowX: 'visible',
-        overflowY: 'visible'
+        overflowY: 'visible',
       }}
     >
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
-        <header className="mb-12 flex flex-col gap-3 sm:gap-4 md:gap-6 md:flex-row md:items-end md:justify-between" data-animate="fade-rise" data-animate-active="false">
+        <header
+          className="mb-12 flex flex-col gap-3 sm:gap-4 md:gap-6 md:flex-row md:items-end md:justify-between"
+          data-animate="fade-rise"
+          data-animate-active="false"
+        >
           <div>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[var(--text-main)]">Feature Flags</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[var(--text-main)]">
+              Feature Flags
+            </h1>
             <p className="mt-2 text-sm sm:text-base text-muted">
               Control which features are visible to customers across your store
             </p>
@@ -227,15 +239,25 @@ function AdminFeatureFlags(): JSX.Element {
         </header>
 
         {/* Feature Flags Section */}
-        <div data-animate="fade-scale" data-animate-active="false" className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-2">Feature Flags</h2>
-          <p className="text-sm sm:text-base text-[var(--text-muted)] mb-6">Control which features are visible to customers</p>
+        <div
+          data-animate="fade-scale"
+          data-animate-active="false"
+          className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]"
+        >
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-2">
+            Feature Flags
+          </h2>
+          <p className="text-sm sm:text-base text-[var(--text-muted)] mb-6">
+            Control which features are visible to customers
+          </p>
 
           <div className="space-y-6">
             {/* Loyalty Program */}
             <div className="flex items-start justify-between gap-4">
               <div className="max-w-md">
-                <p className="text-sm font-medium text-[var(--text-main)] mb-1">Star Rewards (Loyalty Program)</p>
+                <p className="text-sm font-medium text-[var(--text-main)] mb-1">
+                  Star Rewards (Loyalty Program)
+                </p>
                 <p className="text-xs text-[var(--text-muted)]">
                   Enable the loyalty program with points, tiers, and referral system
                 </p>
@@ -245,13 +267,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_loyalty_program.saving && featureFlagStatus.enable_loyalty_program.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_loyalty_program.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_loyalty_program.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_loyalty_program.saving &&
+                  featureFlagStatus.enable_loyalty_program.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_loyalty_program.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_loyalty_program.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -267,11 +294,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_loyalty_program.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_loyalty_program
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_loyalty_program
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_loyalty_program ? 'ON' : 'OFF'}
@@ -282,7 +311,9 @@ function AdminFeatureFlags(): JSX.Element {
             {/* Reservations */}
             <div className="flex items-start justify-between gap-4">
               <div className="max-w-md">
-                <p className="text-sm font-medium text-[var(--text-main)] mb-1">Table Reservations</p>
+                <p className="text-sm font-medium text-[var(--text-main)] mb-1">
+                  Table Reservations
+                </p>
                 <p className="text-xs text-[var(--text-muted)]">
                   Enable table reservation system with booking form
                 </p>
@@ -292,13 +323,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_reservations.saving && featureFlagStatus.enable_reservations.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_reservations.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_reservations.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_reservations.saving &&
+                  featureFlagStatus.enable_reservations.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_reservations.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_reservations.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -314,11 +350,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_reservations.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_reservations
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_reservations
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_reservations ? 'ON' : 'OFF'}
@@ -339,13 +377,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_menu_filters.saving && featureFlagStatus.enable_menu_filters.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_menu_filters.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_menu_filters.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_menu_filters.saving &&
+                  featureFlagStatus.enable_menu_filters.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_menu_filters.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_menu_filters.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -361,11 +404,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_menu_filters.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_menu_filters
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_menu_filters
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_menu_filters ? 'ON' : 'OFF'}
@@ -376,7 +421,9 @@ function AdminFeatureFlags(): JSX.Element {
             {/* Product Customization */}
             <div className="flex items-start justify-between gap-4">
               <div className="max-w-md">
-                <p className="text-sm font-medium text-[var(--text-main)] mb-1">Product Customization</p>
+                <p className="text-sm font-medium text-[var(--text-main)] mb-1">
+                  Product Customization
+                </p>
                 <p className="text-xs text-[var(--text-muted)]">
                   Enable add-ons and spice level customization on products
                 </p>
@@ -386,13 +433,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_product_customization.saving && featureFlagStatus.enable_product_customization.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_product_customization.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_product_customization.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_product_customization.saving &&
+                  featureFlagStatus.enable_product_customization.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_product_customization.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_product_customization.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -408,11 +460,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_product_customization.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_product_customization
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_product_customization
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_product_customization ? 'ON' : 'OFF'}
@@ -433,13 +487,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_order_tracking.saving && featureFlagStatus.enable_order_tracking.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_order_tracking.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_order_tracking.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_order_tracking.saving &&
+                  featureFlagStatus.enable_order_tracking.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_order_tracking.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_order_tracking.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -455,11 +514,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_order_tracking.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_order_tracking
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_order_tracking
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_order_tracking ? 'ON' : 'OFF'}
@@ -480,13 +541,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_order_feedback.saving && featureFlagStatus.enable_order_feedback.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_order_feedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_order_feedback.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_order_feedback.saving &&
+                  featureFlagStatus.enable_order_feedback.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_order_feedback.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_order_feedback.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -502,11 +568,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_order_feedback.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_order_feedback
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_order_feedback
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_order_feedback ? 'ON' : 'OFF'}
@@ -517,7 +585,9 @@ function AdminFeatureFlags(): JSX.Element {
             {/* Marketing Opt-ins */}
             <div className="flex items-start justify-between gap-4">
               <div className="max-w-md">
-                <p className="text-sm font-medium text-[var(--text-main)] mb-1">Marketing Opt-ins</p>
+                <p className="text-sm font-medium text-[var(--text-main)] mb-1">
+                  Marketing Opt-ins
+                </p>
                 <p className="text-xs text-[var(--text-muted)]">
                   Enable email/SMS marketing preference collection
                 </p>
@@ -527,13 +597,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_marketing_optins.saving && featureFlagStatus.enable_marketing_optins.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_marketing_optins.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_marketing_optins.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_marketing_optins.saving &&
+                  featureFlagStatus.enable_marketing_optins.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_marketing_optins.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_marketing_optins.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -549,11 +624,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_marketing_optins.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_marketing_optins
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_marketing_optins
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_marketing_optins ? 'ON' : 'OFF'}
@@ -574,13 +651,18 @@ function AdminFeatureFlags(): JSX.Element {
                     Updating…
                   </p>
                 )}
-                {!featureFlagStatus.enable_quick_reorder.saving && featureFlagStatus.enable_quick_reorder.message && (
-                  <p className={`mt-2 text-xs ${
-                    featureFlagStatus.enable_quick_reorder.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {featureFlagStatus.enable_quick_reorder.message}
-                  </p>
-                )}
+                {!featureFlagStatus.enable_quick_reorder.saving &&
+                  featureFlagStatus.enable_quick_reorder.message && (
+                    <p
+                      className={`mt-2 text-xs ${
+                        featureFlagStatus.enable_quick_reorder.type === 'success'
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {featureFlagStatus.enable_quick_reorder.message}
+                    </p>
+                  )}
               </div>
               <div className="flex flex-col items-end gap-1">
                 <button
@@ -596,11 +678,13 @@ function AdminFeatureFlags(): JSX.Element {
                       : 'bg-theme-elevated border-transparent'
                   } ${featureFlagStatus.enable_quick_reorder.saving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                 >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
-                    formData.enable_quick_reorder
-                      ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
-                      : 'translate-x-1'
-                  }`} />
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all duration-200 ${
+                      formData.enable_quick_reorder
+                        ? 'translate-x-6 shadow-[0_4px_14px_rgba(197,157,95,0.35)]'
+                        : 'translate-x-1'
+                    }`}
+                  />
                 </button>
                 <span className="text-[0.65rem] uppercase tracking-[0.25em] text-[var(--text-muted)]">
                   {formData.enable_quick_reorder ? 'ON' : 'OFF'}
@@ -611,8 +695,7 @@ function AdminFeatureFlags(): JSX.Element {
         </div>
       </div>
     </m.main>
-  );
+  )
 }
 
-export default AdminFeatureFlags;
-
+export default AdminFeatureFlags

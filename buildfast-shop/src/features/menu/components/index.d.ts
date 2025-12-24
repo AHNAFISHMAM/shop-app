@@ -1,6 +1,3 @@
-/**
- * Type declarations for menu components
- */
 export { OrderPageHeader } from './OrderPageHeader';
 export { OrderPageFilters } from './OrderPageFilters';
 export { OrderPageViewToggle } from './OrderPageViewToggle';

@@ -16,16 +16,16 @@ import ConfirmationModal from '../../components/ui/ConfirmationModal'
  * - Reservation Settings (reservation system configuration)
  */
 interface ToggleStatus {
-  saving: boolean;
-  message: string;
-  type: 'idle' | 'success' | 'error';
+  saving: boolean
+  message: string
+  type: 'idle' | 'success' | 'error'
 }
 
-const createToggleStatus = (): Record<string, ToggleStatus> => ({
+const _createToggleStatus = (): Record<string, ToggleStatus> => ({
   show_home_ambience_uploader: { saving: false, message: '', type: 'idle' },
   show_theme_toggle: { saving: false, message: '', type: 'idle' },
   show_public_reviews: { saving: false, message: '', type: 'idle' },
-  show_home_testimonials: { saving: false, message: '', type: 'idle' }
+  show_home_testimonials: { saving: false, message: '', type: 'idle' },
 })
 
 function AdminSettings() {
@@ -34,72 +34,73 @@ function AdminSettings() {
 
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     try {
       const checkTheme = () => {
         try {
-          setIsLightTheme(document.documentElement.classList.contains('theme-light'));
+          setIsLightTheme(document.documentElement.classList.contains('theme-light'))
         } catch (err) {
-          logger.error('Error checking theme:', err);
+          logger.error('Error checking theme:', err)
         }
-      };
+      }
 
-      checkTheme();
+      checkTheme()
 
-      const observer = new MutationObserver(checkTheme);
+      const observer = new MutationObserver(checkTheme)
       observer.observe(document.documentElement, {
         attributes: true,
-        attributeFilter: ['class']
-      });
+        attributeFilter: ['class'],
+      })
 
       return () => {
         try {
-          observer.disconnect();
+          observer.disconnect()
         } catch (err) {
-          logger.error('Error disconnecting observer:', err);
+          logger.error('Error disconnecting observer:', err)
         }
-      };
+      }
     } catch (err) {
-      logger.error('Error setting up theme observer:', err);
-      return undefined;
+      logger.error('Error setting up theme observer:', err)
+      return undefined
     }
-  }, []);
+  }, [])
 
   const [formData, setFormData] = useState<{
-    store_name: string;
-    store_description: string;
-    store_logo_url: string;
-    tax_rate: number;
-    shipping_type: ShippingType;
-    shipping_cost: number;
-    free_shipping_threshold: number;
-    currency: string;
-    store_hours: string;
-    contact_email: string;
-    contact_phone: string;
-    facebook_url: string;
-    twitter_url: string;
-    instagram_url: string;
-    return_policy: string;
-    show_home_ambience_uploader: boolean;
-    show_theme_toggle: boolean;
-    show_public_reviews: boolean;
-    show_home_testimonials: boolean;
-    scroll_thumb_brightness: number;
-    enable_loyalty_program: boolean;
-    enable_reservations: boolean;
-    enable_menu_filters: boolean;
-    enable_product_customization: boolean;
-    enable_order_tracking: boolean;
-    enable_order_feedback: boolean;
-    enable_marketing_optins: boolean;
-    enable_quick_reorder: boolean;
+    store_name: string
+    store_description: string
+    store_logo_url: string
+    tax_rate: number
+    shipping_type: ShippingType
+    shipping_cost: number
+    free_shipping_threshold: number
+    currency: string
+    store_hours: string
+    contact_email: string
+    contact_phone: string
+    facebook_url: string
+    twitter_url: string
+    instagram_url: string
+    return_policy: string
+    show_home_ambience_uploader: boolean
+    show_theme_toggle: boolean
+    show_public_reviews: boolean
+    show_home_testimonials: boolean
+    reviews_visibility_updated_at: string | null
+    scroll_thumb_brightness: number
+    enable_loyalty_program: boolean
+    enable_reservations: boolean
+    enable_menu_filters: boolean
+    enable_product_customization: boolean
+    enable_order_tracking: boolean
+    enable_order_feedback: boolean
+    enable_marketing_optins: boolean
+    enable_quick_reorder: boolean
   }>({
     store_name: '',
     store_description: '',
@@ -120,6 +121,7 @@ function AdminSettings() {
     show_theme_toggle: true,
     show_public_reviews: false,
     show_home_testimonials: true,
+    reviews_visibility_updated_at: null,
     scroll_thumb_brightness: 0.6,
     // Feature flags
     enable_loyalty_program: true,
@@ -134,20 +136,18 @@ function AdminSettings() {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
-  // eslint-disable-next-line no-unused-vars
-  const [toggleStatus, setToggleStatus] = useState<Record<string, ToggleStatus>>(createToggleStatus)
+  // const [toggleStatus, setToggleStatus] = useState<Record<string, ToggleStatus>>(createToggleStatus)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  // eslint-disable-next-line no-unused-vars
-  const [featureFlagStatus, setFeatureFlagStatus] = useState<Record<string, ToggleStatus>>({
-    enable_loyalty_program: { saving: false, message: '', type: 'idle' },
-    enable_reservations: { saving: false, message: '', type: 'idle' },
-    enable_menu_filters: { saving: false, message: '', type: 'idle' },
-    enable_product_customization: { saving: false, message: '', type: 'idle' },
-    enable_order_tracking: { saving: false, message: '', type: 'idle' },
-    enable_order_feedback: { saving: false, message: '', type: 'idle' },
-    enable_marketing_optins: { saving: false, message: '', type: 'idle' },
-    enable_quick_reorder: { saving: false, message: '', type: 'idle' }
-  })
+  //   // const [featureFlagStatus, setFeatureFlagStatus] = useState<Record<string, ToggleStatus>>({
+  //   enable_loyalty_program: { saving: false, message: '', type: 'idle' },
+  //   enable_reservations: { saving: false, message: '', type: 'idle' },
+  //   enable_menu_filters: { saving: false, message: '', type: 'idle' },
+  //   enable_product_customization: { saving: false, message: '', type: 'idle' },
+  //   enable_order_tracking: { saving: false, message: '', type: 'idle' },
+  //   enable_order_feedback: { saving: false, message: '', type: 'idle' },
+  //   enable_marketing_optins: { saving: false, message: '', type: 'idle' },
+  //   enable_quick_reorder: { saving: false, message: '', type: 'idle' }
+  // })
   // Load settings into form when they're available
   useEffect(() => {
     if (settings) {
@@ -170,9 +170,11 @@ function AdminSettings() {
         show_home_ambience_uploader: settings.show_home_ambience_uploader || false,
         show_theme_toggle: settings.show_theme_toggle ?? true,
         show_public_reviews: settings.show_public_reviews ?? false,
-        show_home_testimonials: (settings.show_public_reviews ?? false)
-          ? (settings.show_home_testimonials ?? true)
-          : false,
+        show_home_testimonials:
+          (settings.show_public_reviews ?? false)
+            ? (settings.show_home_testimonials ?? true)
+            : false,
+        reviews_visibility_updated_at: settings.reviews_visibility_updated_at ?? null,
         scroll_thumb_brightness: settings.scroll_thumb_brightness ?? 0.6,
         // Feature flags
         enable_loyalty_program: settings.enable_loyalty_program ?? true,
@@ -184,36 +186,42 @@ function AdminSettings() {
         enable_marketing_optins: settings.enable_marketing_optins ?? true,
         enable_quick_reorder: settings.enable_quick_reorder ?? true,
       })
-      setToggleStatus(createToggleStatus())
-      setFeatureFlagStatus({
-        enable_loyalty_program: { saving: false, message: '', type: 'idle' },
-        enable_reservations: { saving: false, message: '', type: 'idle' },
-        enable_menu_filters: { saving: false, message: '', type: 'idle' },
-        enable_product_customization: { saving: false, message: '', type: 'idle' },
-        enable_order_tracking: { saving: false, message: '', type: 'idle' },
-        enable_order_feedback: { saving: false, message: '', type: 'idle' },
-        enable_marketing_optins: { saving: false, message: '', type: 'idle' },
-        enable_quick_reorder: { saving: false, message: '', type: 'idle' }
-      })
+      // setToggleStatus(createToggleStatus())
+      // setFeatureFlagStatus({
+      //   enable_loyalty_program: { saving: false, message: '', type: 'idle' },
+      //   enable_reservations: { saving: false, message: '', type: 'idle' },
+      //   enable_menu_filters: { saving: false, message: '', type: 'idle' },
+      //   enable_product_customization: { saving: false, message: '', type: 'idle' },
+      //   enable_order_tracking: { saving: false, message: '', type: 'idle' },
+      //   enable_order_feedback: { saving: false, message: '', type: 'idle' },
+      //   enable_marketing_optins: { saving: false, message: '', type: 'idle' },
+      //   enable_quick_reorder: { saving: false, message: '', type: 'idle' }
+      // })
     }
   }, [settings])
 
   // Real-time theme adjustment application
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string | number; name?: string } }) => {
+  const handleChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+      | { target: { value: string | number; name?: string } }
+  ) => {
     // Handle CustomDropdown event format
     if ('target' in e && !('type' in e.target)) {
       const name = e.target.name || ''
       const value = String(e.target.value)
       setFormData(prev => ({
         ...prev,
-        [name]: name === 'shipping_type' ? (value as ShippingType) : value
+        [name]: name === 'shipping_type' ? (value as ShippingType) : value,
       }))
       return
     }
 
     // Handle standard form events
-    const target = (e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>).target
+    const target = (
+      e as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ).target
     const { name, value, type } = target
     const checked = 'checked' in target ? target.checked : undefined
 
@@ -222,14 +230,14 @@ function AdminSettings() {
         setFormData(prev => ({
           ...prev,
           show_public_reviews: false,
-          show_home_testimonials: false
+          show_home_testimonials: false,
         }))
         return
       }
 
       setFormData(prev => ({
         ...prev,
-        [name]: checked
+        [name]: checked,
       }))
       return
     }
@@ -238,146 +246,143 @@ function AdminSettings() {
     if (type === 'number') {
       setFormData(prev => ({
         ...prev,
-        [name]: value === '' ? 0 : parseFloat(value)
+        [name]: value === '' ? 0 : parseFloat(value),
       }))
     } else if (type === 'range') {
       setFormData(prev => ({
         ...prev,
-        [name]: value === '' ? 0.6 : parseFloat(value)
+        [name]: value === '' ? 0.6 : parseFloat(value),
       }))
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: name === 'shipping_type' ? (value as ShippingType) : value
+        [name]: name === 'shipping_type' ? (value as ShippingType) : value,
       }))
     }
   }
 
+  // const handleQuickToggle = async (field: keyof StoreSettings) => {
+  //   const fieldValue = formData[field as keyof typeof formData];
+  //   const nextValue = !(fieldValue as boolean)
+  //   const previousValue = fieldValue as boolean
+  //   const previousTestimonials = formData.show_home_testimonials
 
-  // eslint-disable-next-line no-unused-vars
-  const handleQuickToggle = async (field: keyof StoreSettings) => {
-    const fieldValue = formData[field as keyof typeof formData];
-    const nextValue = !(fieldValue as boolean)
-    const previousValue = fieldValue as boolean
-    const previousTestimonials = formData.show_home_testimonials
+  //   const updates: Partial<StoreSettings> = { [field]: nextValue } as Partial<StoreSettings>
+  //   if (field === 'show_public_reviews') {
+  //     updates.reviews_visibility_updated_at = new Date().toISOString()
+  //     if (!nextValue) {
+  //       updates.show_home_testimonials = false
+  //     }
+  //   }
 
-    const updates: Partial<StoreSettings> = { [field]: nextValue as any }
-    if (field === 'show_public_reviews') {
-      updates.reviews_visibility_updated_at = new Date().toISOString()
-      if (!nextValue) {
-        updates.show_home_testimonials = false
-      }
-    }
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     [field]: nextValue,
+  //     ...(field === 'show_public_reviews' && !nextValue ? { show_home_testimonials: false } : {})
+  //   }))
 
-    setFormData(prev => ({
-      ...prev,
-      [field]: nextValue,
-      ...(field === 'show_public_reviews' && !nextValue ? { show_home_testimonials: false } : {})
-    }))
+  //   setToggleStatus(prev => ({
+  //     ...prev,
+  //     [field]: { saving: true, message: '', type: 'idle' },
+  //     ...(field === 'show_public_reviews' && !nextValue
+  //       ? { show_home_testimonials: { saving: false, message: 'Hidden with reviews', type: 'success' } }
+  //       : {})
+  //   }))
 
-    setToggleStatus(prev => ({
-      ...prev,
-      [field]: { saving: true, message: '', type: 'idle' },
-      ...(field === 'show_public_reviews' && !nextValue
-        ? { show_home_testimonials: { saving: false, message: 'Hidden with reviews', type: 'success' } }
-        : {})
-    }))
+  //   const result = await updateSettings(updates)
 
-    const result = await updateSettings(updates)
+  //   if (result.success) {
+  //     setToggleStatus(prev => ({
+  //       ...prev,
+  //       [field]: {
+  //         saving: false,
+  //         message: nextValue ? 'Enabled' : 'Disabled',
+  //         type: 'success'
+  //       },
+  //       ...(field === 'show_public_reviews' && !nextValue
+  //         ? { show_home_testimonials: { saving: false, message: 'Hidden with reviews', type: 'success' } }
+  //         : {})
+  //     }))
 
-    if (result.success) {
-      setToggleStatus(prev => ({
-        ...prev,
-        [field]: {
-          saving: false,
-          message: nextValue ? 'Enabled' : 'Disabled',
-          type: 'success'
-        },
-        ...(field === 'show_public_reviews' && !nextValue
-          ? { show_home_testimonials: { saving: false, message: 'Hidden with reviews', type: 'success' } }
-          : {})
-      }))
+  //     setTimeout(() => {
+  //       setToggleStatus(prev => ({
+  //         ...prev,
+  //         [field]: { saving: false, message: '', type: 'idle' },
+  //         ...(field === 'show_public_reviews'
+  //           ? { show_home_testimonials: { saving: false, message: '', type: 'idle' } }
+  //           : {})
+  //       }))
+  //     }, 2000)
+  //   } else {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       [field]: previousValue,
+  //       ...(field === 'show_public_reviews' && !nextValue
+  //         ? { show_home_testimonials: previousTestimonials }
+  //         : {})
+  //     }))
+  //     setToggleStatus(prev => ({
+  //       ...prev,
+  //       [field]: {
+  //         saving: false,
+  //         message: result.error || 'Update failed',
+  //         type: 'error'
+  //       },
+  //       ...(field === 'show_public_reviews' && !nextValue
+  //         ? { show_home_testimonials: { saving: false, message: '', type: 'idle' } }
+  //         : {})
+  //     }))
+  //   }
+  // }
 
-      setTimeout(() => {
-        setToggleStatus(prev => ({
-          ...prev,
-          [field]: { saving: false, message: '', type: 'idle' },
-          ...(field === 'show_public_reviews'
-            ? { show_home_testimonials: { saving: false, message: '', type: 'idle' } }
-            : {})
-        }))
-      }, 2000)
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: previousValue,
-        ...(field === 'show_public_reviews' && !nextValue
-          ? { show_home_testimonials: previousTestimonials }
-          : {})
-      }))
-      setToggleStatus(prev => ({
-        ...prev,
-        [field]: {
-          saving: false,
-          message: result.error || 'Update failed',
-          type: 'error'
-        },
-        ...(field === 'show_public_reviews' && !nextValue
-          ? { show_home_testimonials: { saving: false, message: '', type: 'idle' } }
-          : {})
-      }))
-    }
-  }
+  // const handleFeatureFlagToggle = async (field: keyof StoreSettings) => {
+  //   const fieldValue = formData[field as keyof typeof formData];
+  //   const nextValue = !(fieldValue as boolean)
+  //   const previousValue = fieldValue as boolean
 
-  // eslint-disable-next-line no-unused-vars
-  const handleFeatureFlagToggle = async (field: keyof StoreSettings) => {
-    const fieldValue = formData[field as keyof typeof formData];
-    const nextValue = !(fieldValue as boolean)
-    const previousValue = fieldValue as boolean
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     [field]: nextValue
+  //   }))
 
-    setFormData(prev => ({
-      ...prev,
-      [field]: nextValue
-    }))
+  //   setFeatureFlagStatus(prev => ({
+  //     ...prev,
+  //     [field]: { saving: true, message: '', type: 'idle' }
+  //   }))
 
-    setFeatureFlagStatus(prev => ({
-      ...prev,
-      [field]: { saving: true, message: '', type: 'idle' }
-    }))
+  //   const result = await updateSettings({ [field]: nextValue })
 
-    const result = await updateSettings({ [field]: nextValue })
+  //   if (result.success) {
+  //     setFeatureFlagStatus(prev => ({
+  //       ...prev,
+  //       [field]: {
+  //         saving: false,
+  //         message: nextValue ? 'Enabled' : 'Disabled',
+  //         type: 'success'
+  //       }
+  //     }))
 
-    if (result.success) {
-      setFeatureFlagStatus(prev => ({
-        ...prev,
-        [field]: {
-          saving: false,
-          message: nextValue ? 'Enabled' : 'Disabled',
-          type: 'success'
-        }
-      }))
-
-      setTimeout(() => {
-        setFeatureFlagStatus(prev => ({
-          ...prev,
-          [field]: { saving: false, message: '', type: 'idle' }
-        }))
-      }, 2000)
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: previousValue
-      }))
-      setFeatureFlagStatus(prev => ({
-        ...prev,
-        [field]: {
-          saving: false,
-          message: result.error || 'Update failed',
-          type: 'error'
-        }
-      }))
-    }
-  }
+  //     setTimeout(() => {
+  //       setFeatureFlagStatus(prev => ({
+  //         ...prev,
+  //         [field]: { saving: false, message: '', type: 'idle' }
+  //       }))
+  //     }, 2000)
+  //   } else {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       [field]: previousValue
+  //     }))
+  //     setFeatureFlagStatus(prev => ({
+  //       ...prev,
+  //       [field]: {
+  //         saving: false,
+  //         message: result.error || 'Update failed',
+  //         type: 'error'
+  //       }
+  //     }))
+  //   }
+  // }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -409,13 +414,18 @@ function AdminSettings() {
 
       const payload = {
         ...formData,
-        show_home_testimonials: formData.show_public_reviews ? formData.show_home_testimonials : false
+        show_home_testimonials: formData.show_public_reviews
+          ? formData.show_home_testimonials
+          : false,
       }
 
-      payload.scroll_thumb_brightness = Math.max(0.05, Math.min(1, Number((payload.scroll_thumb_brightness ?? 0.6).toFixed(2))))
+      payload.scroll_thumb_brightness = Math.max(
+        0.05,
+        Math.min(1, Number((payload.scroll_thumb_brightness ?? 0.6).toFixed(2)))
+      )
 
       if (settings && payload.show_public_reviews !== (settings.show_public_reviews ?? false)) {
-        (payload as any).reviews_visibility_updated_at = new Date().toISOString()
+        payload.reviews_visibility_updated_at = new Date().toISOString()
       }
 
       const result = await updateSettings(payload as Partial<StoreSettings>)
@@ -428,7 +438,40 @@ function AdminSettings() {
       }
     } catch (err) {
       logger.error('Error saving settings:', err)
-      setError('Failed to save settings: ' + (err instanceof Error ? err.message : String(err)))
+      setError(
+        'Failed to save settings: ' +
+          (err instanceof Error
+            ? err instanceof Error
+              ? err instanceof Error
+                ? err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+                : String(err)
+              : String(err)
+            : String(err))
+      )
     } finally {
       setSaving(false)
     }
@@ -469,7 +512,7 @@ function AdminSettings() {
         enable_order_tracking: settings.enable_order_tracking ?? true,
         enable_order_feedback: settings.enable_order_feedback ?? true,
         enable_marketing_optins: settings.enable_marketing_optins ?? true,
-        enable_quick_reorder: settings.enable_quick_reorder ?? true
+        enable_quick_reorder: settings.enable_quick_reorder ?? true,
       })
     }
     setError('')
@@ -479,7 +522,13 @@ function AdminSettings() {
   if (contextLoading) {
     return (
       <div className="flex h-full min-h-[400px] items-center justify-center bg-[var(--bg-main)] p-8">
-        <div data-animate="fade-scale" data-animate-active="false" className="text-[var(--text-muted)]">Loading settings...</div>
+        <div
+          data-animate="fade-scale"
+          data-animate-active="false"
+          className="text-[var(--text-muted)]"
+        >
+          Loading settings...
+        </div>
       </div>
     )
   }
@@ -492,7 +541,7 @@ function AdminSettings() {
       initial="hidden"
       animate="visible"
       exit="exit"
-      style={{ 
+      style={{
         pointerEvents: 'auto',
         // Add padding to match .app-container spacing (prevents sections from touching viewport edges)
         paddingLeft: 'clamp(1rem, 3vw, 3.5rem)',
@@ -500,13 +549,19 @@ function AdminSettings() {
         // Ensure no overflow constraints that break positioning
         overflow: 'visible',
         overflowX: 'visible',
-        overflowY: 'visible'
+        overflowY: 'visible',
       }}
     >
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5">
-        <header className="mb-12 flex flex-col gap-3 sm:gap-4 md:gap-6 md:flex-row md:items-end md:justify-between" data-animate="fade-rise" data-animate-active="false">
+        <header
+          className="mb-12 flex flex-col gap-3 sm:gap-4 md:gap-6 md:flex-row md:items-end md:justify-between"
+          data-animate="fade-rise"
+          data-animate-active="false"
+        >
           <div>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[var(--text-main)]">Settings</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[var(--text-main)]">
+              Settings
+            </h1>
             <p className="mt-2 text-sm sm:text-base text-muted">
               Configure your store presentation, commerce, and contact details
             </p>
@@ -514,22 +569,52 @@ function AdminSettings() {
         </header>
 
         {success && (
-          <div data-animate="fade-scale" data-animate-active="false" className="mb-6 bg-green-900/20 border border-green-800 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="mb-6 bg-green-900/20 border border-green-800 rounded-xl sm:rounded-2xl p-4 sm:p-6"
+          >
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-5 h-5 text-green-400 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
-              <p className="text-sm sm:text-base font-medium text-green-400">Settings saved successfully!</p>
+              <p className="text-sm sm:text-base font-medium text-green-400">
+                Settings saved successfully!
+              </p>
             </div>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div data-animate="fade-scale" data-animate-active="false" className="mb-6 bg-red-900/20 border border-red-800 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="mb-6 bg-red-900/20 border border-red-800 rounded-xl sm:rounded-2xl p-4 sm:p-6"
+          >
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5 text-red-400 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
               <p className="text-sm sm:text-base font-medium text-red-400">{error}</p>
             </div>
@@ -538,8 +623,14 @@ function AdminSettings() {
 
         <form onSubmit={handleSubmit} className="space-y-6 relative z-10 pointer-events-auto">
           {/* Store Information Section */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">Store Information</h2>
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]"
+          >
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">
+              Store Information
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -583,14 +674,22 @@ function AdminSettings() {
                   className="w-full min-h-[44px] px-4 sm:px-6 py-3 bg-theme-elevated border border-theme text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#C59D5F] focus:border-transparent placeholder:text-[var(--text-muted)] text-sm sm:text-base"
                   placeholder="https://example.com/logo.png"
                 />
-                <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">Enter the URL of your store logo</p>
+                <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">
+                  Enter the URL of your store logo
+                </p>
               </div>
             </div>
           </div>
 
           {/* Tax & Shipping Section */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">Tax & Shipping</h2>
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]"
+          >
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">
+              Tax & Shipping
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -608,7 +707,9 @@ function AdminSettings() {
                   className="w-full min-h-[44px] px-4 sm:px-6 py-3 bg-theme-elevated border border-theme text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#C59D5F] focus:border-transparent placeholder:text-[var(--text-muted)] text-sm sm:text-base"
                   placeholder="8.5"
                 />
-                <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">Enter tax rate as a percentage (e.g., 8.5 for 8.5%)</p>
+                <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">
+                  Enter tax rate as a percentage (e.g., 8.5 for 8.5%)
+                </p>
               </div>
 
               <div>
@@ -620,7 +721,7 @@ function AdminSettings() {
                   options={[
                     { value: 'flat', label: 'Flat Rate' },
                     { value: 'free_over_amount', label: 'Free Over Amount' },
-                    { value: 'free', label: 'Always Free' }
+                    { value: 'free', label: 'Always Free' },
                   ]}
                   value={formData.shipping_type}
                   onChange={handleChange}
@@ -662,15 +763,23 @@ function AdminSettings() {
                     className="w-full min-h-[44px] px-4 sm:px-6 py-3 bg-theme-elevated border border-theme text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#C59D5F] focus:border-transparent placeholder:text-[var(--text-muted)] text-sm sm:text-base"
                     placeholder="50.00"
                   />
-                  <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">Orders over this amount get free shipping</p>
+                  <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">
+                    Orders over this amount get free shipping
+                  </p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Currency Section */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">Currency</h2>
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]"
+          >
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">
+              Currency
+            </h2>
 
             <div>
               <label className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-1">
@@ -683,7 +792,7 @@ function AdminSettings() {
                   { value: 'EUR', label: 'EUR (€) - Euro' },
                   { value: 'GBP', label: 'GBP (£) - British Pound' },
                   { value: 'CAD', label: 'CAD (C$) - Canadian Dollar' },
-                  { value: 'AUD', label: 'AUD (A$) - Australian Dollar' }
+                  { value: 'AUD', label: 'AUD (A$) - Australian Dollar' },
                 ]}
                 value={formData.currency}
                 onChange={handleChange}
@@ -694,8 +803,14 @@ function AdminSettings() {
           </div>
 
           {/* Contact Information Section */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">Contact Information</h2>
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]"
+          >
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">
+              Contact Information
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -743,8 +858,14 @@ function AdminSettings() {
           </div>
 
           {/* Social Media Section */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">Social Media Links</h2>
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]"
+          >
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">
+              Social Media Links
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -792,17 +913,32 @@ function AdminSettings() {
           </div>
 
           {/* Home Page Controls Link */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-gradient-to-br from-[var(--accent)]/10 to-transparent rounded-xl sm:rounded-2xl border border-[var(--accent)]/30 p-6 sm:p-8">
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-gradient-to-br from-[var(--accent)]/10 to-transparent rounded-xl sm:rounded-2xl border border-[var(--accent)]/30 p-6 sm:p-8"
+          >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-main)] mb-2 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  <svg
+                    className="w-6 h-6 text-[var(--accent)]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                    />
                   </svg>
                   Home Page Controls
                 </h3>
                 <p className="text-sm text-[var(--text-muted)]">
-                  Control visibility and behavior of home page elements, reviews, testimonials, and theme settings
+                  Control visibility and behavior of home page elements, reviews, testimonials, and
+                  theme settings
                 </p>
               </div>
               <Link
@@ -811,19 +947,38 @@ function AdminSettings() {
               >
                 Open Home Page Controls
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </Link>
             </div>
           </div>
 
           {/* Admin Management Link */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-gradient-to-br from-[var(--accent)]/10 to-transparent rounded-xl sm:rounded-2xl border border-[var(--accent)]/30 p-6 sm:p-8">
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-gradient-to-br from-[var(--accent)]/10 to-transparent rounded-xl sm:rounded-2xl border border-[var(--accent)]/30 p-6 sm:p-8"
+          >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-main)] mb-2 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  <svg
+                    className="w-6 h-6 text-[var(--accent)]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
                   </svg>
                   Manage Administrators
                 </h3>
@@ -837,19 +992,38 @@ function AdminSettings() {
               >
                 Manage Admins
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </Link>
             </div>
           </div>
 
           {/* Feature Flags Link */}
-          <div data-animate="fade-scale" data-animate-active="false" className="bg-gradient-to-br from-[var(--accent)]/10 to-transparent rounded-xl sm:rounded-2xl border border-[var(--accent)]/30 p-6 sm:p-8">
+          <div
+            data-animate="fade-scale"
+            data-animate-active="false"
+            className="bg-gradient-to-br from-[var(--accent)]/10 to-transparent rounded-xl sm:rounded-2xl border border-[var(--accent)]/30 p-6 sm:p-8"
+          >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-main)] mb-2 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <svg
+                    className="w-6 h-6 text-[var(--accent)]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
                   </svg>
                   Feature Flags
                 </h3>
@@ -863,16 +1037,22 @@ function AdminSettings() {
               >
                 Open Feature Flags
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </Link>
             </div>
           </div>
 
-
           {/* Policies Section */}
           <div className="bg-theme-elevated rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 md:p-10 border border-theme text-[var(--text-main)]">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">Return Policy</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-[var(--text-main)] mb-4">
+              Return Policy
+            </h2>
 
             <div>
               <label className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-1">
@@ -886,7 +1066,9 @@ function AdminSettings() {
                 className="w-full min-h-[44px] px-4 sm:px-6 py-3 bg-theme-elevated border border-theme text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#C59D5F] focus:border-transparent placeholder:text-[var(--text-muted)] text-sm sm:text-base"
                 placeholder="We accept returns within 30 days of purchase..."
               />
-              <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">This will be displayed to customers</p>
+              <p className="mt-1 text-[10px] sm:text-xs text-[var(--text-muted)]">
+                This will be displayed to customers
+              </p>
             </div>
           </div>
 
@@ -905,19 +1087,17 @@ function AdminSettings() {
               disabled={saving}
               className="bg-theme-elevated text-[var(--text-main)] min-h-[44px] px-4 sm:px-6 py-3 rounded-xl sm:rounded-2xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               style={{
-                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.04)' : undefined
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.04)' : undefined,
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 if (!e.currentTarget.disabled) {
-                  e.currentTarget.style.backgroundColor = isLightTheme 
-                    ? 'rgba(0, 0, 0, 0.08)' 
-                    : 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.backgroundColor = isLightTheme
+                    ? 'rgba(0, 0, 0, 0.08)'
+                    : 'rgba(255, 255, 255, 0.1)'
                 }
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme 
-                  ? 'rgba(0, 0, 0, 0.04)' 
-                  : '';
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.04)' : ''
               }}
             >
               Reset

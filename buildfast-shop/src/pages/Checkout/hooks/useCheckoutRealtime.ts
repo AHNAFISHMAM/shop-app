@@ -47,23 +47,32 @@ export function useCheckoutRealtime({
     if (!cartItems || cartItems.length === 0) return
     if (showPayment || showSuccessModal || placingOrder) return
 
-    const menuItemIds = [...new Set(cartItems
-      .filter(item => item.menu_item_id || item.resolvedProductType === 'menu_item')
-      .map(item => item.menu_item_id || item.resolvedProduct?.id)
-      .filter(Boolean)
-    )]
+    const menuItemIds = [
+      ...new Set(
+        cartItems
+          .filter(item => item.menu_item_id || item.resolvedProductType === 'menu_item')
+          .map(item => item.menu_item_id || item.resolvedProduct?.id)
+          .filter(Boolean)
+      ),
+    ]
 
-    const dishIds = [...new Set(cartItems
-      .filter(item => item.product_id || item.resolvedProductType === 'dish')
-      .map(item => item.product_id || item.resolvedProduct?.id)
-      .filter(Boolean)
-    )]
+    const dishIds = [
+      ...new Set(
+        cartItems
+          .filter(item => item.product_id || item.resolvedProductType === 'dish')
+          .map(item => item.product_id || item.resolvedProduct?.id)
+          .filter(Boolean)
+      ),
+    ]
 
-    const productIds = [...new Set(cartItems
-      .filter(item => item.product_id || item.resolvedProductType === 'legacy')
-      .map(item => item.product_id || item.resolvedProduct?.id)
-      .filter(Boolean)
-    )]
+    const productIds = [
+      ...new Set(
+        cartItems
+          .filter(item => item.product_id || item.resolvedProductType === 'legacy')
+          .map(item => item.product_id || item.resolvedProduct?.id)
+          .filter(Boolean)
+      ),
+    ]
 
     const channels: Array<ReturnType<typeof supabase.channel>> = []
 
@@ -78,31 +87,31 @@ export function useCheckoutRealtime({
             {
               event: 'UPDATE',
               schema: 'public',
-              table: 'menu_items'
+              table: 'menu_items',
             },
-            async (payload) => {
+            async payload => {
               const itemId = String(payload.new?.id || payload.old?.id)
               if (!menuItemsSet.has(itemId)) return
-              
+
               logger.log('Menu item updated in checkout:', payload)
-              
+
               const oldPrice = payload.old?.price
               const newPrice = payload.new?.price
-              
+
               if (oldPrice !== newPrice) {
                 toast('Price updated for an item in your cart', {
                   icon: '💰',
-                  duration: 4000
+                  duration: 4000,
                 })
               }
-              
+
               if (payload.new?.is_available === false) {
                 toast.error('An item in your cart is no longer available', {
                   icon: '⚠️',
-                  duration: 5000
+                  duration: 5000,
                 })
               }
-              
+
               if (refetchCart) {
                 setTimeout(() => {
                   refetchCart()
@@ -114,9 +123,11 @@ export function useCheckoutRealtime({
               }
             }
           )
-          .subscribe((status) => {
+          .subscribe(status => {
             if (status === 'CHANNEL_ERROR') {
-              logger.warn('Real-time subscription error for menu_items (table might not exist or real-time not enabled)')
+              logger.warn(
+                'Real-time subscription error for menu_items (table might not exist or real-time not enabled)'
+              )
             } else if (status === 'TIMED_OUT') {
               logger.warn('Real-time subscription timed out for menu_items - retrying...')
               setTimeout(() => {
@@ -128,11 +139,78 @@ export function useCheckoutRealtime({
               }, 2000)
             }
           })
-        
+
         channels.push(menuItemsChannel)
       } catch (err) {
-        if (err && typeof err === 'object' && 'code' in err && (err.code === '42P01' || (('message' in err && err.message && String(err.message).includes('does not exist'))))) {
-          logger.warn('menu_items table does not exist or real-time not enabled - skipping subscription')
+        if (
+          err &&
+          typeof err === 'object' &&
+          'code' in err &&
+          (err.code === '42P01' ||
+            ('message' in err && err instanceof Error
+              ? err instanceof Error
+                ? err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+                : String(err)
+              : String(err) &&
+                String(
+                  err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err instanceof Error
+                                          ? err instanceof Error
+                                            ? err instanceof Error
+                                              ? err.message
+                                              : String(err)
+                                            : String(err)
+                                          : String(err)
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                ).includes('does not exist')))
+        ) {
+          logger.warn(
+            'menu_items table does not exist or real-time not enabled - skipping subscription'
+          )
         } else {
           logger.warn('Failed to subscribe to menu_items updates:', err)
         }
@@ -150,31 +228,31 @@ export function useCheckoutRealtime({
             {
               event: 'UPDATE',
               schema: 'public',
-              table: 'menu_items'
+              table: 'menu_items',
             },
-            async (payload) => {
+            async payload => {
               const itemId = String(payload.new?.id || payload.old?.id)
               if (!menuItemsSet.has(itemId)) return
-              
+
               logger.log('Menu item updated in checkout:', payload)
-              
+
               const oldPrice = payload.old?.price
               const newPrice = payload.new?.price
-              
+
               if (oldPrice !== newPrice) {
                 toast('Price updated for an item in your cart', {
                   icon: '💰',
-                  duration: 4000
+                  duration: 4000,
                 })
               }
-              
+
               if (payload.new?.is_available === false) {
                 toast.error('An item in your cart is no longer available', {
                   icon: '⚠️',
-                  duration: 5000
+                  duration: 5000,
                 })
               }
-              
+
               if (refetchCart) {
                 setTimeout(() => {
                   refetchCart()
@@ -186,9 +264,11 @@ export function useCheckoutRealtime({
               }
             }
           )
-          .subscribe((status) => {
+          .subscribe(status => {
             if (status === 'CHANNEL_ERROR') {
-              logger.warn('Real-time subscription error for menu_items (table might not exist or real-time not enabled)')
+              logger.warn(
+                'Real-time subscription error for menu_items (table might not exist or real-time not enabled)'
+              )
             } else if (status === 'TIMED_OUT') {
               logger.warn('Real-time subscription timed out for menu_items - retrying...')
               setTimeout(() => {
@@ -200,11 +280,78 @@ export function useCheckoutRealtime({
               }, 2000)
             }
           })
-        
+
         channels.push(menuItemsChannel)
       } catch (err) {
-        if (err && typeof err === 'object' && 'code' in err && (err.code === '42P01' || (('message' in err && err.message && String(err.message).includes('does not exist'))))) {
-          logger.warn('menu_items table does not exist or real-time not enabled - skipping subscription')
+        if (
+          err &&
+          typeof err === 'object' &&
+          'code' in err &&
+          (err.code === '42P01' ||
+            ('message' in err && err instanceof Error
+              ? err instanceof Error
+                ? err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+                : String(err)
+              : String(err) &&
+                String(
+                  err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err instanceof Error
+                                          ? err instanceof Error
+                                            ? err instanceof Error
+                                              ? err.message
+                                              : String(err)
+                                            : String(err)
+                                          : String(err)
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                ).includes('does not exist')))
+        ) {
+          logger.warn(
+            'menu_items table does not exist or real-time not enabled - skipping subscription'
+          )
         } else {
           logger.warn('Failed to subscribe to menu_items updates:', err)
         }
@@ -222,14 +369,14 @@ export function useCheckoutRealtime({
             {
               event: 'UPDATE',
               schema: 'public',
-              table: 'menu_items'
+              table: 'menu_items',
             },
-            async (payload) => {
+            async payload => {
               const itemId = String(payload.new?.id || payload.old?.id)
               if (!productsSet.has(itemId)) return
-              
+
               logger.log('Product updated in checkout:', payload)
-              
+
               if (refetchCart) {
                 setTimeout(() => {
                   refetchCart()
@@ -241,16 +388,85 @@ export function useCheckoutRealtime({
               }
             }
           )
-          .subscribe((status) => {
+          .subscribe(status => {
             if (status === 'CHANNEL_ERROR') {
-              logger.warn('Real-time subscription error for products (table might not exist or real-time not enabled)')
+              logger.warn(
+                'Real-time subscription error for products (table might not exist or real-time not enabled)'
+              )
             }
           })
-        
+
         channels.push(productsChannel)
       } catch (err) {
-        if (err && typeof err === 'object' && 'code' in err && (err.code === '42P01' || (('message' in err && err.message && String(err.message).includes('does not exist'))))) {
-          logger.warn('products table does not exist or real-time not enabled - skipping subscription')
+        if (
+          err &&
+          typeof err === 'object' &&
+          'code' in err &&
+          (err.code === '42P01' ||
+            ('message' in err && err instanceof Error
+              ? err instanceof Error
+                ? err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+                : String(err)
+              : String(err) &&
+                String(
+                  err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err instanceof Error
+                                          ? err instanceof Error
+                                            ? err instanceof Error
+                                              ? err.message
+                                              : String(err)
+                                            : String(err)
+                                          : String(err)
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                ).includes('does not exist')))
+        ) {
+          logger.warn(
+            'products table does not exist or real-time not enabled - skipping subscription'
+          )
         } else {
           logger.warn('Failed to subscribe to products updates:', err)
         }
@@ -274,7 +490,7 @@ export function useCheckoutRealtime({
   useEffect(() => {
     if (!user) return
     if (showPayment || showSuccessModal || placingOrder) return
-    
+
     try {
       const addressesChannel = supabase
         .channel('checkout-addresses-updates')
@@ -284,11 +500,11 @@ export function useCheckoutRealtime({
             event: '*',
             schema: 'public',
             table: 'addresses',
-            filter: `user_id=eq.${user.id}`
+            filter: `user_id=eq.${user.id}`,
           },
-          async (payload) => {
+          async payload => {
             logger.log('Address updated in real-time:', payload)
-            
+
             if (refetchAddresses) {
               setTimeout(() => {
                 refetchAddresses()
@@ -296,9 +512,11 @@ export function useCheckoutRealtime({
             }
           }
         )
-        .subscribe((status) => {
+        .subscribe(status => {
           if (status === 'CHANNEL_ERROR') {
-            logger.warn('Real-time subscription error for addresses (table might not exist or real-time not enabled)')
+            logger.warn(
+              'Real-time subscription error for addresses (table might not exist or real-time not enabled)'
+            )
           } else if (status === 'TIMED_OUT') {
             logger.warn('Real-time subscription timed out for addresses - retrying...')
             setTimeout(() => {
@@ -310,7 +528,7 @@ export function useCheckoutRealtime({
             }, 2000)
           }
         })
-      
+
       return () => {
         try {
           supabase.removeChannel(addressesChannel)
@@ -319,8 +537,75 @@ export function useCheckoutRealtime({
         }
       }
     } catch (err) {
-      if (err && typeof err === 'object' && 'code' in err && (err.code === '42P01' || (('message' in err && err.message && String(err.message).includes('does not exist'))))) {
-        logger.warn('addresses table does not exist or real-time not enabled - skipping subscription')
+      if (
+        err &&
+        typeof err === 'object' &&
+        'code' in err &&
+        (err.code === '42P01' ||
+          ('message' in err && err instanceof Error
+            ? err instanceof Error
+              ? err instanceof Error
+                ? err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err.message
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+                : String(err)
+              : String(err)
+            : String(err) &&
+              String(
+                err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err instanceof Error
+                                          ? err instanceof Error
+                                            ? err.message
+                                            : String(err)
+                                          : String(err)
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+              ).includes('does not exist')))
+      ) {
+        logger.warn(
+          'addresses table does not exist or real-time not enabled - skipping subscription'
+        )
       } else {
         logger.warn('Failed to subscribe to addresses updates:', err)
       }
@@ -328,4 +613,3 @@ export function useCheckoutRealtime({
     }
   }, [user, showPayment, showSuccessModal, placingOrder, refetchAddresses])
 }
-

@@ -12,7 +12,11 @@
  */
 export function ProductCardSkeleton() {
   return (
-    <div className="card-soft space-y-4 animate-pulse" role="status" aria-label="Loading product card">
+    <div
+      className="card-soft space-y-4 animate-pulse"
+      role="status"
+      aria-label="Loading product card"
+    >
       {/* Image skeleton */}
       <div className="h-48 bg-[var(--bg-elevated)] rounded-lg" aria-hidden="true" />
 
@@ -25,6 +29,5 @@ export function ProductCardSkeleton() {
       {/* Price skeleton */}
       <div className="h-5 bg-[var(--bg-elevated)] rounded w-1/3" aria-hidden="true" />
     </div>
-  );
+  )
 }
-

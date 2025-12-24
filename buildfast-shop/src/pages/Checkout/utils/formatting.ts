@@ -19,6 +19,9 @@ export function getProductImage(product: {
   image_url?: string | null
   image?: string | null
 }): string {
-  return product.image_url || product.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'
+  return (
+    product.image_url ||
+    product.image ||
+    'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'
+  )
 }
-

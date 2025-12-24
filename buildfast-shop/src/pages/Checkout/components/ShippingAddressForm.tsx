@@ -22,7 +22,7 @@ interface ShippingAddressFormProps {
   placingOrder: boolean
   orderSuccess: boolean
   showPayment: boolean
-  user: unknown | null
+  user: { id?: string } | null
   savedAddressesCount: number
   useManualAddress: boolean
   onBackToSavedAddresses?: () => void
@@ -58,16 +58,29 @@ export function ShippingAddressForm({
     <div
       className="glow-surface glow-strong border border-theme rounded-xl p-6"
       style={{
-        backgroundColor: isLightTheme
-          ? 'rgba(0, 0, 0, 0.04)'
-          : 'rgba(255, 255, 255, 0.05)'
+        backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
       }}
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <svg className="w-6 h-6 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <svg
+            className="w-6 h-6 text-accent flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
           </svg>
           <h2 className="text-xl font-bold text-[var(--text-main)]">Shipping Address</h2>
         </div>
@@ -77,7 +90,12 @@ export function ShippingAddressForm({
             className="flex items-center gap-1 px-4 py-3 text-sm font-medium text-accent bg-accent/10 hover:bg-accent/20 rounded-lg transition min-h-[44px]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Save Address for Later
           </Link>
@@ -87,7 +105,10 @@ export function ShippingAddressForm({
       <form onSubmit={onSubmit} className="space-y-4">
         {/* Full Name */}
         <div>
-          <label htmlFor="fullName" className="block text-sm font-medium text-[var(--text-main)] mb-1">
+          <label
+            htmlFor="fullName"
+            className="block text-sm font-medium text-[var(--text-main)] mb-1"
+          >
             Full Name <span className="text-red-400">*</span>
           </label>
           <input
@@ -105,7 +126,10 @@ export function ShippingAddressForm({
 
         {/* Street Address */}
         <div>
-          <label htmlFor="streetAddress" className="block text-sm font-medium text-[var(--text-main)] mb-1">
+          <label
+            htmlFor="streetAddress"
+            className="block text-sm font-medium text-[var(--text-main)] mb-1"
+          >
             Street Address <span className="text-red-400">*</span>
           </label>
           <input
@@ -124,7 +148,10 @@ export function ShippingAddressForm({
         {/* City and State/Province */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="city" className="block text-sm font-medium text-[var(--text-main)] mb-1">
+            <label
+              htmlFor="city"
+              className="block text-sm font-medium text-[var(--text-main)] mb-1"
+            >
               City <span className="text-red-400">*</span>
             </label>
             <input
@@ -140,7 +167,10 @@ export function ShippingAddressForm({
             />
           </div>
           <div>
-            <label htmlFor="stateProvince" className="block text-sm font-medium text-[var(--text-main)] mb-1">
+            <label
+              htmlFor="stateProvince"
+              className="block text-sm font-medium text-[var(--text-main)] mb-1"
+            >
               State/Province <span className="text-red-400">*</span>
             </label>
             <input
@@ -160,7 +190,10 @@ export function ShippingAddressForm({
         {/* Postal Code and Country */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="postalCode" className="block text-sm font-medium text-[var(--text-main)] mb-1">
+            <label
+              htmlFor="postalCode"
+              className="block text-sm font-medium text-[var(--text-main)] mb-1"
+            >
               Postal/ZIP Code <span className="text-red-400">*</span>
             </label>
             <input
@@ -176,7 +209,10 @@ export function ShippingAddressForm({
             />
           </div>
           <div>
-            <label htmlFor="country" className="block text-sm font-medium text-[var(--text-main)] mb-1">
+            <label
+              htmlFor="country"
+              className="block text-sm font-medium text-[var(--text-main)] mb-1"
+            >
               Country <span className="text-red-400">*</span>
             </label>
             <input
@@ -195,7 +231,10 @@ export function ShippingAddressForm({
 
         {/* Phone Number */}
         <div>
-          <label htmlFor="phoneNumber" className="block text-sm font-medium text-[var(--text-main)] mb-1">
+          <label
+            htmlFor="phoneNumber"
+            className="block text-sm font-medium text-[var(--text-main)] mb-1"
+          >
             Phone Number <span className="text-red-400">*</span>
           </label>
           <input
@@ -219,14 +258,19 @@ export function ShippingAddressForm({
             className="flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition min-h-[44px]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             {showOrderNote ? 'Remove order note' : 'Add order note for the kitchen'}
           </button>
           {showOrderNote && (
             <textarea
               value={orderNote}
-              onChange={(event) => onOrderNoteChange(event.target.value.slice(0, 240))}
+              onChange={event => onOrderNoteChange(event.target.value.slice(0, 240))}
               maxLength={240}
               rows={3}
               placeholder="Add dietary tweaks, arrival notes, or plate instructions (max 240 characters)."
@@ -246,23 +290,19 @@ export function ShippingAddressForm({
               <input
                 type="checkbox"
                 checked={emailUpdatesOptIn}
-                onChange={(event) => onEmailOptInChange(event.target.checked)}
+                onChange={event => onEmailOptInChange(event.target.checked)}
                 className="mt-1 h-4 w-4 rounded border-theme-medium bg-theme-elevated text-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/30 min-h-[44px] min-w-[44px]"
               />
-              <span>
-                Email me about new menus, chef tastings, and loyalty rewards.
-              </span>
+              <span>Email me about new menus, chef tastings, and loyalty rewards.</span>
             </label>
             <label className="flex items-start gap-3 text-sm text-[var(--text-main)]/80">
               <input
                 type="checkbox"
                 checked={smsUpdatesOptIn}
-                onChange={(event) => onSmsOptInChange(event.target.checked)}
+                onChange={event => onSmsOptInChange(event.target.checked)}
                 className="mt-1 h-4 w-4 rounded border-theme-medium bg-theme-elevated text-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/30 min-h-[44px] min-w-[44px]"
               />
-              <span>
-                Text me order updates and flash deals (standard rates apply).
-              </span>
+              <span>Text me order updates and flash deals (standard rates apply).</span>
             </label>
           </div>
         )}
@@ -275,23 +315,24 @@ export function ShippingAddressForm({
               onClick={onBackToSavedAddresses}
               className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-[var(--text-main)] bg-theme-elevated border border-theme rounded-lg transition cursor-pointer min-h-[44px]"
               style={{
-                backgroundColor: isLightTheme
-                  ? 'rgba(0, 0, 0, 0.04)'
-                  : undefined
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.04)' : undefined,
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={e => {
                 e.currentTarget.style.backgroundColor = isLightTheme
                   ? 'rgba(0, 0, 0, 0.08)'
-                  : 'rgba(255, 255, 255, 0.1)';
+                  : 'rgba(255, 255, 255, 0.1)'
               }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = isLightTheme
-                  ? 'rgba(0, 0, 0, 0.04)'
-                  : '';
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = isLightTheme ? 'rgba(0, 0, 0, 0.04)' : ''
               }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
               </svg>
               Back to Saved Addresses
             </button>
@@ -314,14 +355,24 @@ export function ShippingAddressForm({
               ) : orderSuccess ? (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   Order Placed!
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
                   </svg>
                   Continue to Payment
                 </>
@@ -333,4 +384,3 @@ export function ShippingAddressForm({
     </div>
   )
 }
-

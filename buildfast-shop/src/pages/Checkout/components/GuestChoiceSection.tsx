@@ -26,21 +26,33 @@ export function GuestChoiceSection({ onContinueAsGuest }: GuestChoiceSectionProp
             state={{ from: { pathname: '/checkout' } }}
             className="flex flex-col items-center justify-center p-6 border-2 border-theme-medium rounded-xl hover:border-accent transition group min-h-[44px]"
             style={{
-              backgroundColor: 'var(--bg-card)'
+              backgroundColor: 'var(--bg-card)',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-card)'
             }}
           >
             <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-accent/30 transition">
-              <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                className="w-8 h-8 text-accent"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-[var(--text-main)] mb-2">Sign In / Sign Up</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-main)] mb-2">
+              Sign In / Sign Up
+            </h3>
             <p className="text-sm text-muted text-center">
               Access your account, view order history, and save addresses
             </p>
@@ -52,21 +64,33 @@ export function GuestChoiceSection({ onContinueAsGuest }: GuestChoiceSectionProp
             type="button"
             className="flex flex-col items-center justify-center p-6 border-2 border-theme-medium rounded-xl hover:border-green-400 transition group min-h-[44px]"
             style={{
-              backgroundColor: 'var(--bg-card)'
+              backgroundColor: 'var(--bg-card)',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-card)';
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-card)'
             }}
           >
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-500/30 transition">
-              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-8 h-8 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-[var(--text-main)] mb-2">Continue as Guest</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-main)] mb-2">
+              Continue as Guest
+            </h3>
             <p className="text-sm text-muted text-center">
               Quick checkout without creating an account
             </p>
@@ -82,4 +106,3 @@ export function GuestChoiceSection({ onContinueAsGuest }: GuestChoiceSectionProp
     </div>
   )
 }
-

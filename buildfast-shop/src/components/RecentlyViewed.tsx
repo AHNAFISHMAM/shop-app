@@ -1,25 +1,25 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { getRecentlyViewed } from '../lib/recentlyViewedUtils';
-import { parsePrice } from '../lib/priceUtils';
-import { logger } from '../utils/logger';
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { getRecentlyViewed } from '../lib/recentlyViewedUtils'
+import { parsePrice } from '../lib/priceUtils'
+import { logger } from '../utils/logger'
 
 /**
  * Product interface for recently viewed items
  */
 interface RecentlyViewedProduct {
-  id: string;
-  name: string;
-  price: number;
-  image_url?: string | null;
-  images?: string[];
-  is_available?: boolean;
-  stock_quantity?: number;
-  __entryType?: 'menu_item' | 'product';
-  __sourceTable?: 'menu_items' | 'dishes' | 'products';
-  __timestamp?: number;
-  [key: string]: unknown;
+  id: string
+  name: string
+  price: number
+  image_url?: string | null
+  images?: string[]
+  is_available?: boolean
+  stock_quantity?: number
+  __entryType?: 'menu_item' | 'product'
+  __sourceTable?: 'menu_items' | 'dishes' | 'products'
+  __timestamp?: number
+  [key: string]: unknown
 }
 
 /**
@@ -39,60 +39,67 @@ interface RecentlyViewedProduct {
 function RecentlyViewed() {
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
+    if (typeof document === 'undefined') return undefined
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
-  const [products, setProducts] = useState<RecentlyViewedProduct[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [products, setProducts] = useState<RecentlyViewedProduct[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    loadRecentlyViewedProducts();
-  }, []);
+    loadRecentlyViewedProducts()
+  }, [])
 
   const loadRecentlyViewedProducts = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoading(true)
 
       // Get product IDs from localStorage
-      const entries = getRecentlyViewed();
+      const entries = getRecentlyViewed()
 
       if (entries.length === 0) {
-        setProducts([]);
-        setLoading(false);
-        return;
+        setProducts([])
+        setLoading(false)
+        return
       }
 
-      const menuEntries = entries.filter((entry: { itemType: string }) => entry.itemType === 'menu_item');
-      const productEntries = entries.filter((entry: { itemType: string }) => entry.itemType !== 'menu_item');
+      interface Entry {
+        itemType?: string
+        productId: string
+        timestamp: number
+        [key: string]: unknown
+      }
 
-      const menuIds = Array.from(new Set(menuEntries.map((entry: { productId: string }) => entry.productId)));
-      const productIds = Array.from(new Set(productEntries.map((entry: { productId: string }) => entry.productId)));
+      const menuEntries = entries.filter((entry: Entry): entry is Entry => entry.itemType === 'menu_item')
+      const productEntries = entries.filter((entry: Entry): entry is Entry => entry.itemType !== 'menu_item')
 
-      const [
-        menuResult,
-        dishesResult,
-        legacyProductResult
-      ] = await Promise.all([
+      const menuIds = Array.from(
+        new Set(menuEntries.map((entry: Entry) => entry.productId))
+      )
+      const productIds = Array.from(
+        new Set(productEntries.map((entry: Entry) => entry.productId))
+      )
+
+      const [menuResult, dishesResult, legacyProductResult] = await Promise.all([
         menuIds.length
           ? supabase.from('menu_items').select('*').in('id', menuIds)
           : Promise.resolve({ data: [], error: null }),
@@ -101,96 +108,90 @@ function RecentlyViewed() {
           : Promise.resolve({ data: [], error: null }),
         productIds.length
           ? supabase.from('menu_items').select('*').in('id', productIds)
-          : Promise.resolve({ data: [], error: null })
-      ]);
+          : Promise.resolve({ data: [], error: null }),
+      ])
 
       if (menuResult.error || dishesResult.error || legacyProductResult.error) {
         logger.error('Error fetching recently viewed products:', {
           menuError: menuResult.error,
           dishesError: dishesResult.error,
-          legacyError: legacyProductResult.error
-        });
-        setProducts([]);
-        setLoading(false);
-        return;
+          legacyError: legacyProductResult.error,
+        })
+        setProducts([])
+        setLoading(false)
+        return
       }
 
-      const lookup = new Map<string, RecentlyViewedProduct>();
+      const lookup = new Map<string, RecentlyViewedProduct>()
 
-      (dishesResult.data || []).forEach((item: RecentlyViewedProduct) => {
-        lookup.set(item.id, { ...item, __entryType: 'product', __sourceTable: 'dishes' });
-      });
-
-      (legacyProductResult.data || []).forEach((item: RecentlyViewedProduct) => {
+      ;(dishesResult.data || []).forEach((item: RecentlyViewedProduct) => {
+        lookup.set(item.id, { ...item, __entryType: 'product', __sourceTable: 'dishes' })
+      })
+      ;(legacyProductResult.data || []).forEach((item: RecentlyViewedProduct) => {
         if (!lookup.has(item.id)) {
-          lookup.set(item.id, { ...item, __entryType: 'product', __sourceTable: 'products' });
+          lookup.set(item.id, { ...item, __entryType: 'product', __sourceTable: 'products' })
         }
-      });
+      })
+      ;(menuResult.data || []).forEach((item: RecentlyViewedProduct) => {
+        lookup.set(item.id, { ...item, __entryType: 'menu_item', __sourceTable: 'menu_items' })
+      })
 
-      (menuResult.data || []).forEach((item: RecentlyViewedProduct) => {
-        lookup.set(item.id, { ...item, __entryType: 'menu_item', __sourceTable: 'menu_items' });
-      });
-
-      const sortedProducts = entries
-        .map((entry: { productId: string; itemType: string; timestamp: number }) => {
-          const resolved = lookup.get(entry.productId);
-          if (!resolved) return null;
+      const sortedProducts: RecentlyViewedProduct[] = entries
+        .map((entry: Entry): RecentlyViewedProduct | null => {
+          const resolved = lookup.get(entry.productId)
+          if (!resolved) return null
           return {
             ...resolved,
-            __entryType: entry.itemType,
-            __timestamp: entry.timestamp
-          };
+            __entryType: (entry.itemType ?? 'product') as 'menu_item' | 'product',
+            __timestamp: entry.timestamp,
+          }
         })
-        .filter((item: RecentlyViewedProduct | null): item is RecentlyViewedProduct => item !== null);
+        .filter(
+          (item: RecentlyViewedProduct | null): item is RecentlyViewedProduct => item !== null
+        )
 
-      setProducts(sortedProducts);
+      setProducts(sortedProducts)
     } catch (err) {
-      logger.error('Error loading recently viewed products:', err);
-      setProducts([]);
+      logger.error('Error loading recently viewed products:', err)
+      setProducts([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   // Get product image (first image or placeholder)
   const getProductImage = useCallback((product: RecentlyViewedProduct | null): string => {
     if (!product) {
-      return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
     }
 
     if (product.image_url) {
-      return product.image_url;
+      return product.image_url
     }
 
     if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
-      const firstImage = product.images[0];
-      if (firstImage) {
-        return firstImage;
+      const firstImage = product.images[0]
+      if (firstImage && typeof firstImage === 'string') {
+        return firstImage
       }
     }
-    return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop';
-  }, []);
+    return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
+  }, [])
 
   // Memoized skeleton background color
   const skeletonBg = useMemo(() => {
-    return isLightTheme
-      ? 'rgba(var(--bg-dark-rgb), 0.08)'
-      : 'rgba(var(--text-main-rgb), 0.1)';
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.08)' : 'rgba(var(--text-main-rgb), 0.1)'
+  }, [isLightTheme])
 
   // Memoized background color
   const backgroundColor = useMemo((): string => {
-    return isLightTheme
-      ? 'rgba(var(--text-main-rgb), 0.95)'
-      : 'rgba(var(--bg-dark-rgb), 0.95)';
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--text-main-rgb), 0.95)' : 'rgba(var(--bg-dark-rgb), 0.95)'
+  }, [isLightTheme])
 
   // Memoized image background color
   const imageBgColor = useMemo(() => {
-    return isLightTheme
-      ? 'rgba(var(--text-main-rgb), 0.3)'
-      : 'rgba(var(--bg-dark-rgb), 0.3)';
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--text-main-rgb), 0.3)' : 'rgba(var(--bg-dark-rgb), 0.3)'
+  }, [isLightTheme])
 
   // Show loading skeleton
   if (loading) {
@@ -205,13 +206,23 @@ function RecentlyViewed() {
         <div className="app-container">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <div className="h-8 w-48 bg-[var(--bg-elevated)] rounded animate-pulse mb-2" style={{ backgroundColor: skeletonBg }}></div>
-              <div className="h-4 w-64 bg-[var(--bg-elevated)] rounded animate-pulse" style={{ backgroundColor: skeletonBg }}></div>
+              <div
+                className="h-8 w-48 bg-[var(--bg-elevated)] rounded animate-pulse mb-2"
+                style={{ backgroundColor: skeletonBg }}
+              ></div>
+              <div
+                className="h-4 w-64 bg-[var(--bg-elevated)] rounded animate-pulse"
+                style={{ backgroundColor: skeletonBg }}
+              ></div>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-default)] overflow-hidden animate-pulse" aria-hidden="true">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div
+                key={i}
+                className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-default)] overflow-hidden animate-pulse"
+                aria-hidden="true"
+              >
                 <div className="w-full aspect-square" style={{ backgroundColor: skeletonBg }}></div>
                 <div className="p-3 space-y-2">
                   <div className="h-4 rounded" style={{ backgroundColor: skeletonBg }}></div>
@@ -222,12 +233,12 @@ function RecentlyViewed() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Don't render if no products
   if (products.length === 0) {
-    return null;
+    return null
   }
 
   return (
@@ -240,25 +251,48 @@ function RecentlyViewed() {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 id="recently-viewed-heading" className="text-2xl font-bold text-[var(--text-main)]">Recently Viewed</h2>
+            <h2 id="recently-viewed-heading" className="text-2xl font-bold text-[var(--text-main)]">
+              Recently Viewed
+            </h2>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
               Products you&apos;ve checked out recently
             </p>
           </div>
-          <svg className="w-8 h-8 text-[var(--color-blue)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          <svg
+            className="w-8 h-8 text-[var(--color-blue)]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
           </svg>
         </div>
 
         {/* Products Grid - Horizontal scroll on mobile, grid on desktop */}
         <div className="relative">
           {/* Mobile: Horizontal Scroll */}
-          <div className="lg:hidden flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory" role="list" aria-label="Recently viewed products">
-            {products.map((product) => {
-              const isOutOfStock = product.__entryType === 'menu_item'
-                ? product.is_available === false
-                : (product.stock_quantity !== undefined && product.stock_quantity === 0);
+          <div
+            className="lg:hidden flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+            role="list"
+            aria-label="Recently viewed products"
+          >
+            {products.map(product => {
+              const isOutOfStock =
+                product.__entryType === 'menu_item'
+                  ? product.is_available === false
+                  : product.stock_quantity !== undefined && product.stock_quantity === 0
 
               return (
                 <Link
@@ -277,13 +311,18 @@ function RecentlyViewed() {
                       src={getProductImage(product)}
                       alt={product.name || 'Product'}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop';
+                      onError={e => {
+                        const target = e.target as HTMLImageElement
+                        target.src =
+                          'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
                       }}
                     />
                     {isOutOfStock && (
-                      <div className="absolute top-2 left-2 bg-[var(--color-red)] text-white px-2 py-1 rounded text-sm font-semibold min-h-[44px] flex items-center" role="status" aria-label="Out of stock">
+                      <div
+                        className="absolute top-2 left-2 bg-[var(--color-red)] text-white px-2 py-1 rounded text-sm font-semibold min-h-[44px] flex items-center"
+                        role="status"
+                        aria-label="Out of stock"
+                      >
                         Out of Stock
                       </div>
                     )}
@@ -299,16 +338,21 @@ function RecentlyViewed() {
                     </p>
                   </div>
                 </Link>
-              );
+              )
             })}
           </div>
 
           {/* Desktop: Grid Layout */}
-          <div className="hidden lg:grid grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4" role="list" aria-label="Recently viewed products">
-            {products.map((product) => {
-              const isOutOfStock = product.__entryType === 'menu_item'
-                ? product.is_available === false
-                : (product.stock_quantity !== undefined && product.stock_quantity === 0);
+          <div
+            className="hidden lg:grid grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4"
+            role="list"
+            aria-label="Recently viewed products"
+          >
+            {products.map(product => {
+              const isOutOfStock =
+                product.__entryType === 'menu_item'
+                  ? product.is_available === false
+                  : product.stock_quantity !== undefined && product.stock_quantity === 0
 
               return (
                 <Link
@@ -327,13 +371,18 @@ function RecentlyViewed() {
                       src={getProductImage(product)}
                       alt={product.name || 'Product'}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop';
+                      onError={e => {
+                        const target = e.target as HTMLImageElement
+                        target.src =
+                          'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
                       }}
                     />
                     {isOutOfStock && (
-                      <div className="absolute top-2 left-2 bg-[var(--color-red)] text-white px-2 py-1 rounded text-sm font-semibold min-h-[44px] flex items-center" role="status" aria-label="Out of stock">
+                      <div
+                        className="absolute top-2 left-2 bg-[var(--color-red)] text-white px-2 py-1 rounded text-sm font-semibold min-h-[44px] flex items-center"
+                        role="status"
+                        aria-label="Out of stock"
+                      >
                         Out of Stock
                       </div>
                     )}
@@ -349,7 +398,7 @@ function RecentlyViewed() {
                     </p>
                   </div>
                 </Link>
-              );
+              )
             })}
           </div>
         </div>
@@ -363,8 +412,19 @@ function RecentlyViewed() {
               aria-label="View all products"
             >
               View All Products
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
               </svg>
             </Link>
           </div>
@@ -382,8 +442,7 @@ function RecentlyViewed() {
         }
       `}</style>
     </section>
-  );
+  )
 }
 
-export default RecentlyViewed;
-
+export default RecentlyViewed

@@ -95,7 +95,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
     debounceTimerRef.current = setTimeout(() => {
       if (isMountedRef.current) {
         // Invalidate all specified query keys
-        queryKeys.forEach((queryKey) => {
+        queryKeys.forEach(queryKey => {
           queryClient.invalidateQueries({ queryKey })
         })
       }
@@ -149,8 +149,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
     }
 
     // Generate channel name if not provided
-    const finalChannelName =
-      channelName || `realtime-${table}-${filter || 'all'}-${Date.now()}`
+    const finalChannelName = channelName || `realtime-${table}-${filter || 'all'}-${Date.now()}`
 
     // Build subscription config
     const subscriptionConfig: {
@@ -170,22 +169,26 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
 
     const channel = supabase
       .channel(finalChannelName)
-      .on('postgres_changes', subscriptionConfig, (payload) => {
-        if (!isMountedRef.current) return
+      .on(
+        'postgres_changes',
+        subscriptionConfig as any,
+        (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
+          if (!isMountedRef.current) return
 
-        // Call custom payload handler if provided
-        if (onPayload) {
-          try {
-            onPayload(payload)
-          } catch (error) {
-            logError(error, 'useRealtimeChannel.onPayload')
+          // Call custom payload handler if provided
+          if (onPayload) {
+            try {
+              onPayload(payload as RealtimePostgresChangesPayload<any>)
+            } catch (error) {
+              logError(error, 'useRealtimeChannel.onPayload')
+            }
           }
-        }
 
-        // Debounced cache invalidation
-        debouncedInvalidate()
-      })
-      .subscribe((status) => {
+          // Debounced cache invalidation
+          debouncedInvalidate()
+        }
+      )
+      .subscribe(status => {
         if (!isMountedRef.current) return
 
         if (status === 'SUBSCRIBED') {
@@ -195,12 +198,12 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
             clearTimeout(reconnectTimeoutRef.current)
             reconnectTimeoutRef.current = null
           }
-          
+
           // Set up periodic health check to prevent timeouts
           if (healthCheckIntervalRef.current) {
             clearInterval(healthCheckIntervalRef.current)
           }
-          
+
           healthCheckIntervalRef.current = setInterval(() => {
             if (!isMountedRef.current || !enabled) {
               if (healthCheckIntervalRef.current) {
@@ -209,13 +212,15 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
               }
               return
             }
-            
+
             // Check if channel is still active
             if (channelRef.current) {
               const channelState = channelRef.current.state
               if (channelState !== 'joined' && channelState !== 'joining') {
                 // Channel is not active, trigger reconnection
-                logger.warn(`[Realtime] Health check failed for ${table}, channel state: ${channelState}`)
+                logger.warn(
+                  `[Realtime] Health check failed for ${table}, channel state: ${channelState}`
+                )
                 if (channelRef.current) {
                   try {
                     supabase.removeChannel(channelRef.current)
@@ -224,13 +229,16 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
                   }
                   channelRef.current = null
                 }
-                setReconnectTrigger((prev) => prev + 1)
+                setReconnectTrigger(prev => prev + 1)
               }
             }
           }, HEALTH_CHECK_INTERVAL)
-          
+
           if (import.meta.env.DEV) {
-            logger.log(`[Realtime] Subscribed to ${table}`, { filter, channelName: finalChannelName })
+            logger.log(`[Realtime] Subscribed to ${table}`, {
+              filter,
+              channelName: finalChannelName,
+            })
           }
         } else if (status === 'TIMED_OUT' || status === 'CLOSED') {
           // Automatic reconnection with exponential backoff
@@ -258,7 +266,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
                   channelRef.current = null
                 }
                 // Trigger reconnection by updating state
-                setReconnectTrigger((prev) => prev + 1)
+                setReconnectTrigger(prev => prev + 1)
               }
             }, delay)
           } else {
@@ -274,7 +282,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
         } else if (status === 'CHANNEL_ERROR') {
           // Log channel errors
           logError(new Error(`Realtime channel error for ${table}`), 'useRealtimeChannel.subscribe')
-          
+
           // Attempt reconnection on channel errors too
           if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS && enabled) {
             const delay = Math.min(
@@ -297,7 +305,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
                   }
                   channelRef.current = null
                 }
-                setReconnectTrigger((prev) => prev + 1)
+                setReconnectTrigger(prev => prev + 1)
               }
             }, delay)
           }
@@ -341,6 +349,16 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
       // Reset reconnect attempts on cleanup
       reconnectAttemptsRef.current = 0
     }
-  }, [enabled, table, event, filter, schema, channelName, queryKeys, debouncedInvalidate, onPayload, reconnectTrigger])
+  }, [
+    enabled,
+    table,
+    event,
+    filter,
+    schema,
+    channelName,
+    queryKeys,
+    debouncedInvalidate,
+    onPayload,
+    reconnectTrigger,
+  ])
 }
-

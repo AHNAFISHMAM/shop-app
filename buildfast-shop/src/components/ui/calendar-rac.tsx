@@ -1,6 +1,6 @@
-import React from "react"
-import { cn } from "../../lib/utils"
-import { getLocalTimeZone, today, type CalendarDate } from "@internationalized/date"
+import React from 'react'
+import { cn } from '../../lib/utils'
+import { getLocalTimeZone, today, type CalendarDate } from '@internationalized/date'
 import {
   Button,
   CalendarCell as CalendarCellRac,
@@ -14,12 +14,12 @@ import {
   composeRenderProps,
   type CalendarProps as CalendarRacProps,
   type RangeCalendarProps as RangeCalendarRacProps,
-} from "react-aria-components"
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons"
+} from 'react-aria-components'
+import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 
 /**
  * CalendarHeader Component
- * 
+ *
  * Header with navigation buttons for calendar component
  */
 const CalendarHeader: React.FC = () => (
@@ -44,7 +44,7 @@ const CalendarHeader: React.FC = () => (
 
 /**
  * CalendarGridComponent
- * 
+ *
  * Grid component for calendar cells with proper touch targets
  */
 interface CalendarGridComponentProps {
@@ -73,14 +73,15 @@ const CalendarGridComponent: React.FC<CalendarGridComponentProps> = ({ isRange =
             <CalendarCellRac
               date={date}
               className={cn(
-                "relative flex min-h-[44px] min-w-[44px] h-11 w-11 items-center justify-center rounded-lg text-sm font-medium transition-all",
-                "text-[var(--text-primary)]",
-                "hover:bg-[var(--bg-hover)] hover:text-[var(--accent)]",
-                "focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:ring-offset-1 focus:ring-offset-[var(--bg-main)] focus:z-10",
-                "data-[disabled]:opacity-30 data-[disabled]:cursor-not-allowed data-[disabled]:line-through",
-                "data-[selected]:bg-[var(--accent)] data-[selected]:text-black data-[selected]:font-semibold data-[selected]:shadow-sm",
-                isToday && !isRange && "ring-2 ring-[var(--accent)] ring-offset-1",
-                isRange && "data-[selection-start]:rounded-r-none data-[selection-end]:rounded-l-none data-[selected]:data-[selection-middle]:rounded-none"
+                'relative flex min-h-[44px] min-w-[44px] h-11 w-11 items-center justify-center rounded-lg text-sm font-medium transition-all',
+                'text-[var(--text-primary)]',
+                'hover:bg-[var(--bg-hover)] hover:text-[var(--accent)]',
+                'focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 focus:ring-offset-1 focus:ring-offset-[var(--bg-main)] focus:z-10',
+                'data-[disabled]:opacity-30 data-[disabled]:cursor-not-allowed data-[disabled]:line-through',
+                'data-[selected]:bg-[var(--accent)] data-[selected]:text-black data-[selected]:font-semibold data-[selected]:shadow-sm',
+                isToday && !isRange && 'ring-2 ring-[var(--accent)] ring-offset-1',
+                isRange &&
+                  'data-[selection-start]:rounded-r-none data-[selection-end]:rounded-l-none data-[selected]:data-[selection-middle]:rounded-none'
               )}
             />
           )
@@ -92,11 +93,11 @@ const CalendarGridComponent: React.FC<CalendarGridComponentProps> = ({ isRange =
 
 /**
  * Calendar Component (React Aria)
- * 
+ *
  * A fully accessible calendar component built on react-aria-components with
  * proper keyboard navigation, WCAG 2.2 AA compliance, and 44px minimum touch targets.
  * Uses design system CSS variables for consistent theming.
- * 
+ *
  * @example
  * ```tsx
  * <Calendar
@@ -106,7 +107,7 @@ const CalendarGridComponent: React.FC<CalendarGridComponentProps> = ({ isRange =
  * />
  * ```
  */
-export interface CalendarProps extends CalendarRacProps {
+export interface CalendarProps extends CalendarRacProps<CalendarDate> {
   /**
    * Additional CSS classes
    */
@@ -115,14 +116,14 @@ export interface CalendarProps extends CalendarRacProps {
 
 export const Calendar: React.FC<CalendarProps> = ({ className, ...props }) => {
   return (
-    <CalendarRac
+    <CalendarRac<CalendarDate>
       {...props}
-      className={composeRenderProps(className, (className) =>
+      className={composeRenderProps(className, className =>
         cn(
-          "w-full max-w-sm mx-auto flex flex-col p-4 sm:p-6",
-          "bg-[var(--bg-main)] rounded-xl border border-[var(--border-default)]",
+          'w-full max-w-sm mx-auto flex flex-col p-4 sm:p-6',
+          'bg-[var(--bg-main)] rounded-xl border border-[var(--border-default)]',
           className
-        ),
+        )
       )}
     >
       <CalendarHeader />
@@ -135,11 +136,11 @@ export const Calendar: React.FC<CalendarProps> = ({ className, ...props }) => {
 
 /**
  * RangeCalendar Component (React Aria)
- * 
+ *
  * A fully accessible range calendar component built on react-aria-components with
  * proper keyboard navigation, WCAG 2.2 AA compliance, and 44px minimum touch targets.
  * Uses design system CSS variables for consistent theming.
- * 
+ *
  * @example
  * ```tsx
  * <RangeCalendar
@@ -149,7 +150,7 @@ export const Calendar: React.FC<CalendarProps> = ({ className, ...props }) => {
  * />
  * ```
  */
-export interface RangeCalendarProps extends RangeCalendarRacProps {
+export interface RangeCalendarProps extends RangeCalendarRacProps<CalendarDate> {
   /**
    * Additional CSS classes
    */
@@ -158,14 +159,14 @@ export interface RangeCalendarProps extends RangeCalendarRacProps {
 
 export const RangeCalendar: React.FC<RangeCalendarProps> = ({ className, ...props }) => {
   return (
-    <RangeCalendarRac
+    <RangeCalendarRac<CalendarDate>
       {...props}
-      className={composeRenderProps(className, (className) =>
+      className={composeRenderProps(className, className =>
         cn(
-          "w-full max-w-sm mx-auto flex flex-col p-4 sm:p-6",
-          "bg-[var(--bg-main)] rounded-xl border border-[var(--border-default)]",
+          'w-full max-w-sm mx-auto flex flex-col p-4 sm:p-6',
+          'bg-[var(--bg-main)] rounded-xl border border-[var(--border-default)]',
           className
-        ),
+        )
       )}
     >
       <CalendarHeader />
@@ -175,4 +176,3 @@ export const RangeCalendar: React.FC<RangeCalendarProps> = ({ className, ...prop
     </RangeCalendarRac>
   )
 }
-

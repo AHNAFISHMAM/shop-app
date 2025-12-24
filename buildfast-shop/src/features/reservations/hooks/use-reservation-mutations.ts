@@ -22,15 +22,16 @@ export function useCreateReservation() {
 
   return useMutation<ReservationResponse, Error, ReservationData>({
     ...defaultMutationConfig,
-    mutationFn: async (reservationData) => {
+    mutationFn: async reservationData => {
       return await createReservation(reservationData)
     },
     onSuccess: (data, variables) => {
       if (data.success && data.reservationId) {
         // Invalidate reservations list to refetch updated reservations
-        queryClient.invalidateQueries({ queryKey: queryKeys.reservations.list(variables.userId || null) })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.reservations.list(variables.userId || null),
+        })
       }
     },
   })
 }
-

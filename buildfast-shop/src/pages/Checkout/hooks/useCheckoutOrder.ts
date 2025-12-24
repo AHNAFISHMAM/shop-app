@@ -122,225 +122,343 @@ export function useCheckoutOrder({
   const [showConversionModal, setShowConversionModal] = useState(false)
   const [guestCheckoutData, setGuestCheckoutData] = useState<unknown | null>(null)
   const [trackingStatus, setTrackingStatus] = useState<unknown | null>(null)
-  
+
   const errorClearRef = useRef<(() => void) | null>(null)
   const successRedirectRef = useRef<NodeJS.Timeout | null>(null)
   const isProcessingPaymentSuccess = useRef(false)
 
-  const handlePlaceOrder = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handlePlaceOrder = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
 
-    // Validate form
-    if (!isAddressValid()) {
-      if (errorClearRef.current) errorClearRef.current()
-      const { missing, errors } = getMissingAddressFields()
-      let errorMessage = 'Please fill in all required shipping address fields.'
-      if (errors.length > 0) {
-        errorMessage = errors[0]
-      } else if (missing.length > 0) {
-        errorMessage = `Missing required fields: ${missing.join(', ')}`
-      }
-      errorClearRef.current = setMessageWithAutoClear(setOrderError, null, errorMessage, 'error', 5000)
-      return
-    }
-
-    // Validate email
-    if (!user) {
-      if (!guestEmail.trim()) {
+      // Validate form
+      if (!isAddressValid()) {
         if (errorClearRef.current) errorClearRef.current()
-        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Please provide your email address.', 'error', 5000)
+        const { missing, errors } = getMissingAddressFields()
+        let errorMessage = 'Please fill in all required shipping address fields.'
+        if (errors.length > 0) {
+          errorMessage = errors[0]
+        } else if (missing.length > 0) {
+          errorMessage = `Missing required fields: ${missing.join(', ')}`
+        }
+        errorClearRef.current = setMessageWithAutoClear(
+          setOrderError,
+          null,
+          errorMessage,
+          'error',
+          5000
+        )
         return
       }
-      if (!validateEmail(guestEmail)) {
+
+      // Validate email
+      if (!user) {
+        if (!guestEmail.trim()) {
+          if (errorClearRef.current) errorClearRef.current()
+          errorClearRef.current = setMessageWithAutoClear(
+            setOrderError,
+            null,
+            'Please provide your email address.',
+            'error',
+            5000
+          )
+          return
+        }
+        if (!validateEmail(guestEmail)) {
+          if (errorClearRef.current) errorClearRef.current()
+          errorClearRef.current = setMessageWithAutoClear(
+            setOrderError,
+            null,
+            'Please provide a valid email address.',
+            'error',
+            5000
+          )
+          return
+        }
+      } else {
+        if (!user.email || !user.email.trim()) {
+          if (errorClearRef.current) errorClearRef.current()
+          errorClearRef.current = setMessageWithAutoClear(
+            setOrderError,
+            null,
+            'Your account email is missing. Please update your profile.',
+            'error',
+            5000
+          )
+          return
+        }
+        if (!validateEmail(user.email)) {
+          if (errorClearRef.current) errorClearRef.current()
+          errorClearRef.current = setMessageWithAutoClear(
+            setOrderError,
+            null,
+            'Your account email is invalid. Please update your profile.',
+            'error',
+            5000
+          )
+          return
+        }
+      }
+
+      // Check cart items
+      if (cartItems.length === 0) {
         if (errorClearRef.current) errorClearRef.current()
-        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Please provide a valid email address.', 'error', 5000)
+        errorClearRef.current = setMessageWithAutoClear(
+          setOrderError,
+          null,
+          'Your cart is empty.',
+          'error',
+          5000
+        )
         return
       }
-    } else {
-      if (!user.email || !user.email.trim()) {
+
+      try {
+        setPlacingOrder(true)
+        setOrderError('')
+
         if (errorClearRef.current) errorClearRef.current()
-        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Your account email is missing. Please update your profile.', 'error', 5000)
-        return
-      }
-      if (!validateEmail(user.email)) {
-        if (errorClearRef.current) errorClearRef.current()
-        errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Your account email is invalid. Please update your profile.', 'error', 5000)
-        return
-      }
-    }
+        if (successRedirectRef.current) clearTimeout(successRedirectRef.current)
 
-    // Check cart items
-    if (cartItems.length === 0) {
-      if (errorClearRef.current) errorClearRef.current()
-      errorClearRef.current = setMessageWithAutoClear(setOrderError, null, 'Your cart is empty.', 'error', 5000)
-      return
-    }
+        const customerEmail = user ? user.email! : guestEmail
 
-    try {
-      setPlacingOrder(true)
-      setOrderError('')
+        // Prepare order items
+        const orderItems = cartItems.map(item => {
+          const resolvedProduct = item.resolvedProduct ||
+            item.product || {
+              id: item.menu_item_id || item.product_id || item.id,
+              name: item.name || `Item ${item.menu_item_id || item.product_id || item.id}`,
+              price: item.price || item.price_at_purchase || 0,
+            }
 
-      if (errorClearRef.current) errorClearRef.current()
-      if (successRedirectRef.current) clearTimeout(successRedirectRef.current)
+          const price =
+            typeof resolvedProduct.price === 'number'
+              ? resolvedProduct.price
+              : parsePrice(resolvedProduct.price || item.price || item.price_at_purchase || '0')
 
-      const customerEmail = user ? user.email! : guestEmail
+          if (price <= 0) {
+            throw new Error(
+              `Invalid price for product: ${resolvedProduct.name || item.product_id || item.menu_item_id}`
+            )
+          }
 
-      // Prepare order items
-      const orderItems = cartItems.map(item => {
-        const resolvedProduct = item.resolvedProduct || item.product || {
-          id: item.menu_item_id || item.product_id || item.id,
-          name: item.name || `Item ${item.menu_item_id || item.product_id || item.id}`,
-          price: item.price || item.price_at_purchase || 0
+          const derivedMenuItemId =
+            item.menu_item_id ||
+            (item.resolvedProductType === 'menu_item'
+              ? resolvedProduct?.id || item.product?.id
+              : null)
+          const derivedLegacyProductId =
+            item.product_id ||
+            (item.resolvedProductType === 'dish'
+              ? resolvedProduct?.id || item.product?.id
+              : null) ||
+            (item.resolvedProductType === 'legacy' ? resolvedProduct?.id || item.product?.id : null)
+
+          let variantMetadata = item.variant_metadata || item.variantMetadata || null
+          if (!variantMetadata && item.variant_snapshot) {
+            variantMetadata = item.variant_snapshot
+          } else if (!variantMetadata && item.variant_display) {
+            variantMetadata = { display: item.variant_display }
+          }
+
+          if (variantMetadata && typeof variantMetadata === 'string') {
+            try {
+              variantMetadata = JSON.parse(variantMetadata)
+            } catch {
+              variantMetadata = { display: variantMetadata }
+            }
+          }
+
+          return {
+            product_id: derivedLegacyProductId || null,
+            menu_item_id: derivedMenuItemId || null,
+            quantity: item.quantity,
+            price_at_purchase: price,
+            variant_id: item.variant_id || item.variantId || null,
+            combination_id: item.combination_id || item.combinationId || null,
+            variant_metadata: variantMetadata as Record<string, unknown> | null | undefined,
+          }
+        })
+
+        const guestSessionId = user?.id ? null : getGuestSessionId()
+
+        const shippingPayload = {
+          ...shippingAddress,
+          fulfillmentMode,
+          scheduledSlot,
+          orderNote: orderNote?.trim() ? orderNote.trim() : undefined,
+          marketingPreferences: enableMarketingOptins
+            ? {
+                email: emailUpdatesOptIn,
+                sms: smsUpdatesOptIn,
+              }
+            : undefined,
         }
 
-        const price = typeof resolvedProduct.price === 'number'
-          ? resolvedProduct.price
-          : parsePrice(resolvedProduct.price || item.price || item.price_at_purchase || '0')
+        const orderResult = await createOrderWithItems({
+          userId: user?.id || null,
+          customerEmail: customerEmail,
+          customerName: shippingAddress.fullName,
+          shippingAddress: shippingPayload,
+          items: orderItems,
+          discountCodeId: appliedDiscountCode ? (appliedDiscountCode as { id: string }).id : null,
+          discountAmount: discountAmount,
+          guestSessionId,
+          isGuest: !user,
+        })
 
-        if (price <= 0) {
-          throw new Error(`Invalid price for product: ${resolvedProduct.name || item.product_id || item.menu_item_id}`)
+        if (!orderResult.success) {
+          throw new Error(orderResult.error || 'Failed to create order')
         }
 
-        const derivedMenuItemId = item.menu_item_id || (item.resolvedProductType === 'menu_item' ? (resolvedProduct?.id || item.product?.id) : null)
-        const derivedLegacyProductId = item.product_id || (item.resolvedProductType === 'dish' ? (resolvedProduct?.id || item.product?.id) : null) || (item.resolvedProductType === 'legacy' ? (resolvedProduct?.id || item.product?.id) : null)
+        const orderData = { id: orderResult.orderId }
+        setTrackingStatus('pending')
 
-        let variantMetadata = item.variant_metadata || item.variantMetadata || null
-        if (!variantMetadata && item.variant_snapshot) {
-          variantMetadata = item.variant_snapshot
-        } else if (!variantMetadata && item.variant_display) {
-          variantMetadata = { display: item.variant_display }
-        }
+        // Apply discount code usage tracking
+        if (appliedDiscountCode && discountAmount > 0 && user?.id) {
+          const orderSubtotal = subtotal + shipping + tax
+          const discountResult = await applyDiscountCodeToOrder(
+            (appliedDiscountCode as { id: string }).id,
+            user.id,
+            orderResult.orderId,
+            discountAmount,
+            orderSubtotal
+          )
 
-        if (variantMetadata && typeof variantMetadata === 'string') {
-          try {
-            variantMetadata = JSON.parse(variantMetadata)
-          } catch {
-            variantMetadata = { display: variantMetadata }
+          if (!discountResult.success) {
+            logger.error('Failed to record discount code usage:', discountResult.error)
           }
         }
 
-        return {
-          product_id: derivedLegacyProductId || null,
-          menu_item_id: derivedMenuItemId || null,
-          quantity: item.quantity,
-          price_at_purchase: price,
-          variant_id: item.variant_id || item.variantId || null,
-          combination_id: item.combination_id || item.combinationId || null,
-          variant_metadata: variantMetadata as Record<string, unknown> | null | undefined
+        // Create Stripe Payment Intent
+        const paymentResponse = await edgeFunctionClient.invoke('create-payment-intent', {
+          amount: Number(grandTotal.toFixed(2)),
+          currency: CURRENCY_CODE,
+          orderId: orderData.id,
+          customerEmail: customerEmail,
+        })
+
+        if (!paymentResponse.success || !paymentResponse.data?.clientSecret) {
+          throw new Error(paymentResponse.message || 'Failed to initialize payment')
         }
-      })
 
-      const guestSessionId = user?.id ? null : getGuestSessionId()
+        const secret = paymentResponse.data.clientSecret
 
-      const shippingPayload = {
-        ...shippingAddress,
-        fulfillmentMode,
-        scheduledSlot,
-        orderNote: orderNote?.trim() ? orderNote.trim() : undefined,
-        marketingPreferences: enableMarketingOptins ? {
-          email: emailUpdatesOptIn,
-          sms: smsUpdatesOptIn,
-        } : undefined,
-      }
+        setCreatedOrderId(orderData.id)
+        setClientSecret(secret)
+        setShowPayment(true)
+      } catch (err) {
+        logger.error('Error placing order:', err)
 
-      const orderResult = await createOrderWithItems({
-        userId: user?.id || null,
-        customerEmail: customerEmail,
-        customerName: shippingAddress.fullName,
-        shippingAddress: shippingPayload,
-        items: orderItems,
-        discountCodeId: appliedDiscountCode ? (appliedDiscountCode as { id: string }).id : null,
-        discountAmount: discountAmount,
-        guestSessionId,
-        isGuest: !user
-      })
+        let errorMessage = 'Failed to place order. Please try again.'
+        if (
+          err instanceof Error && err instanceof Error
+            ? err instanceof Error
+              ? err instanceof Error
+                ? err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err.message
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+                : String(err)
+              : String(err)
+            : String(err)
+        ) {
+          errorMessage =
+            err instanceof Error
+              ? err instanceof Error
+                ? err instanceof Error
+                  ? err instanceof Error
+                    ? err instanceof Error
+                      ? err instanceof Error
+                        ? err instanceof Error
+                          ? err instanceof Error
+                            ? err instanceof Error
+                              ? err instanceof Error
+                                ? err instanceof Error
+                                  ? err instanceof Error
+                                    ? err instanceof Error
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
+                                      : String(err)
+                                    : String(err)
+                                  : String(err)
+                                : String(err)
+                              : String(err)
+                            : String(err)
+                          : String(err)
+                        : String(err)
+                      : String(err)
+                    : String(err)
+                  : String(err)
+                : String(err)
+              : String(err)
+        } else if (err && typeof err === 'object' && 'code' in err) {
+          if (err.code === '42P01') {
+            errorMessage = 'Database tables not found. Please run the migration first.'
+          } else if (err.code === '42501') {
+            errorMessage = 'Permission denied. Please ensure you are logged in.'
+          }
+        }
 
-      if (!orderResult.success) {
-        throw new Error(orderResult.error || 'Failed to create order')
-      }
-
-      const orderData = { id: orderResult.orderId }
-      setTrackingStatus('pending')
-
-      // Apply discount code usage tracking
-      if (appliedDiscountCode && discountAmount > 0 && user?.id) {
-        const orderSubtotal = subtotal + shipping + tax
-        const discountResult = await applyDiscountCodeToOrder(
-          (appliedDiscountCode as { id: string }).id,
-          user.id,
-          orderResult.orderId,
-          discountAmount,
-          orderSubtotal
+        if (errorClearRef.current) errorClearRef.current()
+        errorClearRef.current = setMessageWithAutoClear(
+          setOrderError,
+          null,
+          errorMessage,
+          'error',
+          8000
         )
-
-        if (!discountResult.success) {
-          logger.error('Failed to record discount code usage:', discountResult.error)
-        }
+      } finally {
+        setPlacingOrder(false)
       }
-
-      // Create Stripe Payment Intent
-      const paymentResponse = await edgeFunctionClient.invoke('create-payment-intent', {
-        amount: Number(grandTotal.toFixed(2)),
-        currency: CURRENCY_CODE,
-        orderId: orderData.id,
-        customerEmail: customerEmail
-      })
-
-      if (!paymentResponse.success || !paymentResponse.data?.clientSecret) {
-        throw new Error(paymentResponse.message || 'Failed to initialize payment')
-      }
-
-      const secret = paymentResponse.data.clientSecret
-
-      setCreatedOrderId(orderData.id)
-      setClientSecret(secret)
-      setShowPayment(true)
-
-    } catch (err) {
-      logger.error('Error placing order:', err)
-
-      let errorMessage = 'Failed to place order. Please try again.'
-      if (err instanceof Error && err.message) {
-        errorMessage = err.message
-      } else if (err && typeof err === 'object' && 'code' in err) {
-        if (err.code === '42P01') {
-          errorMessage = 'Database tables not found. Please run the migration first.'
-        } else if (err.code === '42501') {
-          errorMessage = 'Permission denied. Please ensure you are logged in.'
-        }
-      }
-
-      if (errorClearRef.current) errorClearRef.current()
-      errorClearRef.current = setMessageWithAutoClear(setOrderError, null, errorMessage, 'error', 8000)
-    } finally {
-      setPlacingOrder(false)
-    }
-  }, [
-    user,
-    guestEmail,
-    cartItems,
-    shippingAddress,
-    fulfillmentMode,
-    scheduledSlot,
-    orderNote,
-    enableMarketingOptins,
-    emailUpdatesOptIn,
-    smsUpdatesOptIn,
-    appliedDiscountCode,
-    discountAmount,
-    grandTotal,
-    subtotal,
-    shipping,
-    tax,
-    isAddressValid,
-    getMissingAddressFields,
-  ])
+    },
+    [
+      user,
+      guestEmail,
+      cartItems,
+      shippingAddress,
+      fulfillmentMode,
+      scheduledSlot,
+      orderNote,
+      enableMarketingOptins,
+      emailUpdatesOptIn,
+      smsUpdatesOptIn,
+      appliedDiscountCode,
+      discountAmount,
+      grandTotal,
+      subtotal,
+      shipping,
+      tax,
+      isAddressValid,
+      getMissingAddressFields,
+    ]
+  )
 
   const handlePaymentSuccess = useCallback(async () => {
     logger.log('handlePaymentSuccess called', { user: !!user, createdOrderId, grandTotal })
-    
+
     isProcessingPaymentSuccess.current = true
-    
+
     try {
       setTrackingStatus('processing')
       const customerEmail = user ? user.email! : guestEmail
@@ -352,16 +470,16 @@ export function useCheckoutOrder({
         setGuestCheckoutData({
           email: guestEmail,
           orderId: createdOrderId,
-          guestSessionId: sessionId ?? undefined
+          guestSessionId: sessionId ?? undefined,
         })
         setShowConversionModal(true)
         setShowPayment(false)
         setOrderSuccess(true)
       } else {
-        logger.log('Showing success modal for authenticated user - BEFORE clearing cart', { 
-          showSuccessModal: true, 
-          createdOrderId, 
-          grandTotal 
+        logger.log('Showing success modal for authenticated user - BEFORE clearing cart', {
+          showSuccessModal: true,
+          createdOrderId,
+          grandTotal,
         })
         setShowPayment(false)
         setShowSuccessModal(true)
@@ -401,24 +519,29 @@ export function useCheckoutOrder({
       }
 
       try {
-        const apiUrl = (import.meta as { env?: { VITE_SUPABASE_URL?: string } }).env?.VITE_SUPABASE_URL || ''
-        const { data: { session } } = await supabase.auth.getSession()
+        const apiUrl =
+          (import.meta as { env?: { VITE_SUPABASE_URL?: string } }).env?.VITE_SUPABASE_URL || ''
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
-        const anonKey = (import.meta as { env?: { VITE_SUPABASE_ANON_KEY?: string } }).env?.VITE_SUPABASE_ANON_KEY || ''
+        const anonKey =
+          (import.meta as { env?: { VITE_SUPABASE_ANON_KEY?: string } }).env
+            ?.VITE_SUPABASE_ANON_KEY || ''
         const authHeader = session?.access_token
-          ? { 'Authorization': `Bearer ${session.access_token}` }
-          : { 'Authorization': `Bearer ${anonKey}` }
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : { Authorization: `Bearer ${anonKey}` }
 
         const response = await fetch(`${apiUrl}/functions/v1/send-order-confirmation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...authHeader
+            ...authHeader,
           },
           body: JSON.stringify({
             orderId: createdOrderId,
-            email: customerEmail
-          })
+            email: customerEmail,
+          }),
         })
 
         if (response.ok) {
@@ -456,11 +579,11 @@ export function useCheckoutOrder({
     setShowSuccessModal(false)
     setShowConversionModal(false)
     isProcessingPaymentSuccess.current = false
-    
+
     if (successRedirectRef.current) {
       clearTimeout(successRedirectRef.current)
     }
-    
+
     successRedirectRef.current = setTimeout(() => {
       navigate('/order')
     }, 500)
@@ -486,4 +609,3 @@ export function useCheckoutOrder({
     setOrderError,
   }
 }
-

@@ -44,9 +44,7 @@ export function OrderItemsList({ items, isLightTheme }: OrderItemsListProps) {
     <div
       className="glow-surface glow-strong border border-theme rounded-2xl p-6 mb-6"
       style={{
-        backgroundColor: isLightTheme
-          ? 'var(--bg-elevated)'
-          : 'rgba(255, 255, 255, 0.05)'
+        backgroundColor: isLightTheme ? 'var(--bg-elevated)' : 'rgba(255, 255, 255, 0.05)',
       }}
     >
       <div className="flex items-center justify-between mb-6">
@@ -57,20 +55,22 @@ export function OrderItemsList({ items, isLightTheme }: OrderItemsListProps) {
       </div>
 
       <div className="space-y-3">
-        {items.map((item) => {
+        {items.map(item => {
           // Use resolved product from database, fallback to embedded product, or use cart item data
-          const product = item.resolvedProduct || item.product || {
-            id: item.menu_item_id || item.product_id || item.id,
-            name: item.name || `Item ${item.menu_item_id || item.product_id || item.id}`,
-            price: item.price || item.price_at_purchase || 0,
-            image_url: item.image_url || item.image || null,
-            description: item.description || null
-          }
+          const product = item.resolvedProduct ||
+            item.product || {
+              id: item.menu_item_id || item.product_id || item.id,
+              name: item.name || `Item ${item.menu_item_id || item.product_id || item.id}`,
+              price: item.price || item.price_at_purchase || 0,
+              image_url: item.image_url || item.image || null,
+              description: item.description || null,
+            }
 
           // Handle price - might be string or number, or use fallback from cart item
-          const itemPrice = typeof product.price === 'number'
-            ? product.price
-            : parsePrice(product.price || item.price || item.price_at_purchase || '0')
+          const itemPrice =
+            typeof product.price === 'number'
+              ? product.price
+              : parsePrice(product.price || item.price || item.price_at_purchase || '0')
           const itemSubtotal = itemPrice * item.quantity
 
           return (
@@ -78,9 +78,7 @@ export function OrderItemsList({ items, isLightTheme }: OrderItemsListProps) {
               key={item.id}
               className="glow-surface glow-soft border border-theme rounded-xl p-4 hover:border-accent/30 transition-all"
               style={{
-                backgroundColor: isLightTheme
-                  ? 'rgba(0, 0, 0, 0.04)'
-                  : 'rgba(255, 255, 255, 0.05)'
+                backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
               }}
             >
               <div className="flex gap-4">
@@ -90,10 +88,11 @@ export function OrderItemsList({ items, isLightTheme }: OrderItemsListProps) {
                     src={getProductImage(product)}
                     alt={product.name || 'Dish'}
                     className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl"
-                    onError={(e) => {
+                    onError={e => {
                       const target = e.target as HTMLImageElement
                       if (target) {
-                        target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'
+                        target.src =
+                          'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'
                       }
                     }}
                   />
@@ -105,7 +104,8 @@ export function OrderItemsList({ items, isLightTheme }: OrderItemsListProps) {
                     {product.name || 'Unknown Dish'}
                   </h3>
                   <p className="text-sm text-muted mb-3">
-                    Quantity: <span className="text-[var(--text-main)] font-medium">{item.quantity}</span>
+                    Quantity:{' '}
+                    <span className="text-[var(--text-main)] font-medium">{item.quantity}</span>
                   </p>
                   <div className="flex items-center justify-between">
                     <div>
@@ -130,4 +130,3 @@ export function OrderItemsList({ items, isLightTheme }: OrderItemsListProps) {
     </div>
   )
 }
-

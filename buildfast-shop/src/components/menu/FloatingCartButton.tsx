@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { m } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { getGuestCart } from '../../lib/guestSessionUtils';
-import { onCartChanged } from '../../lib/cartEvents';
-import { logger } from '../../utils/logger';
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { m } from 'framer-motion'
+import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
+import { getGuestCart } from '../../lib/guestSessionUtils'
+import { onCartChanged } from '../../lib/cartEvents'
+import { logger } from '../../utils/logger'
 
 /**
  * Floating Cart Button Component
@@ -24,73 +24,79 @@ import { logger } from '../../utils/logger';
  * - Respects prefers-reduced-motion
  */
 const FloatingCartButton = () => {
-  const { user } = useAuth();
-  const location = useLocation();
-  const [cartCount, setCartCount] = useState<number>(0);
+  const { user } = useAuth()
+  const location = useLocation()
+  const [cartCount, setCartCount] = useState<number>(0)
 
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
+    if (typeof document === 'undefined') return undefined
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Fetch cart count (total quantity, not unique items)
   const fetchCartCount = useCallback(async () => {
     try {
-      let count = 0;
+      let count = 0
 
       if (user) {
         // Authenticated user - fetch from database
         const { data, error } = await supabase
           .from('cart_items')
           .select('quantity')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
 
-        if (error) throw error;
-        count = (data || []).reduce((sum: number, item: { quantity?: number }) => sum + (item.quantity || 0), 0);
+        if (error) throw error
+        count = (data || []).reduce(
+          (sum: number, item: { quantity?: number }) => sum + (item.quantity || 0),
+          0
+        )
       } else {
         // Guest user - fetch from localStorage
-        const guestCart = getGuestCart();
-        count = guestCart.reduce((sum: number, item: { quantity?: number }) => sum + (item.quantity || 0), 0);
+        const guestCart = getGuestCart() as Array<{ quantity?: number }>
+        count = guestCart.reduce(
+          (sum: number, item: { quantity?: number }) => sum + (item.quantity || 0),
+          0
+        )
       }
 
-      setCartCount(count);
+      setCartCount(count)
     } catch (error) {
-      logger.error('Error fetching cart count:', error);
-      setCartCount(0);
+      logger.error('Error fetching cart count:', error)
+      setCartCount(0)
     }
-  }, [user]);
+  }, [user])
 
   // Initial fetch and listen for cart changes
   useEffect(() => {
-    fetchCartCount();
+    fetchCartCount()
 
     // Listen for cart change events
     const cleanup = onCartChanged(() => {
-      fetchCartCount();
-    });
+      fetchCartCount()
+    })
 
     // Real-time subscription for authenticated users
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null
     if (user) {
       channel = supabase
         .channel(`floating-cart-${user.id}`)
@@ -100,73 +106,75 @@ const FloatingCartButton = () => {
             event: '*',
             schema: 'public',
             table: 'cart_items',
-            filter: `user_id=eq.${user.id}`
+            filter: `user_id=eq.${user.id}`,
           },
           () => {
-            fetchCartCount();
+            fetchCartCount()
           }
         )
-        .subscribe();
+        .subscribe()
     }
 
     // Listen for guest cart updates
     const handleGuestCartUpdate = () => {
       if (!user) {
-        fetchCartCount();
+        fetchCartCount()
       }
-    };
-    window.addEventListener('guestCartUpdated', handleGuestCartUpdate);
+    }
+    window.addEventListener('guestCartUpdated', handleGuestCartUpdate)
 
     return () => {
-      cleanup();
+      cleanup()
       if (channel) {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(channel)
       }
-      window.removeEventListener('guestCartUpdated', handleGuestCartUpdate);
-    };
-  }, [user, fetchCartCount]);
+      window.removeEventListener('guestCartUpdated', handleGuestCartUpdate)
+    }
+  }, [user, fetchCartCount])
 
   // Memoized values
   const isOrderPage = useMemo(() => {
-    return location.pathname === '/order' || location.pathname === '/checkout';
-  }, [location.pathname]);
+    return location.pathname === '/order' || location.pathname === '/checkout'
+  }, [location.pathname])
 
-  const isEmpty = useMemo(() => cartCount === 0, [cartCount]);
+  const isEmpty = useMemo(() => cartCount === 0, [cartCount])
 
   const prefersReducedMotion = useMemo(() => {
-    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }, []);
+    return (
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+  }, [])
 
   // Memoized box shadows
   const emptyBoxShadow = useMemo(() => {
     return isLightTheme
       ? '0 4px 20px rgba(var(--bg-dark-rgb), 0.1), 0 0 0 1px rgba(var(--bg-dark-rgb), 0.05)'
-      : '0 4px 20px rgba(var(--bg-dark-rgb), 0.3), 0 0 0 1px rgba(var(--text-main-rgb), 0.1)';
-  }, [isLightTheme]);
+      : '0 4px 20px rgba(var(--bg-dark-rgb), 0.3), 0 0 0 1px rgba(var(--text-main-rgb), 0.1)'
+  }, [isLightTheme])
 
   const filledBoxShadow = useMemo(() => {
     return isLightTheme
       ? '0 10px 40px rgba(var(--accent-rgb), 0.25), 0 0 0 1px rgba(var(--accent-rgb), 0.1)'
-      : '0 10px 40px rgba(var(--bg-dark-rgb), 0.4), 0 0 0 1px rgba(var(--accent-rgb), 0.2)';
-  }, [isLightTheme]);
+      : '0 10px 40px rgba(var(--bg-dark-rgb), 0.4), 0 0 0 1px rgba(var(--accent-rgb), 0.2)'
+  }, [isLightTheme])
 
   const cartLabel = useMemo(() => {
-    if (isEmpty) return 'View cart (empty)';
-    return `View cart with ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`;
-  }, [isEmpty, cartCount]);
+    if (isEmpty) return 'View cart (empty)'
+    return `View cart with ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`
+  }, [isEmpty, cartCount])
 
   const cartText = useMemo(() => {
-    if (isEmpty) return 'Empty';
-    return `${cartCount} ${cartCount === 1 ? 'item' : 'items'}`;
-  }, [isEmpty, cartCount]);
+    if (isEmpty) return 'Empty'
+    return `${cartCount} ${cartCount === 1 ? 'item' : 'items'}`
+  }, [isEmpty, cartCount])
 
   const badgeText = useMemo(() => {
-    return cartCount > 99 ? '99+' : String(cartCount);
-  }, [cartCount]);
+    return cartCount > 99 ? '99+' : String(cartCount)
+  }, [cartCount])
 
   // Don't render on order/checkout pages
   if (isOrderPage) {
-    return null;
+    return null
   }
 
   return (
@@ -178,7 +186,9 @@ const FloatingCartButton = () => {
         initial={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.8, y: -20 }}
         animate={prefersReducedMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
         exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.8, y: -20 }}
-        transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 25 }}
+        transition={
+          prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 25 }
+        }
       >
         <Link
           to="/order"
@@ -188,7 +198,7 @@ const FloatingCartButton = () => {
               : 'bg-[var(--accent)] text-black border-[var(--accent)]/20 hover:shadow-[0_8px_30px_rgba(var(--accent-rgb),0.4)]'
           }`}
           style={{
-            boxShadow: isEmpty ? emptyBoxShadow : filledBoxShadow
+            boxShadow: isEmpty ? emptyBoxShadow : filledBoxShadow,
           }}
           aria-label={cartLabel}
         >
@@ -212,9 +222,7 @@ const FloatingCartButton = () => {
 
           <div className="flex flex-col items-start">
             <span className="text-sm font-medium opacity-80 leading-tight">Cart</span>
-            <span className="text-base font-bold leading-tight">
-              {cartText}
-            </span>
+            <span className="text-base font-bold leading-tight">{cartText}</span>
           </div>
 
           {/* Cart Count Badge - Only show when not empty */}
@@ -224,7 +232,11 @@ const FloatingCartButton = () => {
               aria-label={`${cartCount} items in cart`}
               initial={prefersReducedMotion ? undefined : { scale: 0 }}
               animate={prefersReducedMotion ? undefined : { scale: 1 }}
-              transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 30 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0 }
+                  : { type: 'spring', stiffness: 500, damping: 30 }
+              }
               whileHover={prefersReducedMotion ? undefined : { scale: 1.15 }}
             >
               {badgeText}
@@ -247,7 +259,9 @@ const FloatingCartButton = () => {
         initial={prefersReducedMotion ? undefined : { opacity: 0, y: 100 }}
         animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
         exit={prefersReducedMotion ? undefined : { opacity: 0, y: 100 }}
-        transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 25 }}
+        transition={
+          prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 25 }
+        }
       >
         <Link
           to="/order"
@@ -257,7 +271,7 @@ const FloatingCartButton = () => {
               : 'bg-[var(--accent)] text-black border-[var(--accent)]/20 hover:shadow-[0_8px_30px_rgba(var(--accent-rgb),0.4)]'
           }`}
           style={{
-            boxShadow: isEmpty ? emptyBoxShadow : filledBoxShadow
+            boxShadow: isEmpty ? emptyBoxShadow : filledBoxShadow,
           }}
           aria-label={cartLabel}
         >
@@ -287,7 +301,11 @@ const FloatingCartButton = () => {
               aria-label={`${cartCount} items in cart`}
               initial={prefersReducedMotion ? undefined : { scale: 0 }}
               animate={prefersReducedMotion ? undefined : { scale: 1 }}
-              transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 30 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0 }
+                  : { type: 'spring', stiffness: 500, damping: 30 }
+              }
               whileTap={prefersReducedMotion ? undefined : { scale: 1.1 }}
             >
               {badgeText}
@@ -303,8 +321,7 @@ const FloatingCartButton = () => {
         </Link>
       </m.div>
     </>
-  );
-};
+  )
+}
 
-export default FloatingCartButton;
-
+export default FloatingCartButton

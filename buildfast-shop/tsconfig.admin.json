@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo.admin"
+  },
+  "include": [
+    "src/pages/admin/**/*",
+    "src/components/admin/**/*",
+    "src/components/Admin/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
+}
+

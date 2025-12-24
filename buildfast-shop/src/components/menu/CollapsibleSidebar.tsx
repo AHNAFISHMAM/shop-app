@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import { sidebarSequence, staggerContainer, fadeSlideUp, batchFadeSlideUp } from '../animations/menuAnimations';
-import { cn } from '../../utils/cn';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
+import { staggerContainer, fadeSlideUp, batchFadeSlideUp } from '../animations/menuAnimations'
+import { cn } from '../../utils/cn'
 import {
   HomeIcon,
   SearchIcon,
@@ -16,68 +16,70 @@ import {
   InternationalIcon,
   LightBitesIcon,
   OtherIcon,
-} from '../icons/SidebarIcons';
-import { ANIMATION_DELAYS } from './sidebarConstants';
-import { logger } from '../../utils/logger';
+} from '../icons/SidebarIcons'
+import { ANIMATION_DELAYS } from './sidebarConstants'
+import { logger } from '../../utils/logger'
 
 interface Category {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 interface MenuItem {
-  id: string;
-  category_id: string;
-  name: string;
-  image_url?: string;
-  image?: string;
-  dietary_tags?: string[];
+  id: string
+  category_id: string
+  name: string
+  image_url?: string
+  image?: string
+  dietary_tags?: string[]
 }
 
 interface CategoryGroup {
-  id: string;
-  name: string;
-  icon: React.ComponentType<{ className?: string }>;
-  keywords: string[];
-  categories: Category[];
+  id: string
+  name: string
+  icon: React.ComponentType<{ className?: string }>
+  keywords: string[]
+  categories: Category[]
 }
 
 interface QuickReorderItem {
-  id: string | number;
-  name: string;
-  image_url?: string;
-  image?: string;
-  dietary_tags?: string[];
+  id: string | number
+  name: string
+  image_url?: string
+  image?: string
+  dietary_tags?: string[]
 }
 
 interface CollapsibleSidebarProps {
-  categories?: Category[];
-  menuItems?: MenuItem[];
-  selectedCategory?: Category | null;
-  onCategorySelect: (category: Category | null) => void;
-  variant?: 'desktop' | 'mobile';
-  enableFilters?: boolean;
-  searchQuery?: string;
-  onSearchChange?: (query: string) => void;
-  dietaryTags?: string[];
-  activeDietaryTags?: string[];
-  onDietaryToggle?: (tag: string) => void;
-  allergenTags?: string[];
-  activeAllergenTags?: string[];
-  onAllergenToggle?: (tag: string) => void;
-  quickReorderItems?: QuickReorderItem[];
-  onQuickReorder?: ((itemId: string | number) => void) | null;
+  categories?: Category[]
+  menuItems?: MenuItem[]
+  selectedCategory?: Category | null
+  onCategorySelect: (category: Category | null) => void
+  variant?: 'desktop' | 'mobile'
+  enableFilters?: boolean
+  searchQuery?: string
+  onSearchChange?: (query: string) => void
+  dietaryTags?: string[]
+  activeDietaryTags?: string[]
+  onDietaryToggle?: (tag: string) => void
+  allergenTags?: string[]
+  activeAllergenTags?: string[]
+  onAllergenToggle?: (tag: string) => void
+  quickReorderItems?: QuickReorderItem[]
+  onQuickReorder?: ((itemId: string | number) => void) | null
 }
 
 // Utility functions from MenuEnhancementsPanel
 const formatLabel = (label: string): string => {
-  if (!label) return '';
-  const normalized = label.replace(/[-_]/g, ' ').toLowerCase();
-  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
-};
+  if (!label) return ''
+  const normalized = label.replace(/[-_]/g, ' ').toLowerCase()
+  return normalized.replace(/\b\w/g, char => char.toUpperCase())
+}
 
 const resolveImage = (item: MenuItem | QuickReorderItem): string =>
-  item?.image_url || item?.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=400&fit=crop';
+  item?.image_url ||
+  item?.image ||
+  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=400&fit=crop'
 
 /**
  * Professional Collapsible Sidebar for Menu Categories
@@ -91,39 +93,39 @@ const CATEGORY_GROUPS: Omit<CategoryGroup, 'categories'>[] = [
     id: 'set-menus',
     name: 'Set Menus',
     icon: SetMenuIcon,
-    keywords: ['set menu', 'dine in', 'take away', 'set', 'combo']
+    keywords: ['set menu', 'dine in', 'take away', 'set', 'combo'],
   },
   {
     id: 'bangladeshi',
     name: 'Bangladeshi Cuisine',
     icon: CuisineIcon,
-    keywords: ['biryani', 'bangla', 'fish', 'mach', 'goru', 'khasi', 'sonali', 'murgi', 'bengali']
+    keywords: ['biryani', 'bangla', 'fish', 'mach', 'goru', 'khasi', 'sonali', 'murgi', 'bengali'],
   },
   {
     id: 'main-dishes',
     name: 'Main Dishes',
     icon: MainDishIcon,
-    keywords: ['rice', 'beef', 'mutton', 'chicken', 'prawn', 'fish', 'vegetable', 'sizzling']
+    keywords: ['rice', 'beef', 'mutton', 'chicken', 'prawn', 'fish', 'vegetable', 'sizzling'],
   },
   {
     id: 'breads',
     name: 'Breads & Sides',
     icon: BreadIcon,
-    keywords: ['naan', 'nun', 'bon', 'bread', 'roti']
+    keywords: ['naan', 'nun', 'bon', 'bread', 'roti'],
   },
   {
     id: 'international',
     name: 'International',
     icon: InternationalIcon,
-    keywords: ['pizza', 'burger', 'chowmein', 'pasta', 'ramen', 'nachos', 'chop suey']
+    keywords: ['pizza', 'burger', 'chowmein', 'pasta', 'ramen', 'nachos', 'chop suey'],
   },
   {
     id: 'light-bites',
     name: 'Light Bites',
     icon: LightBitesIcon,
-    keywords: ['appetizer', 'snack', 'salad', 'soup', 'kabab', 'starter']
-  }
-];
+    keywords: ['appetizer', 'snack', 'salad', 'soup', 'kabab', 'starter'],
+  },
+]
 
 const CollapsibleSidebar = ({
   categories = [],
@@ -143,209 +145,215 @@ const CollapsibleSidebar = ({
   quickReorderItems = [],
   onQuickReorder = null,
 }: CollapsibleSidebarProps): JSX.Element => {
-  const isDesktop = variant === 'desktop';
+  const isDesktop = variant === 'desktop'
   const asideClasses = isDesktop
     ? 'hidden lg:block w-full lg:w-80 flex-shrink-0 z-20 sticky top-16 self-start'
-    : 'w-full h-full';
+    : 'w-full h-full'
   const containerClasses = `rounded-xl sm:rounded-2xl border border-theme backdrop-blur-sm flex flex-col ${
     isDesktop ? 'max-h-[calc(100vh-4rem)]' : 'h-full'
-  }`;
-  const navWrapperClasses = isDesktop 
+  }`
+  const navWrapperClasses = isDesktop
     ? 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden hide-scrollbar px-4 sm:px-6 py-4'
-    : 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden hide-scrollbar px-4 sm:px-6 py-4';
-  const groupWrapperClasses = 'space-y-2';
+    : 'flex-1 min-h-0 overflow-y-auto overflow-x-hidden hide-scrollbar px-4 sm:px-6 py-4'
+  const groupWrapperClasses = 'space-y-2'
 
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Memoized container styles using CSS variables
-  const containerStyle = useMemo(() => ({
-    backgroundColor: 'var(--bg-elevated)',
-    boxShadow: 'var(--modal-shadow)',
-    borderColor: 'var(--border-default)',
-  }), []);
+  const containerStyle = useMemo(
+    () => ({
+      backgroundColor: 'var(--bg-elevated)',
+      boxShadow: 'var(--modal-shadow)',
+      borderColor: 'var(--border-default)',
+    }),
+    []
+  )
 
   // View state: 'categories' or 'filters'
-  const [currentView, setCurrentView] = useState<'categories' | 'filters'>('categories');
-  
+  const [currentView, setCurrentView] = useState<'categories' | 'filters'>('categories')
+
   // Filters panel collapsed state
-  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
 
   // Track which groups are expanded (all collapsed by default)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
     CATEGORY_GROUPS.reduce((acc, group) => ({ ...acc, [group.id]: false }), {})
-  );
-  
+  )
+
   // Filters panel computed values
-  const hasDietaryFilters = dietaryTags.length > 0;
-  const hasAllergenFilters = allergenTags.length > 0;
-  const hasQuickReorder = quickReorderItems.length > 0;
-  const quickReorderCards = useMemo(() => quickReorderItems.slice(0, 3), [quickReorderItems]);
+  const hasDietaryFilters = dietaryTags.length > 0
+  const hasAllergenFilters = allergenTags.length > 0
+  const hasQuickReorder = quickReorderItems.length > 0
+  const quickReorderCards = useMemo(() => quickReorderItems.slice(0, 3), [quickReorderItems])
 
   // Group categories by parent
   const groupedCategories = useMemo(() => {
-    const groups: Record<string, CategoryGroup> = {};
+    const groups: Record<string, CategoryGroup> = {}
 
     // Initialize all groups
     CATEGORY_GROUPS.forEach(group => {
       groups[group.id] = {
         ...group,
-        categories: []
-      };
-    });
+        categories: [],
+      }
+    })
 
     // Assign each category to appropriate group based on keywords
     categories.forEach(category => {
-      const categoryNameLower = category.name.toLowerCase();
+      const categoryNameLower = category.name.toLowerCase()
 
       // Find matching group
-      let assigned = false;
+      let assigned = false
       for (const group of CATEGORY_GROUPS) {
-        if (group.keywords.some(keyword => categoryNameLower.includes(keyword))) {
-          groups[group.id].categories.push(category);
-          assigned = true;
-          break;
+        if (category && group.keywords.some(keyword => categoryNameLower.includes(keyword))) {
+          const targetGroup = groups[group.id]
+          if (targetGroup) {
+            targetGroup.categories.push(category)
+          }
+          assigned = true
+          break
         }
       }
 
       // If no match, add to "Other" group
       if (!assigned) {
-          if (!groups['other']) {
+        if (!groups['other']) {
           groups['other'] = {
             id: 'other',
             name: 'Other',
             icon: OtherIcon,
             keywords: [],
-            categories: []
-          };
+            categories: [],
+          }
         }
-        groups['other'].categories.push(category);
+        const otherGroup = groups['other']
+        if (otherGroup) {
+          otherGroup.categories.push(category)
+        }
       }
-    });
+    })
 
-    return groups;
-  }, [categories]);
+    return groups
+  }, [categories])
 
   // Calculate item counts per category
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, number> = {}
     menuItems.forEach(item => {
-      const catId = item.category_id;
-      counts[catId] = (counts[catId] || 0) + 1;
-    });
-    return counts;
-  }, [menuItems]);
+      const catId = item.category_id
+      counts[catId] = (counts[catId] || 0) + 1
+    })
+    return counts
+  }, [menuItems])
 
   // Toggle group expand/collapse
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => ({
       ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
+      [groupId]: !prev[groupId],
+    }))
+  }
 
-  const allGroupIds = useMemo(
-    () => Object.keys(groupedCategories),
-    [groupedCategories]
-  );
+  const allGroupIds = useMemo(() => Object.keys(groupedCategories), [groupedCategories])
 
   // Check if all groups are expanded or collapsed
   const allExpanded = useMemo(() => {
-    if (allGroupIds.length === 0) return false;
-    return allGroupIds.every(id => expandedGroups[id] === true);
-  }, [allGroupIds, expandedGroups]);
+    if (allGroupIds.length === 0) return false
+    return allGroupIds.every(id => expandedGroups[id] === true)
+  }, [allGroupIds, expandedGroups])
 
   const allCollapsed = useMemo(() => {
-    if (allGroupIds.length === 0) return false;
-    return allGroupIds.every(id => expandedGroups[id] === false);
-  }, [allGroupIds, expandedGroups]);
+    if (allGroupIds.length === 0) return false
+    return allGroupIds.every(id => expandedGroups[id] === false)
+  }, [allGroupIds, expandedGroups])
 
   const syncNewGroups = useCallback(() => {
-    setExpandedGroups((prev) => {
-      const updated = { ...prev };
-      let changed = false;
-      allGroupIds.forEach((id) => {
+    setExpandedGroups(prev => {
+      const updated = { ...prev }
+      let changed = false
+      allGroupIds.forEach(id => {
         if (typeof updated[id] === 'undefined') {
-          updated[id] = true;
-          changed = true;
+          updated[id] = true
+          changed = true
         }
-      });
-      return changed ? updated : prev;
-    });
-  }, [allGroupIds]);
+      })
+      return changed ? updated : prev
+    })
+  }, [allGroupIds])
 
   useEffect(() => {
-    syncNewGroups();
-  }, [syncNewGroups]);
+    syncNewGroups()
+  }, [syncNewGroups])
 
   const setAllGroupsExpanded = useCallback(
     (isExpanded: boolean) => {
-    setExpandedGroups(
-        allGroupIds.reduce((acc, id) => ({ ...acc, [id]: isExpanded }), {})
-      );
+      setExpandedGroups(allGroupIds.reduce((acc, id) => ({ ...acc, [id]: isExpanded }), {}))
     },
     [allGroupIds]
-    );
+  )
 
-  const collapseAll = () => setAllGroupsExpanded(false);
-  const expandAll = () => setAllGroupsExpanded(true);
+  const collapseAll = () => setAllGroupsExpanded(false)
+  const expandAll = () => setAllGroupsExpanded(true)
 
   // Debug logging for sidebar scroll behavior
-  const sidebarRef = useRef<HTMLElement>(null);
-  
+  const sidebarRef = useRef<HTMLElement>(null)
+
   useEffect(() => {
-    if (!isDesktop) return;
-    
+    if (!isDesktop) return
+
     // Run automatic diagnostics in development
     if (process.env.NODE_ENV === 'development') {
-      import('../../utils/stickySidebarDiagnostics').then(({ runStickySidebarDiagnostics }) => {
-        setTimeout(() => {
-          logger.log('[Sidebar] 🔍 Running automatic diagnostics...');
-          runStickySidebarDiagnostics();
-        }, 500);
-      }).catch(() => {
-        // Diagnostic utility not available, skip silently
-      });
+      import('../../utils/stickySidebarDiagnostics')
+        .then(({ runStickySidebarDiagnostics }) => {
+          setTimeout(() => {
+            logger.log('[Sidebar] 🔍 Running automatic diagnostics...')
+            runStickySidebarDiagnostics()
+          }, 500)
+        })
+        .catch(() => {
+          // Diagnostic utility not available, skip silently
+        })
     }
-    
+
     // Wait for sidebar to mount
     const checkSidebar = () => {
-      const asideElement = sidebarRef.current;
+      const asideElement = sidebarRef.current
       if (!asideElement) {
-        logger.log('[Sidebar Debug] Sidebar element not found, retrying...');
-        setTimeout(checkSidebar, 100);
-        return;
+        logger.log('[Sidebar Debug] Sidebar element not found, retrying...')
+        setTimeout(checkSidebar, 100)
+        return
       }
-      
+
       const logSidebarInfo = () => {
-        const rect = asideElement.getBoundingClientRect();
-        const computedStyle = window.getComputedStyle(asideElement);
-        const container = asideElement.querySelector('.rounded-xl') as HTMLElement;
-        const containerRect = container?.getBoundingClientRect();
-        const containerStyle = container ? window.getComputedStyle(container) : null;
-        
-        logger.log('[Sidebar Debug] ===== Sidebar Info =====');
+        const rect = asideElement.getBoundingClientRect()
+        const computedStyle = window.getComputedStyle(asideElement)
+        const container = asideElement.querySelector('.rounded-xl') as HTMLElement
+        const containerRect = container?.getBoundingClientRect()
+        const containerStyle = container ? window.getComputedStyle(container) : null
+
+        logger.log('[Sidebar Debug] ===== Sidebar Info =====')
         logger.log('Aside element:', {
           position: computedStyle.position,
           top: computedStyle.top,
@@ -363,52 +371,57 @@ const CollapsibleSidebar = ({
           documentHeight: document.documentElement.scrollHeight,
           viewportHeight: window.innerHeight,
           isSticky: computedStyle.position === 'sticky' || computedStyle.position === 'fixed',
-          willScrollWithPage: computedStyle.position === 'relative' || computedStyle.position === 'static'
-        });
-        
-        if (container) {
+          willScrollWithPage:
+            computedStyle.position === 'relative' || computedStyle.position === 'static',
+        })
+
+        if (container && containerStyle) {
           logger.log('Container element:', {
             position: containerStyle.position,
             height: containerStyle.height,
             maxHeight: containerStyle.maxHeight,
             overflow: containerStyle.overflow,
             overflowY: containerStyle.overflowY,
-            rect: { top: containerRect.top, bottom: containerRect.bottom, height: containerRect.height }
-          });
+            rect: {
+              top: containerRect.top,
+              bottom: containerRect.bottom,
+              height: containerRect.height,
+            },
+          })
         }
-        
-        const scrollableContent = asideElement.querySelector('.overflow-y-auto') as HTMLElement;
+
+        const scrollableContent = asideElement.querySelector('.overflow-y-auto') as HTMLElement
         if (scrollableContent) {
-          const scrollRect = scrollableContent.getBoundingClientRect();
-          const scrollStyle = window.getComputedStyle(scrollableContent);
+          const scrollRect = scrollableContent.getBoundingClientRect()
+          const scrollStyle = window.getComputedStyle(scrollableContent)
           logger.log('Scrollable content:', {
             scrollHeight: scrollableContent.scrollHeight,
             clientHeight: scrollableContent.clientHeight,
             scrollTop: scrollableContent.scrollTop,
             overflow: scrollStyle.overflow,
             overscrollBehavior: scrollStyle.overscrollBehavior,
-            rect: { top: scrollRect.top, bottom: scrollRect.bottom, height: scrollRect.height }
-          });
+            rect: { top: scrollRect.top, bottom: scrollRect.bottom, height: scrollRect.height },
+          })
         }
-        logger.log('[Sidebar Debug] =======================');
-      };
+        logger.log('[Sidebar Debug] =======================')
+      }
 
       // Log on mount
-      setTimeout(logSidebarInfo, 100);
+      setTimeout(logSidebarInfo, 100)
 
       // Track previous scroll position to detect movement
-      let previousScrollY = window.scrollY;
-      let previousSidebarTop = asideElement.getBoundingClientRect().top;
-      
+      let previousScrollY = window.scrollY
+      let previousSidebarTop = asideElement.getBoundingClientRect().top
+
       // Log on window scroll
       const handleWindowScroll = () => {
-        const rect = asideElement.getBoundingClientRect();
-        const style = window.getComputedStyle(asideElement);
-        const currentScrollY = window.scrollY;
-        const currentSidebarTop = rect.top;
-        const scrollDelta = currentScrollY - previousScrollY;
-        const sidebarMoved = Math.abs(currentSidebarTop - previousSidebarTop) > 0.1;
-        
+        const rect = asideElement.getBoundingClientRect()
+        const style = window.getComputedStyle(asideElement)
+        const currentScrollY = window.scrollY
+        const currentSidebarTop = rect.top
+        const scrollDelta = currentScrollY - previousScrollY
+        const sidebarMoved = Math.abs(currentSidebarTop - previousSidebarTop) > 0.1
+
         logger.log('[Sidebar Debug] Window scroll:', {
           scrollY: currentScrollY,
           scrollDelta: scrollDelta,
@@ -420,34 +433,34 @@ const CollapsibleSidebar = ({
           position: style.position,
           top: style.top,
           sidebarMovedWithPage: sidebarMoved && scrollDelta !== 0,
-          isSticky: style.position === 'sticky' || style.position === 'fixed'
-        });
-        
-        previousScrollY = currentScrollY;
-        previousSidebarTop = currentSidebarTop;
-      };
+          isSticky: style.position === 'sticky' || style.position === 'fixed',
+        })
+
+        previousScrollY = currentScrollY
+        previousSidebarTop = currentSidebarTop
+      }
 
       // Log on resize
       const handleResize = () => {
-        logger.log('[Sidebar Debug] Window resize');
-        logSidebarInfo();
-      };
+        logger.log('[Sidebar Debug] Window resize')
+        logSidebarInfo()
+      }
 
-      window.addEventListener('scroll', handleWindowScroll, { passive: true });
-      window.addEventListener('resize', handleResize);
+      window.addEventListener('scroll', handleWindowScroll, { passive: true })
+      window.addEventListener('resize', handleResize)
 
       return () => {
-        window.removeEventListener('scroll', handleWindowScroll);
-        window.removeEventListener('resize', handleResize);
-      };
-    };
-    
-    checkSidebar();
-  }, [isDesktop]);
+        window.removeEventListener('scroll', handleWindowScroll)
+        window.removeEventListener('resize', handleResize)
+      }
+    }
+
+    checkSidebar()
+  }, [isDesktop])
 
   return (
-    <aside 
-      ref={sidebarRef} 
+    <aside
+      ref={sidebarRef}
       className={asideClasses}
       style={{
         position: 'sticky',
@@ -456,7 +469,7 @@ const CollapsibleSidebar = ({
         maxHeight: 'calc(100vh - 4rem)',
         alignSelf: 'flex-start',
         transform: 'none',
-        willChange: 'auto'
+        willChange: 'auto',
       }}
     >
       <div
@@ -464,7 +477,7 @@ const CollapsibleSidebar = ({
         style={{
           ...containerStyle,
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
         }}
       >
         {/* Sidebar Header */}
@@ -488,18 +501,26 @@ const CollapsibleSidebar = ({
             </m.h2>
             {enableFilters && (
               <m.button
-                onClick={() => setCurrentView(currentView === 'categories' ? 'filters' : 'categories')}
+                onClick={() =>
+                  setCurrentView(currentView === 'categories' ? 'filters' : 'categories')
+                }
                 type="button"
                 className="px-3 py-1.5 rounded-xl border border-theme bg-theme-elevated text-xs sm:text-xs text-[var(--text-main)] hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)] transition-colors whitespace-nowrap flex items-center gap-1.5 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2"
                 title={currentView === 'categories' ? 'Switch to Filters' : 'Switch to Categories'}
-                aria-label={currentView === 'categories' ? 'Switch to Filters view' : 'Switch to Categories view'}
+                aria-label={
+                  currentView === 'categories'
+                    ? 'Switch to Filters view'
+                    : 'Switch to Categories view'
+                }
               >
                 {currentView === 'categories' ? (
                   <SearchIcon className="w-4 h-4" />
                 ) : (
                   <FolderIcon className="w-4 h-4" />
                 )}
-                <span className="hidden sm:inline">{currentView === 'categories' ? 'Filters' : 'Categories'}</span>
+                <span className="hidden sm:inline">
+                  {currentView === 'categories' ? 'Filters' : 'Categories'}
+                </span>
               </m.button>
             )}
           </div>
@@ -513,7 +534,7 @@ const CollapsibleSidebar = ({
                 aria-label="Expand all categories"
                 disabled={allExpanded}
                 className={cn(
-                  "flex-1 text-xs sm:text-xs uppercase tracking-wider px-3 sm:px-4 py-2 min-h-[44px] rounded-xl border transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60",
+                  'flex-1 text-xs sm:text-xs uppercase tracking-wider px-3 sm:px-4 py-2 min-h-[44px] rounded-xl border transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60',
                   allExpanded
                     ? 'text-muted opacity-50 border-theme-subtle cursor-not-allowed bg-theme-elevated'
                     : 'bg-theme-elevated text-[var(--text-main)] border-theme hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)]'
@@ -528,7 +549,7 @@ const CollapsibleSidebar = ({
                 aria-label="Collapse all categories"
                 disabled={allCollapsed}
                 className={cn(
-                  "flex-1 text-xs sm:text-xs uppercase tracking-wider px-3 sm:px-4 py-2 min-h-[44px] rounded-xl border transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60",
+                  'flex-1 text-xs sm:text-xs uppercase tracking-wider px-3 sm:px-4 py-2 min-h-[44px] rounded-xl border transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60',
                   allCollapsed
                     ? 'text-muted opacity-50 border-theme-subtle cursor-not-allowed bg-theme-elevated'
                     : 'bg-theme-elevated text-[var(--text-main)] border-theme hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)]'
@@ -544,7 +565,7 @@ const CollapsibleSidebar = ({
           {currentView === 'filters' && (
             <m.button
               type="button"
-              onClick={() => setFiltersCollapsed((prev) => !prev)}
+              onClick={() => setFiltersCollapsed(prev => !prev)}
               className="w-full rounded-xl border border-theme px-3 sm:px-4 py-2 min-h-[44px] text-xs sm:text-xs text-muted hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-colors bg-theme-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2"
               aria-label={filtersCollapsed ? 'Expand filters' : 'Collapse filters'}
               title={filtersCollapsed ? 'Expand filters' : 'Collapse filters'}
@@ -562,45 +583,45 @@ const CollapsibleSidebar = ({
         </m.div>
 
         {/* Scrollable Content Area - Switches between Categories and Filters */}
-        <div 
+        <div
           className={navWrapperClasses}
-          style={{ 
+          style={{
             overscrollBehavior: 'auto',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
           }}
-          onWheel={(e) => {
+          onWheel={e => {
             // Only stop propagation when actively scrolling within the sidebar content
             // Allow page scroll when at boundaries
-            const target = e.currentTarget;
-            const { scrollTop, scrollHeight, clientHeight } = target;
-            const isScrollable = scrollHeight > clientHeight;
-            
+            const target = e.currentTarget
+            const { scrollTop, scrollHeight, clientHeight } = target
+            const isScrollable = scrollHeight > clientHeight
+
             if (isScrollable) {
-              const isAtTop = scrollTop <= 0;
-              const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-              
+              const isAtTop = scrollTop <= 0
+              const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+
               // Only stop if scrolling within bounds (not at edges)
               // At edges, allow scroll to propagate to page
               if (!isAtTop && !isAtBottom) {
-                e.stopPropagation();
+                e.stopPropagation()
               }
             }
             // If not scrollable, don't stop - let page scroll
           }}
-          onTouchMove={(e) => {
+          onTouchMove={e => {
             // Only prevent touch scroll when actively scrolling within sidebar bounds
             // Allow page scroll when at boundaries
-            const target = e.currentTarget;
-            const { scrollTop, scrollHeight, clientHeight } = target;
-            const isScrollable = scrollHeight > clientHeight;
-            
+            const target = e.currentTarget
+            const { scrollTop, scrollHeight, clientHeight } = target
+            const isScrollable = scrollHeight > clientHeight
+
             if (isScrollable) {
-              const isAtTop = scrollTop <= 0;
-              const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-              
+              const isAtTop = scrollTop <= 0
+              const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1
+
               // Only stop if scrolling within bounds (not at edges)
               if (!isAtTop && !isAtBottom) {
-                e.stopPropagation();
+                e.stopPropagation()
               }
             }
             // If not scrollable, don't stop - let page scroll
@@ -622,7 +643,7 @@ const CollapsibleSidebar = ({
                   <m.button
                     onClick={() => onCategorySelect(null)}
                     className={cn(
-                      "w-full flex items-center justify-between px-4 sm:px-6 py-4 min-h-[44px] rounded-xl sm:rounded-2xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2",
+                      'w-full flex items-center justify-between px-4 sm:px-6 py-4 min-h-[44px] rounded-xl sm:rounded-2xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2',
                       !selectedCategory
                         ? 'bg-[var(--accent)] text-black font-semibold shadow-lg shadow-[var(--accent)]/20'
                         : 'text-[var(--text-main)] bg-theme-elevated hover:bg-[var(--bg-hover)]'
@@ -643,17 +664,19 @@ const CollapsibleSidebar = ({
 
                 {/* Category Groups */}
                 {Object.values(groupedCategories).map((group, groupIndex) => {
-                  if (group.categories.length === 0) return null;
+                  if (group.categories.length === 0) return null
 
-                  const isExpanded = expandedGroups[group.id];
-                  const IconComponent = group.icon;
+                  const isExpanded = expandedGroups[group.id]
+                  const IconComponent = group.icon
 
                   return (
                     <m.div
                       key={group.id}
                       className={groupWrapperClasses}
                       variants={fadeSlideUp}
-                      custom={ANIMATION_DELAYS.GROUP_BASE + groupIndex * ANIMATION_DELAYS.GROUP_INCREMENT}
+                      custom={
+                        ANIMATION_DELAYS.GROUP_BASE + groupIndex * ANIMATION_DELAYS.GROUP_INCREMENT
+                      }
                     >
                       {/* Group Header */}
                       <m.button
@@ -668,7 +691,7 @@ const CollapsibleSidebar = ({
                           <IconComponent className="w-5 h-5 text-[var(--text-main)]" />
                           <span className="text-base">{group.name}</span>
                         </span>
-                        <ChevronDownIcon 
+                        <ChevronDownIcon
                           className="w-4 h-4 text-muted transition-transform duration-300"
                           style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
                         />
@@ -685,15 +708,15 @@ const CollapsibleSidebar = ({
                             exit="hidden"
                           >
                             {group.categories.map((category, categoryIndex) => {
-                              const itemCount = categoryCounts[category.id] || 0;
-                              const isSelected = selectedCategory?.id === category.id;
+                              const itemCount = categoryCounts[category.id] || 0
+                              const isSelected = selectedCategory?.id === category.id
 
                               return (
                                 <m.button
                                   key={category.id}
                                   onClick={() => onCategorySelect(category)}
                                   className={cn(
-                                    "w-full flex items-center justify-between px-4 sm:px-6 py-4 min-h-[44px] rounded-xl sm:rounded-2xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2",
+                                    'w-full flex items-center justify-between px-4 sm:px-6 py-4 min-h-[44px] rounded-xl sm:rounded-2xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2',
                                     isSelected
                                       ? 'bg-[var(--accent)]/20 text-[var(--accent)] font-semibold border-2 border-[var(--accent)]/50 shadow-sm'
                                       : 'text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
@@ -714,13 +737,13 @@ const CollapsibleSidebar = ({
                                     {itemCount}
                                   </m.span>
                                 </m.button>
-                              );
+                              )
                             })}
                           </m.div>
                         )}
                       </AnimatePresence>
                     </m.div>
-                  );
+                  )
                 })}
               </m.nav>
             ) : (
@@ -743,10 +766,7 @@ const CollapsibleSidebar = ({
                       className="space-y-4"
                     >
                       {/* Quick Search */}
-                      <m.div
-                        className="space-y-4"
-                        variants={fadeSlideUp}
-                      >
+                      <m.div className="space-y-4" variants={fadeSlideUp}>
                         <m.label
                           htmlFor="refine-search"
                           className="text-sm sm:text-base font-medium text-[var(--text-main)]/80"
@@ -754,15 +774,12 @@ const CollapsibleSidebar = ({
                         >
                           Quick Search
                         </m.label>
-                        <m.div
-                          className="relative"
-                          variants={fadeSlideUp}
-                        >
+                        <m.div className="relative" variants={fadeSlideUp}>
                           <input
                             id="refine-search"
                             type="search"
                             value={searchQuery}
-                            onChange={(event) => onSearchChange(event.target.value)}
+                            onChange={event => onSearchChange(event.target.value)}
                             placeholder="Search dishes"
                             className="w-full rounded-xl sm:rounded-2xl border border-theme bg-theme-elevated px-4 sm:px-6 py-4 min-h-[44px] text-sm sm:text-base text-[var(--text-main)] placeholder:text-muted focus:border-[var(--accent)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                           />
@@ -783,29 +800,28 @@ const CollapsibleSidebar = ({
 
                       {/* Dietary Focus */}
                       {hasDietaryFilters && (
-                        <m.section
-                          className="space-y-4"
-                          variants={fadeSlideUp}
-                        >
+                        <m.section className="space-y-4" variants={fadeSlideUp}>
                           <m.div
                             className="flex items-center justify-between"
                             variants={fadeSlideUp}
                           >
-                            <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Dietary Focus</h4>
+                            <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                              Dietary Focus
+                            </h4>
                             {activeDietaryTags.length > 0 && (
                               <m.button
                                 type="button"
                                 onClick={() => {
-                                  activeDietaryTags.forEach((normalizedTag) => {
-                                    const originalTag = dietaryTags.find(t =>
-                                      t.toLowerCase() === normalizedTag.toLowerCase()
-                                    );
+                                  activeDietaryTags.forEach(normalizedTag => {
+                                    const originalTag = dietaryTags.find(
+                                      t => t.toLowerCase() === normalizedTag.toLowerCase()
+                                    )
                                     if (originalTag) {
-                                      onDietaryToggle(originalTag);
+                                      onDietaryToggle(originalTag)
                                     } else {
-                                      onDietaryToggle(normalizedTag);
+                                      onDietaryToggle(normalizedTag)
                                     }
-                                  });
+                                  })
                                 }}
                                 className="text-xs sm:text-xs text-muted underline-offset-4 hover:text-[var(--accent)]"
                                 whileHover={{ scale: 1.05 }}
@@ -815,13 +831,10 @@ const CollapsibleSidebar = ({
                               </m.button>
                             )}
                           </m.div>
-                          <m.div
-                            className="flex flex-wrap gap-4"
-                            variants={staggerContainer}
-                          >
+                          <m.div className="flex flex-wrap gap-4" variants={staggerContainer}>
                             {dietaryTags.map((tag, index) => {
-                              const normalized = tag.toLowerCase();
-                              const isActive = activeDietaryTags.includes(normalized);
+                              const normalized = tag.toLowerCase()
+                              const isActive = activeDietaryTags.includes(normalized)
 
                               return (
                                 <m.button
@@ -840,7 +853,7 @@ const CollapsibleSidebar = ({
                                 >
                                   {formatLabel(tag)}
                                 </m.button>
-                              );
+                              )
                             })}
                           </m.div>
                         </m.section>
@@ -848,29 +861,28 @@ const CollapsibleSidebar = ({
 
                       {/* Avoid Allergens */}
                       {hasAllergenFilters && (
-                        <m.section
-                          className="space-y-4"
-                          variants={fadeSlideUp}
-                        >
+                        <m.section className="space-y-4" variants={fadeSlideUp}>
                           <m.div
                             className="flex items-center justify-between"
                             variants={fadeSlideUp}
                           >
-                            <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Avoid Allergens</h4>
+                            <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                              Avoid Allergens
+                            </h4>
                             {activeAllergenTags.length > 0 && (
                               <m.button
                                 type="button"
                                 onClick={() => {
-                                  activeAllergenTags.forEach((normalizedTag) => {
-                                    const originalTag = allergenTags.find(t =>
-                                      t.toLowerCase() === normalizedTag.toLowerCase()
-                                    );
+                                  activeAllergenTags.forEach(normalizedTag => {
+                                    const originalTag = allergenTags.find(
+                                      t => t.toLowerCase() === normalizedTag.toLowerCase()
+                                    )
                                     if (originalTag) {
-                                      onAllergenToggle(originalTag);
+                                      onAllergenToggle(originalTag)
                                     } else {
-                                      onAllergenToggle(normalizedTag);
+                                      onAllergenToggle(normalizedTag)
                                     }
-                                  });
+                                  })
                                 }}
                                 className="text-xs sm:text-xs text-muted underline-offset-4 hover:text-[var(--accent)]"
                                 whileHover={{ scale: 1.05 }}
@@ -880,13 +892,10 @@ const CollapsibleSidebar = ({
                               </m.button>
                             )}
                           </m.div>
-                          <m.div
-                            className="flex flex-wrap gap-4"
-                            variants={staggerContainer}
-                          >
+                          <m.div className="flex flex-wrap gap-4" variants={staggerContainer}>
                             {allergenTags.map((tag, index) => {
-                              const normalized = tag.toLowerCase();
-                              const isActive = activeAllergenTags.includes(normalized);
+                              const normalized = tag.toLowerCase()
+                              const isActive = activeAllergenTags.includes(normalized)
 
                               return (
                                 <m.button
@@ -905,42 +914,37 @@ const CollapsibleSidebar = ({
                                 >
                                   {formatLabel(tag)}
                                 </m.button>
-                              );
+                              )
                             })}
                           </m.div>
                         </m.section>
                       )}
 
                       {/* Quick Reorder */}
-                      <m.section
-                        className="space-y-4"
-                        variants={fadeSlideUp}
-                      >
-                        <m.div
-                          className="flex items-center justify-between"
-                          variants={fadeSlideUp}
-                        >
-                          <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">Quick Reorder</h4>
-                          <span className="text-xs sm:text-xs text-muted">{hasQuickReorder ? 'Last enjoyed' : 'No history yet'}</span>
+                      <m.section className="space-y-4" variants={fadeSlideUp}>
+                        <m.div className="flex items-center justify-between" variants={fadeSlideUp}>
+                          <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)]">
+                            Quick Reorder
+                          </h4>
+                          <span className="text-xs sm:text-xs text-muted">
+                            {hasQuickReorder ? 'Last enjoyed' : 'No history yet'}
+                          </span>
                         </m.div>
 
                         {hasQuickReorder ? (
-                          <m.div
-                            className="space-y-4"
-                            variants={staggerContainer}
-                          >
+                          <m.div className="space-y-4" variants={staggerContainer}>
                             {quickReorderCards.map((item, index) => (
                               <m.div
                                 key={item.id}
                                 className="flex gap-4 rounded-xl sm:rounded-2xl border border-theme px-4 sm:px-6 py-4"
                                 style={{
-                                  backgroundColor: isLightTheme 
-                                    ? 'rgba(0, 0, 0, 0.04)' 
+                                  backgroundColor: isLightTheme
+                                    ? 'rgba(0, 0, 0, 0.04)'
                                     : 'rgba(255, 255, 255, 0.05)',
-                                  boxShadow: isLightTheme 
-                                    ? '0 1px 2px 0 rgba(0, 0, 0, 0.1)' 
+                                  boxShadow: isLightTheme
+                                    ? '0 1px 2px 0 rgba(0, 0, 0, 0.1)'
                                     : '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
-                                  borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+                                  borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
                                 }}
                                 variants={batchFadeSlideUp}
                                 whileHover={{ scale: 1.02, y: -2 }}
@@ -955,18 +959,20 @@ const CollapsibleSidebar = ({
                                   />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm sm:text-base font-semibold text-[var(--text-main)] line-clamp-1">{item.name}</p>
+                                  <p className="text-sm sm:text-base font-semibold text-[var(--text-main)] line-clamp-1">
+                                    {item.name}
+                                  </p>
                                   <p className="text-xs sm:text-xs text-muted/80 line-clamp-1">
                                     {(item.dietary_tags || [])
                                       .slice(0, 2)
-                                      .map((tag) => formatLabel(tag))
+                                      .map(tag => formatLabel(tag))
                                       .join(' • ')}
                                   </p>
                                   <m.button
                                     type="button"
                                     onClick={() => {
                                       if (onQuickReorder) {
-                                        onQuickReorder(item.id);
+                                        onQuickReorder(item.id)
                                       }
                                     }}
                                     className="mt-2 inline-flex items-center gap-1.5 px-2 py-1.5 rounded border border-[var(--accent)]/20 bg-[var(--accent)]/5 text-xs sm:text-xs font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/40 hover:text-[var(--accent)] transition-all"
@@ -995,10 +1001,10 @@ const CollapsibleSidebar = ({
                           <m.div
                             className="rounded-xl sm:rounded-2xl border border-dashed border-theme px-4 sm:px-6 py-4 text-center"
                             style={{
-                              backgroundColor: isLightTheme 
-                                ? 'rgba(0, 0, 0, 0.04)' 
+                              backgroundColor: isLightTheme
+                                ? 'rgba(0, 0, 0, 0.04)'
                                 : 'rgba(255, 255, 255, 0.05)',
-                              borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined
+                              borderColor: isLightTheme ? 'rgba(0, 0, 0, 0.1)' : undefined,
                             }}
                             variants={fadeSlideUp}
                           >
@@ -1017,8 +1023,7 @@ const CollapsibleSidebar = ({
         </div>
       </div>
     </aside>
-  );
-};
+  )
+}
 
-export default CollapsibleSidebar;
-
+export default CollapsibleSidebar

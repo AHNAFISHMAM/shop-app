@@ -1,21 +1,21 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react'
 
 /**
  * ItemActions component props
  */
 interface ItemActionsProps {
   /** Callback when item is removed */
-  onRemove: () => void;
+  onRemove: () => void
   /** Optional callback when item is saved for later */
-  onSaveForLater?: () => void;
+  onSaveForLater?: () => void
   /** Optional callback when note is added */
-  onAddNote?: (note: string) => void;
+  onAddNote?: (note: string) => void
   /** Item name for accessibility labels */
-  itemName: string;
+  itemName: string
   /** Whether item already has a note */
-  hasNote?: boolean;
+  hasNote?: boolean
   /** Whether to show save for later button */
-  showSaveForLater?: boolean;
+  showSaveForLater?: boolean
 }
 
 /**
@@ -39,41 +39,41 @@ const ItemActions = ({
   hasNote = false,
   showSaveForLater = true,
 }: ItemActionsProps) => {
-  const [showNoteInput, setShowNoteInput] = useState<boolean>(false);
-  const [note, setNote] = useState<string>('');
+  const [showNoteInput, setShowNoteInput] = useState<boolean>(false)
+  const [note, setNote] = useState<string>('')
 
   const handleRemove = useCallback(() => {
     // Direct removal - cart management hook already shows toast notification
-    onRemove();
-  }, [onRemove]);
+    onRemove()
+  }, [onRemove])
 
   const handleSaveNote = useCallback(() => {
     if (onAddNote) {
-      onAddNote(note);
-      setShowNoteInput(false);
-      setNote('');
+      onAddNote(note)
+      setShowNoteInput(false)
+      setNote('')
     }
-  }, [onAddNote, note]);
+  }, [onAddNote, note])
 
   const handleCancelNote = useCallback(() => {
-    setNote('');
-    setShowNoteInput(false);
-  }, []);
+    setNote('')
+    setShowNoteInput(false)
+  }, [])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
-        handleSaveNote();
+        handleSaveNote()
       } else if (e.key === 'Escape') {
-        handleCancelNote();
+        handleCancelNote()
       }
     },
     [handleSaveNote, handleCancelNote]
-  );
+  )
 
-  const noteButtonLabel = useMemo(() => (hasNote ? 'Edit note' : 'Add note'), [hasNote]);
-  const saveForLaterLabel = useMemo(() => `Save ${itemName} for later`, [itemName]);
-  const removeLabel = useMemo(() => `Remove ${itemName} from cart`, [itemName]);
+  const noteButtonLabel = useMemo(() => (hasNote ? 'Edit note' : 'Add note'), [hasNote])
+  const saveForLaterLabel = useMemo(() => `Save ${itemName} for later`, [itemName])
+  const removeLabel = useMemo(() => `Remove ${itemName} from cart`, [itemName])
 
   return (
     <div className="cart-item-actions" role="group" aria-label="Item actions">
@@ -82,7 +82,7 @@ const ItemActions = ({
           <input
             type="text"
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={e => setNote(e.target.value)}
             placeholder="Add a note..."
             className="cart-item-note-input min-h-[44px]"
             autoFocus
@@ -185,8 +185,7 @@ const ItemActions = ({
         </>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ItemActions;
-
+export default ItemActions

@@ -38,25 +38,13 @@ export function useCheckoutCalculations({
   cartItems,
   discountAmount,
 }: UseCheckoutCalculationsOptions): UseCheckoutCalculationsReturn {
-  const totalItemsCount = useMemo(
-    () => calculateTotalItemsCount(cartItems),
-    [cartItems]
-  )
+  const totalItemsCount = useMemo(() => calculateTotalItemsCount(cartItems), [cartItems])
 
-  const subtotal = useMemo(
-    () => calculateSubtotal(cartItems),
-    [cartItems]
-  )
+  const subtotal = useMemo(() => calculateSubtotal(cartItems), [cartItems])
 
-  const shipping = useMemo(
-    () => calculateShipping(subtotal),
-    [subtotal]
-  )
+  const shipping = useMemo(() => calculateShipping(subtotal), [subtotal])
 
-  const tax = useMemo(
-    () => calculateTax(subtotal),
-    [subtotal]
-  )
+  const tax = useMemo(() => calculateTax(subtotal), [subtotal])
 
   const taxRatePercent = getTaxRatePercent()
 
@@ -65,10 +53,7 @@ export function useCheckoutCalculations({
     [subtotal, shipping, tax, discountAmount]
   )
 
-  const loyalty = useMemo(
-    () => resolveLoyaltyState(grandTotal),
-    [grandTotal]
-  )
+  const loyalty = useMemo(() => resolveLoyaltyState(grandTotal), [grandTotal])
 
   return {
     totalItemsCount,
@@ -80,4 +65,3 @@ export function useCheckoutCalculations({
     loyalty,
   }
 }
-

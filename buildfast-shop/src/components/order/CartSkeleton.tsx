@@ -3,7 +3,7 @@
  */
 interface CartSkeletonProps {
   /** Number of skeleton items to display */
-  count?: number;
+  count?: number
 }
 
 /**
@@ -20,7 +20,12 @@ const CartSkeleton = ({ count = 3 }: CartSkeletonProps) => {
   return (
     <>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="cart-skeleton cart-skeleton-item" aria-hidden="true" role="presentation">
+        <div
+          key={index}
+          className="cart-skeleton cart-skeleton-item"
+          aria-hidden="true"
+          role="presentation"
+        >
           <div className="cart-skeleton-container">
             <div className="cart-skeleton cart-skeleton-image" />
             <div className="cart-skeleton-content">
@@ -35,8 +40,7 @@ const CartSkeleton = ({ count = 3 }: CartSkeletonProps) => {
         </div>
       ))}
     </>
-  );
-};
+  )
+}
 
-export default CartSkeleton;
-
+export default CartSkeleton

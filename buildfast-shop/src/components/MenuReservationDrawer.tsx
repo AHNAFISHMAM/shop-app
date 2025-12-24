@@ -1,16 +1,16 @@
-import { useMemo, useState, useEffect, FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { AnimatePresence, m } from 'framer-motion';
-import toast from 'react-hot-toast';
-import { useAuth } from '../contexts/AuthContext';
-import { createReservation } from '../lib/reservationService';
-import { staggerContainer, fadeSlideUp } from './animations/menuAnimations';
-import { logger } from '../utils/logger';
+import { useMemo, useState, useEffect, FormEvent } from 'react'
+import { Link } from 'react-router-dom'
+import { AnimatePresence, m } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { useAuth } from '../contexts/AuthContext'
+import { createReservation } from '../lib/reservationService'
+import { staggerContainer, fadeSlideUp } from './animations/menuAnimations'
+import { logger } from '../utils/logger'
 
 interface MenuReservationDrawerProps {
-  open?: boolean;
-  onClose?: () => void;
-  cartCount?: number;
+  open?: boolean
+  onClose?: () => void
+  cartCount?: number
 }
 
 const QUICK_TIMES = [
@@ -19,107 +19,112 @@ const QUICK_TIMES = [
   { value: '19:00', label: '7:00 PM' },
   { value: '19:30', label: '7:30 PM' },
   { value: '20:00', label: '8:00 PM' },
-];
+]
 
-const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservationDrawerProps): JSX.Element => {
-  const { user } = useAuth();
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
-  
+const MenuReservationDrawer = ({
+  open,
+  onClose,
+  cartCount = 0,
+}: MenuReservationDrawerProps): JSX.Element => {
+  const { user } = useAuth()
+  const today = useMemo(() => new Date().toISOString().split('T')[0], [])
+
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
-  
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
+
   // State declarations
-  const [partySize, setPartySize] = useState(2);
-  const [reservationDate, setReservationDate] = useState(today);
-  const [reservationTime, setReservationTime] = useState(QUICK_TIMES[0].value);
-  const [preOrder, setPreOrder] = useState(false);
-  const [note, setNote] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
-  
+  const [partySize, setPartySize] = useState(2)
+  const [reservationDate, setReservationDate] = useState(today)
+  const [reservationTime, setReservationTime] = useState(QUICK_TIMES[0]?.value || '18:00')
+  const [preOrder, setPreOrder] = useState(false)
+  const [note, setNote] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState(user?.email || '')
+  const [phone, setPhone] = useState('')
+
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
+    if (typeof document === 'undefined') return
+
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
-    
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
+
+    checkTheme()
+
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, [open]);
+      attributeFilter: ['class'],
+    })
+
+    return () => observer.disconnect()
+  }, [open])
 
   // Sync email when user changes
   useEffect(() => {
     if (user?.email && !email) {
-      setEmail(user.email);
+      setEmail(user.email)
     }
-  }, [user?.email, email]);
+  }, [user?.email, email])
 
   const resetState = () => {
-    setPartySize(2);
-    setReservationDate(today);
-    setReservationTime(QUICK_TIMES[0].value);
-    setPreOrder(false);
-    setNote('');
-    setName('');
-    setEmail(user?.email || '');
-    setPhone('');
-  };
+    setPartySize(2)
+    setReservationDate(today)
+    setReservationTime(QUICK_TIMES[0]?.value || '18:00')
+    setPreOrder(false)
+    setNote('')
+    setName('')
+    setEmail(user?.email || '')
+    setPhone('')
+  }
 
   const formatTime = (time: string): string => {
-    if (!time) return '';
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${displayHour}:${minutes} ${ampm}`;
-  };
+    if (!time) return ''
+    const [hours, minutes] = time.split(':')
+    if (!hours || !minutes) return ''
+    const hour = parseInt(hours, 10)
+    const ampm = hour >= 12 ? 'PM' : 'AM'
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    return `${displayHour}:${minutes} ${ampm}`
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (submitting) return;
+    event.preventDefault()
+    if (submitting) return
 
     // Validate required fields
     if (!name.trim()) {
-      toast.error('Please enter your name');
-      return;
+      toast.error('Please enter your name')
+      return
     }
     if (!email.trim()) {
-      toast.error('Please enter your email');
-      return;
+      toast.error('Please enter your email')
+      return
     }
     if (!phone.trim()) {
-      toast.error('Please enter your phone number');
-      return;
+      toast.error('Please enter your phone number')
+      return
     }
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email.trim())) {
-      toast.error('Please enter a valid email address');
-      return;
+      toast.error('Please enter a valid email address')
+      return
     }
 
-    setSubmitting(true);
+    setSubmitting(true)
     try {
       // Build special requests - include pre-order info if checked
-      let specialRequests = note.trim() || null;
+      let specialRequests = note.trim() || null
       if (preOrder && cartCount > 0) {
-        const preOrderNote = `Pre-order requested: ${cartCount} item(s) in cart.${note.trim() ? ` Additional notes: ${note.trim()}` : ''}`;
-        specialRequests = preOrderNote.trim();
+        const preOrderNote = `Pre-order requested: ${cartCount} item(s) in cart.${note.trim() ? ` Additional notes: ${note.trim()}` : ''}`
+        specialRequests = preOrderNote.trim()
       }
 
       // Create reservation using the same service as ReservationsPage
@@ -128,37 +133,37 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
         customerName: name.trim(),
         customerEmail: email.trim(),
         customerPhone: phone.trim(),
-        reservationDate: reservationDate,
-        reservationTime: reservationTime,
+        reservationDate: (reservationDate || today) as string,
+        reservationTime: reservationTime || QUICK_TIMES[0]?.value || '18:00',
         partySize: parseInt(partySize.toString(), 10),
         specialRequests: specialRequests,
         occasion: null,
-        tablePreference: null
-      });
+        tablePreference: null,
+      })
 
       if (!result.success) {
-        toast.error(result.error || 'Failed to create reservation');
-        setSubmitting(false);
-        return;
+        toast.error(result.error || 'Failed to create reservation')
+        setSubmitting(false)
+        return
       }
 
       // Success message matching ReservationsPage style
-      const successMessage = `🎉 Table reserved for ${partySize} on ${reservationDate} at ${formatTime(reservationTime)}.${preOrder && cartCount > 0 ? ' Your pre-order has been noted.' : ''}`;
-      toast.success(successMessage, { duration: 5000 });
+      const successMessage = `🎉 Table reserved for ${partySize} on ${reservationDate || today} at ${formatTime(reservationTime || QUICK_TIMES[0]?.value || '18:00')}.${preOrder && cartCount > 0 ? ' Your pre-order has been noted.' : ''}`
+      toast.success(successMessage, { duration: 5000 })
 
-      if (import.meta.env.DEV) {
-        logger.log('Reservation created:', result.reservationId);
+      if (import.meta.env.DEV && result.reservationId) {
+        logger.log('Reservation created:', result.reservationId)
       }
 
-      resetState();
-      onClose?.();
+      resetState()
+      onClose?.()
     } catch (err) {
-      logger.error('Unexpected error:', err);
-      toast.error('An unexpected error occurred. Please try again.');
+      logger.error('Unexpected error:', err)
+      toast.error('An unexpected error occurred. Please try again.')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <AnimatePresence>
@@ -170,17 +175,15 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{
-              backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.5)'
+              backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.5)',
             }}
             onClick={onClose}
           />
           <m.aside
             className="fixed inset-y-0 right-0 z-50 w-[420px] max-w-full shadow-2xl border-l border-theme flex flex-col"
             style={{
-              backgroundColor: isLightTheme 
-                ? 'rgba(255, 255, 255, 0.95)' 
-                : 'rgba(5, 5, 9, 0.95)',
-              overscrollBehavior: 'contain'
+              backgroundColor: isLightTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(5, 5, 9, 0.95)',
+              overscrollBehavior: 'contain',
             }}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -195,7 +198,9 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
               custom={0.1}
             >
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-main)]/60">Reserve</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-main)]/60">
+                  Reserve
+                </p>
                 <h2 className="text-xl font-semibold text-[var(--text-main)]">Table Request</h2>
               </div>
               <m.button
@@ -206,7 +211,13 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </m.button>
@@ -219,106 +230,91 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
               initial="hidden"
               animate="visible"
               style={{
-                overscrollBehavior: 'contain'
+                overscrollBehavior: 'contain',
               }}
             >
               {/* Required Contact Information */}
-              <m.label
-                className="space-y-2 block"
-                variants={fadeSlideUp}
-              >
-                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Full Name *</span>
+              <m.label className="space-y-2 block" variants={fadeSlideUp}>
+                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                  Full Name *
+                </span>
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                   placeholder="Enter your full name"
                   required
                 />
               </m.label>
 
-              <m.label
-                className="space-y-2 block"
-                variants={fadeSlideUp}
-                custom={0.05}
-              >
-                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Email *</span>
+              <m.label className="space-y-2 block" variants={fadeSlideUp} custom={0.05}>
+                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                  Email *
+                </span>
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                   placeholder="your.email@example.com"
                   required
                 />
               </m.label>
 
-              <m.label
-                className="space-y-2 block"
-                variants={fadeSlideUp}
-                custom={0.1}
-              >
-                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Phone *</span>
+              <m.label className="space-y-2 block" variants={fadeSlideUp} custom={0.1}>
+                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                  Phone *
+                </span>
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={e => setPhone(e.target.value)}
                   className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                   placeholder="+880 1234-567890"
                   required
                 />
               </m.label>
 
-              <m.div
-                className="grid grid-cols-2 gap-4"
-                variants={fadeSlideUp}
-              >
-                <m.label
-                  className="space-y-2"
-                  variants={fadeSlideUp}
-                  custom={0.05}
-                >
-                  <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Party Size</span>
+              <m.div className="grid grid-cols-2 gap-4" variants={fadeSlideUp}>
+                <m.label className="space-y-2" variants={fadeSlideUp} custom={0.05}>
+                  <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                    Party Size
+                  </span>
                   <input
                     type="number"
                     min={1}
                     max={12}
                     value={partySize}
-                    onChange={(event) => setPartySize(Math.max(1, Math.min(12, Number(event.target.value))))}
+                    onChange={event =>
+                      setPartySize(Math.max(1, Math.min(12, Number(event.target.value))))
+                    }
                     className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                     required
                   />
                 </m.label>
 
-                <m.label
-                  className="space-y-2"
-                  variants={fadeSlideUp}
-                  custom={0.1}
-                >
-                  <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Date</span>
+                <m.label className="space-y-2" variants={fadeSlideUp} custom={0.1}>
+                  <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                    Date
+                  </span>
                   <input
                     type="date"
                     min={today}
                     value={reservationDate}
-                    onChange={(event) => setReservationDate(event.target.value)}
+                    onChange={event => setReservationDate(event.target.value)}
                     className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                     required
                   />
                 </m.label>
 
-                <m.label
-                  className="space-y-2 col-span-2"
-                  variants={fadeSlideUp}
-                  custom={0.15}
-                >
-                  <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Time</span>
-                  <m.div
-                    className="flex flex-wrap gap-2"
-                    variants={staggerContainer}
-                  >
+                <m.label className="space-y-2 col-span-2" variants={fadeSlideUp} custom={0.15}>
+                  <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                    Time
+                  </span>
+                  <m.div className="flex flex-wrap gap-2" variants={staggerContainer}>
                     {QUICK_TIMES.map((slot, index) => {
-                      const isActive = reservationTime === slot.value;
+                      const isActive = reservationTime === slot.value
                       return (
                         <m.button
                           key={slot.value}
@@ -336,7 +332,7 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
                         >
                           {slot.label}
                         </m.button>
-                      );
+                      )
                     })}
                   </m.div>
                 </m.label>
@@ -350,7 +346,7 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
                 <input
                   type="checkbox"
                   checked={preOrder}
-                  onChange={(event) => setPreOrder(event.target.checked)}
+                  onChange={event => setPreOrder(event.target.checked)}
                   className="h-5 w-5 rounded border-theme-medium bg-white/10 text-[var(--accent)] focus:ring-[var(--accent)]/40 transition-all"
                 />
                 <div className="flex-1">
@@ -373,38 +369,44 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
                   >
                     <div className="flex items-center justify-between text-sm text-[#FDE68A]">
                       <span>Current cart</span>
-                      <span>{cartCount} item{cartCount === 1 ? '' : 's'}</span>
+                      <span>
+                        {cartCount} item{cartCount === 1 ? '' : 's'}
+                      </span>
                     </div>
                     <p className="text-xs text-[#FDE68A]/80">
-                      You can tweak dishes anytime before arrival. Checkout locks it in for the kitchen.
+                      You can tweak dishes anytime before arrival. Checkout locks it in for the
+                      kitchen.
                     </p>
-                    <m.div
-                      variants={fadeSlideUp}
-                      custom={0.3}
-                    >
+                    <m.div variants={fadeSlideUp} custom={0.3}>
                       <Link
                         to="/checkout"
                         className="inline-flex items-center justify-center gap-2 rounded-xl border border-theme-strong px-4 py-2 text-xs font-semibold transition hover:border-theme-medium"
                         style={{
-                          backgroundColor: isLightTheme 
-                            ? 'rgba(255, 255, 255, 0.3)' 
+                          backgroundColor: isLightTheme
+                            ? 'rgba(255, 255, 255, 0.3)'
                             : 'rgba(5, 5, 9, 0.3)',
-                          color: 'var(--text-main)'
+                          color: 'var(--text-main)',
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = isLightTheme 
-                            ? 'rgba(255, 255, 255, 0.4)' 
-                            : 'rgba(5, 5, 9, 0.4)';
+                        onMouseEnter={e => {
+                          e.currentTarget.style.backgroundColor = isLightTheme
+                            ? 'rgba(255, 255, 255, 0.4)'
+                            : 'rgba(5, 5, 9, 0.4)'
                         }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = isLightTheme 
-                            ? 'rgba(255, 255, 255, 0.3)' 
-                            : 'rgba(5, 5, 9, 0.3)';
+                        onMouseLeave={e => {
+                          e.currentTarget.style.backgroundColor = isLightTheme
+                            ? 'rgba(255, 255, 255, 0.3)'
+                            : 'rgba(5, 5, 9, 0.3)'
                         }}
                         onClick={() => onClose?.()}
                       >
                         Review cart
-                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <svg
+                          className="h-3.5 w-3.5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                        >
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                       </Link>
@@ -413,20 +415,20 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
                 )}
               </AnimatePresence>
 
-              <m.label
-                className="space-y-2 block"
-                variants={fadeSlideUp}
-                custom={0.3}
-              >
-                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">Notes</span>
+              <m.label className="space-y-2 block" variants={fadeSlideUp} custom={0.3}>
+                <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-main)]/60">
+                  Notes
+                </span>
                 <textarea
                   value={note}
-                  onChange={(event) => setNote(event.target.value.slice(0, 240))}
+                  onChange={event => setNote(event.target.value.slice(0, 240))}
                   rows={3}
                   placeholder="Add celebration details, seating requests, or dietary notes."
                   className="w-full rounded-2xl border border-theme bg-theme-elevated px-3 py-3 text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                 />
-                <span className="block text-right text-[10px] text-[var(--text-main)]/40">{note.length}/240</span>
+                <span className="block text-right text-[10px] text-[var(--text-main)]/40">
+                  {note.length}/240
+                </span>
               </m.label>
 
               <m.button
@@ -464,8 +466,7 @@ const MenuReservationDrawer = ({ open, onClose, cartCount = 0 }: MenuReservation
         </>
       )}
     </AnimatePresence>
-  );
-};
+  )
+}
 
-export default MenuReservationDrawer;
-
+export default MenuReservationDrawer

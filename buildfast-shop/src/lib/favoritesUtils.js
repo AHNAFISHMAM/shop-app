@@ -5,13 +5,12 @@ import { logger } from '../utils/logger'
 const NOT_AUTHENTICATED = 'NOT_AUTHENTICATED'
 const USER_MISMATCH = 'USER_MISMATCH'
 
-const getFavoriteColumn = (isMenuItem) => (isMenuItem ? 'menu_item_id' : 'product_id')
+const getFavoriteColumn = isMenuItem => (isMenuItem ? 'menu_item_id' : 'product_id')
 
-const buildFavoriteColumns = (targetId, isMenuItem) => (
+const buildFavoriteColumns = (targetId, isMenuItem) =>
   isMenuItem
     ? { menu_item_id: targetId, product_id: null }
     : { menu_item_id: null, product_id: targetId }
-)
 
 const buildError = (message, code) => {
   const error = new Error(message)
@@ -33,7 +32,7 @@ const resolveSessionUserId = async () => {
   return sessionUserId
 }
 
-const ensureAuthenticated = async (userId) => {
+const ensureAuthenticated = async userId => {
   const sessionUserId = await resolveSessionUserId()
 
   if (userId && userId !== sessionUserId) {
@@ -59,7 +58,7 @@ export async function addToFavorites(targetId, userId, { isMenuItem = true } = {
       .from('favorites')
       .insert({
         user_id: sessionUserId,
-        ...columns
+        ...columns,
       })
       .select()
       .single()
@@ -70,7 +69,7 @@ export async function addToFavorites(targetId, userId, { isMenuItem = true } = {
         return {
           success: false,
           alreadyExists: true,
-          message: 'This dish is already in your favorites'
+          message: 'This dish is already in your favorites',
         }
       }
       throw error
@@ -151,16 +150,18 @@ export async function isInFavorites(targetId, userId, { isMenuItem = true } = {}
 export async function getFavoriteItems(userId) {
   try {
     const sessionUserId = await ensureAuthenticated(userId)
-    
+
     // Query favorites without join (Supabase relationship not configured correctly)
     // Fetch menu_items separately for better reliability
     const { data: favoritesData, error: favoritesError } = await supabase
       .from('favorites')
-      .select(`
+      .select(
+        `
         id,
         created_at,
         product_id
-      `)
+      `
+      )
       .eq('user_id', sessionUserId)
       .order('created_at', { ascending: false })
 
@@ -179,11 +180,13 @@ export async function getFavoriteItems(userId) {
       }
 
       const menuItemsMap = new Map((menuItemsData || []).map(d => [d.id, d]))
-      
-      const normalized = (favoritesData || []).map((item) => ({
+
+      const normalized = (favoritesData || []).map(item => ({
         ...item,
-        menu_items: menuItemsMap.get(item.product_id) ? { ...menuItemsMap.get(item.product_id), isMenuItem: true } : null,
-        dishes: null
+        menu_items: menuItemsMap.get(item.product_id)
+          ? { ...menuItemsMap.get(item.product_id), isMenuItem: true }
+          : null,
+        dishes: null,
       }))
 
       return { success: true, data: normalized }
@@ -236,7 +239,7 @@ export async function toggleFavorites(targetId, userId, { isMenuItem = true } = 
       .from('favorites')
       .insert({
         user_id: sessionUserId,
-        ...columns
+        ...columns,
       })
       .select()
 
@@ -273,7 +276,7 @@ export async function toggleFavorites(targetId, userId, { isMenuItem = true } = 
 export async function removeFavorite(favoriteId, userId) {
   try {
     const sessionUserId = await ensureAuthenticated(userId)
-    
+
     // First, fetch the favorite record to get the item ID
     const { data: favorite, error: fetchError } = await supabase
       .from('favorites')

@@ -1,5 +1,5 @@
 /**
- * Type declarations for className utility
+ * Utility function to merge classNames conditionally
  */
-export function cn(...classes: (string | null | undefined | false)[]): string;
+export function cn(...classes: (string | boolean | undefined | null)[]): string;
 

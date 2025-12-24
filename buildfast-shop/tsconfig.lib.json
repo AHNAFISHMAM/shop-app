@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo.lib"
+  },
+  "include": [
+    "src/lib/**/*",
+    "src/utils/**/*",
+    "src/hooks/**/*",
+    "src/contexts/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
+}
+

@@ -1,20 +1,20 @@
-import { Helmet } from 'react-helmet-async';
-import { useMemo } from 'react';
+import { Helmet } from 'react-helmet-async'
+import { useMemo } from 'react'
 
 /**
  * SEO component props
  */
 interface SEOProps {
   /** Page title (will be appended to site name) */
-  title?: string;
+  title?: string
   /** Meta description */
-  description?: string;
+  description?: string
   /** Open Graph image URL */
-  image?: string;
+  image?: string
   /** Open Graph type (website, article, etc.) */
-  type?: string;
+  type?: string
   /** Meta keywords (optional) */
-  keywords?: string;
+  keywords?: string
 }
 
 /**
@@ -28,35 +28,30 @@ interface SEOProps {
  * - Default fallbacks for missing data
  * - Performance optimized (memoized values)
  */
-export function SEO({
-  title,
-  description,
-  image,
-  type = 'website',
-  keywords
-}: SEOProps) {
-  const defaultTitle = 'Star Café - Fine Dining Restaurant';
-  const defaultDesc = 'Experience authentic flavors and exceptional dining at Star Café. Discover our menu, make reservations, and enjoy fine dining in a warm, welcoming atmosphere.';
+export function SEO({ title, description, image, type = 'website', keywords }: SEOProps) {
+  const defaultTitle = 'Star Café - Fine Dining Restaurant'
+  const defaultDesc =
+    'Experience authentic flavors and exceptional dining at Star Café. Discover our menu, make reservations, and enjoy fine dining in a warm, welcoming atmosphere.'
 
   const siteUrl = useMemo(() => {
-    return typeof window !== 'undefined' ? window.location.origin : '';
-  }, []);
+    return typeof window !== 'undefined' ? window.location.origin : ''
+  }, [])
 
   const currentUrl = useMemo(() => {
-    return typeof window !== 'undefined' ? window.location.href : '';
-  }, []);
+    return typeof window !== 'undefined' ? window.location.href : ''
+  }, [])
 
   const ogImage = useMemo(() => {
-    return image || `${siteUrl}/og-image.jpg`;
-  }, [image, siteUrl]);
+    return image || `${siteUrl}/og-image.jpg`
+  }, [image, siteUrl])
 
   const pageTitle = useMemo(() => {
-    return title ? `${title} | ${defaultTitle}` : defaultTitle;
-  }, [title]);
+    return title ? `${title} | ${defaultTitle}` : defaultTitle
+  }, [title])
 
   const metaDescription = useMemo(() => {
-    return description || defaultDesc;
-  }, [description]);
+    return description || defaultDesc
+  }, [description])
 
   return (
     <Helmet>
@@ -86,6 +81,5 @@ export function SEO({
       <meta name="language" content="English" />
       <meta name="author" content="Star Café" />
     </Helmet>
-  );
+  )
 }
-

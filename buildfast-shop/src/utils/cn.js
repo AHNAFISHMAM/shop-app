@@ -3,6 +3,5 @@
  * Similar to clsx but simpler for our use case
  */
 export function cn(...classes) {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(' ')
 }
-

@@ -65,18 +65,10 @@ export interface FormHandlers<T extends Record<string, any>> {
 /**
  * useForm hook return type
  */
-export interface UseFormReturn<T extends Record<string, any>> extends FormState<T>, FormHandlers<T> {}
+export interface UseFormReturn<T extends Record<string, any>>
+  extends FormState<T>, FormHandlers<T> {}
 
-/**
- * Debounce utility
- */
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-  let timeout: NodeJS.Timeout | null = null
-  return ((...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }) as T
-}
+// Debounce utility removed - not used in current implementation
 
 /**
  * useForm Hook
@@ -168,17 +160,18 @@ export function useForm<T extends Record<string, any>>(
    */
   const setValue = useCallback(
     <K extends keyof T>(field: K, value: T[K]): void => {
-      setValuesState((prev) => ({ ...prev, [field]: value }))
+      setValuesState((prev: T) => ({ ...prev, [field]: value }))
 
       // Validate on change if enabled
       if (validateOnChange && touched[field]) {
         const error = validateField(field)
-        setErrors((prev) => {
+        setErrors((prev: Partial<Record<keyof T, string>>) => {
           if (error) {
             return { ...prev, [field]: error }
           } else {
-            const { [field]: _, ...rest } = prev
-            return rest
+            const newErrors = { ...prev }
+            delete newErrors[field]
+            return newErrors as Partial<Record<keyof T, string>>
           }
         })
       }
@@ -190,19 +183,20 @@ export function useForm<T extends Record<string, any>>(
    * Set multiple field values
    */
   const setValues = useCallback((newValues: Partial<T>): void => {
-    setValuesState((prev) => ({ ...prev, ...newValues }))
+    setValuesState((prev: T) => ({ ...prev, ...newValues }))
   }, [])
 
   /**
    * Set field error
    */
   const setError = useCallback(<K extends keyof T>(field: K, error: string | null): void => {
-    setErrors((prev) => {
+    setErrors((prev: Partial<Record<keyof T, string>>) => {
       if (error) {
         return { ...prev, [field]: error }
       } else {
-        const { [field]: _, ...rest } = prev
-        return rest
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors as Partial<Record<keyof T, string>>
       }
     })
   }, [])
@@ -218,7 +212,7 @@ export function useForm<T extends Record<string, any>>(
    * Set touched state
    */
   const setTouchedField = useCallback(<K extends keyof T>(field: K, isTouched: boolean): void => {
-    setTouched((prev) => ({ ...prev, [field]: isTouched }))
+    setTouched((prev: Partial<Record<keyof T, boolean>>) => ({ ...prev, [field]: isTouched }))
   }, [])
 
   /**
@@ -338,4 +332,3 @@ export function useForm<T extends Record<string, any>>(
     validateField,
   }
 }
-

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { useStoreSettings } from '../contexts/StoreSettingsContext';
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { useStoreSettings } from '../contexts/StoreSettingsContext'
 
 /**
  * QuickActionsBar Component
@@ -17,46 +17,46 @@ import { useStoreSettings } from '../contexts/StoreSettingsContext';
  * - Performance optimized (memoized callbacks)
  */
 const QuickActionsBar = () => {
-  const [isVisible, setIsVisible] = useState<boolean>(false);
-  const { settings, loading: settingsLoading } = useStoreSettings();
+  const [isVisible, setIsVisible] = useState<boolean>(false)
+  const { settings, loading: settingsLoading } = useStoreSettings()
   const enableReservations = useMemo(() => {
-    return settingsLoading ? false : (settings?.enable_reservations ?? true);
-  }, [settingsLoading, settings?.enable_reservations]);
+    return settingsLoading ? false : (settings?.enable_reservations ?? true)
+  }, [settingsLoading, settings?.enable_reservations])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === 'undefined') return undefined
 
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const apply = () => {
       if (mediaQuery.matches) {
-        setIsVisible(true);
-        return;
+        setIsVisible(true)
+        return
       }
 
-      const threshold = 160;
-      const bottomOffset = 260;
-      const scrollTop = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const docHeight = document.documentElement.scrollHeight;
-      const nearFooter = scrollTop + viewportHeight >= docHeight - bottomOffset;
-      setIsVisible(scrollTop > threshold && !nearFooter);
-    };
+      const threshold = 160
+      const bottomOffset = 260
+      const scrollTop = window.scrollY
+      const viewportHeight = window.innerHeight
+      const docHeight = document.documentElement.scrollHeight
+      const nearFooter = scrollTop + viewportHeight >= docHeight - bottomOffset
+      setIsVisible(scrollTop > threshold && !nearFooter)
+    }
 
-    apply();
-    mediaQuery.addEventListener('change', apply);
-    window.addEventListener('scroll', apply, { passive: true });
-    window.addEventListener('resize', apply);
+    apply()
+    mediaQuery.addEventListener('change', apply)
+    window.addEventListener('scroll', apply, { passive: true })
+    window.addEventListener('resize', apply)
 
     return () => {
-      mediaQuery.removeEventListener('change', apply);
-      window.removeEventListener('scroll', apply);
-      window.removeEventListener('resize', apply);
-    };
-  }, []);
+      mediaQuery.removeEventListener('change', apply)
+      window.removeEventListener('scroll', apply)
+      window.removeEventListener('resize', apply)
+    }
+  }, [])
 
   const scrollToTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
 
   return (
     <aside
@@ -137,8 +137,7 @@ const QuickActionsBar = () => {
         </Link>
       )}
     </aside>
-  );
-};
+  )
+}
 
-export default QuickActionsBar;
-
+export default QuickActionsBar

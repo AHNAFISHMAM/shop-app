@@ -1,12 +1,12 @@
-import { useState, FormEvent } from 'react';
-import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useState, FormEvent } from 'react'
+import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 
 interface StripeCheckoutFormProps {
-  orderId: string;
-  amount: number;
-  currencySymbol?: string;
-  onSuccess: () => void;
-  onError: (error: string) => void;
+  orderId: string
+  amount: number
+  currencySymbol?: string
+  onSuccess: () => void
+  onError: (error: string) => void
 }
 
 /**
@@ -14,27 +14,33 @@ interface StripeCheckoutFormProps {
  *
  * Handles payment processing using Stripe Elements
  */
-function StripeCheckoutForm({ orderId, amount, currencySymbol = '৳', onSuccess, onError }: StripeCheckoutFormProps): JSX.Element {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [processing, setProcessing] = useState(false);
+function StripeCheckoutForm({
+  orderId,
+  amount,
+  currencySymbol = '৳',
+  onSuccess,
+  onError,
+}: StripeCheckoutFormProps): JSX.Element {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [processing, setProcessing] = useState(false)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!stripe || !elements) {
-      onError('Stripe is not initialized. Please refresh the page.');
-      return;
+      onError('Stripe is not initialized. Please refresh the page.')
+      return
     }
 
     try {
-      setProcessing(true);
+      setProcessing(true)
 
-      const { error: submitError } = await elements.submit();
+      const { error: submitError } = await elements.submit()
       if (submitError) {
-        onError(submitError.message || 'Please check your payment details');
-        setProcessing(false);
-        return;
+        onError(submitError.message || 'Please check your payment details')
+        setProcessing(false)
+        return
       }
 
       const { error, paymentIntent } = await stripe.confirmPayment({
@@ -43,45 +49,45 @@ function StripeCheckoutForm({ orderId, amount, currencySymbol = '৳', onSuccess
           return_url: `${window.location.origin}/payment-success?order_id=${orderId}`,
         },
         redirect: 'if_required',
-      });
+      })
 
       if (error) {
         // Payment failed
-        onError(error.message || 'Payment failed');
-        setProcessing(false);
+        onError(error.message || 'Payment failed')
+        setProcessing(false)
       } else if (paymentIntent) {
         // Check payment intent status
         if (paymentIntent.status === 'succeeded') {
           // Payment successful - call onSuccess
-          onSuccess();
+          onSuccess()
         } else if (paymentIntent.status === 'requires_action') {
           // 3D Secure or other action required - Stripe will handle redirect
           // Don't set processing to false here - let Stripe handle the redirect
-          return;
+          return
         } else {
           // Payment is processing or in another state
           // For processing status, wait a bit and check again, or show success
           if (paymentIntent.status === 'processing') {
             // Payment is processing - show success as it will complete shortly
-            onSuccess();
+            onSuccess()
           } else {
-            onError(`Payment status: ${paymentIntent.status}`);
-            setProcessing(false);
+            onError(`Payment status: ${paymentIntent.status}`)
+            setProcessing(false)
           }
         }
       } else {
         // No error but no paymentIntent - this shouldn't happen but handle it
         // Payment confirmation returned no error and no paymentIntent - assume success
         // Assume success if no error
-        onSuccess();
+        onSuccess()
       }
     } catch (err) {
       // Payment error logged by parent component
-      const error = err as Error;
-      onError(error.message || 'Payment processing error');
-      setProcessing(false);
+      const error = err as Error
+      onError(error.message || 'Payment processing error')
+      setProcessing(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -100,15 +106,20 @@ function StripeCheckoutForm({ orderId, amount, currencySymbol = '৳', onSuccess
         ) : (
           <>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
             </svg>
-            Pay {currencySymbol}{amount.toFixed(2)}
+            Pay {currencySymbol}
+            {amount.toFixed(2)}
           </>
         )}
       </button>
     </form>
-  );
+  )
 }
 
-export default StripeCheckoutForm;
-
+export default StripeCheckoutForm

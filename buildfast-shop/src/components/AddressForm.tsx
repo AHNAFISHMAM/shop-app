@@ -51,7 +51,12 @@ export interface AddressFormProps {
  *
  * @param {AddressFormProps} props - Component props
  */
-function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = false }: AddressFormProps) {
+function AddressForm({
+  initialAddress = null,
+  onSubmit,
+  onCancel,
+  loading = false,
+}: AddressFormProps) {
   const [formData, setFormData] = useState<AddressFormData>({
     label: 'Home',
     fullName: '',
@@ -62,34 +67,34 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
     postalCode: '',
     country: 'United States',
     phone: '',
-    isDefault: false
+    isDefault: false,
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Theme detection
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Populate form if editing
   useEffect(() => {
@@ -104,17 +109,19 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
         postalCode: initialAddress.postalCode || '',
         country: initialAddress.country || 'United States',
         phone: initialAddress.phone || '',
-        isDefault: initialAddress.isDefault || false
+        isDefault: initialAddress.isDefault || false,
       })
     }
   }, [initialAddress])
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement> | { target: { value: string | number; name?: string } }) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement> | { target: { value: string | number; name?: string } }
+  ) => {
     const { name, value, type } = e.target as HTMLInputElement
     const checked = (e.target as HTMLInputElement).checked
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }))
     // Clear error for this field
     if (errors[name]) {
@@ -188,11 +195,21 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" aria-label={initialAddress ? 'Edit address form' : 'Add address form'}>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      aria-label={initialAddress ? 'Edit address form' : 'Add address form'}
+    >
       {/* Label Selection */}
       <div>
-        <label htmlFor="label" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
-          Address Label <span className="text-[var(--color-red)]" aria-label="required">*</span>
+        <label
+          htmlFor="label"
+          className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+        >
+          Address Label{' '}
+          <span className="text-[var(--color-red)]" aria-label="required">
+            *
+          </span>
         </label>
         <CustomDropdown
           id="label"
@@ -201,7 +218,7 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
             { value: 'Home', label: 'Home' },
             { value: 'Work', label: 'Work' },
             { value: 'Office', label: 'Office' },
-            { value: 'Other', label: 'Other' }
+            { value: 'Other', label: 'Other' },
           ]}
           value={formData.label}
           onChange={handleChange}
@@ -211,14 +228,26 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           maxVisibleItems={5}
         />
         {errors.label && (
-          <p className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.label}</p>
+          <p
+            className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+            role="alert"
+            aria-live="polite"
+          >
+            {errors.label}
+          </p>
         )}
       </div>
 
       {/* Full Name */}
       <div>
-        <label htmlFor="fullName" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
-          Full Name <span className="text-[var(--color-red)]" aria-label="required">*</span>
+        <label
+          htmlFor="fullName"
+          className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+        >
+          Full Name{' '}
+          <span className="text-[var(--color-red)]" aria-label="required">
+            *
+          </span>
         </label>
         <input
           type="text"
@@ -228,7 +257,9 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           onChange={handleChange}
           disabled={loading}
           className={`w-full min-h-[44px] px-4 py-3 border bg-[var(--bg-elevated)] text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent disabled:bg-[var(--bg-main)]/30 ${
-            errors.fullName ? 'border-[var(--status-error-border)]' : 'border-[var(--border-default)]'
+            errors.fullName
+              ? 'border-[var(--status-error-border)]'
+              : 'border-[var(--border-default)]'
           }`}
           placeholder="John Doe"
           aria-required="true"
@@ -236,14 +267,27 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           aria-describedby={errors.fullName ? 'fullName-error' : undefined}
         />
         {errors.fullName && (
-          <p id="fullName-error" className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.fullName}</p>
+          <p
+            id="fullName-error"
+            className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+            role="alert"
+            aria-live="polite"
+          >
+            {errors.fullName}
+          </p>
         )}
       </div>
 
       {/* Address Line 1 */}
       <div>
-        <label htmlFor="addressLine1" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
-          Address Line 1 <span className="text-[var(--color-red)]" aria-label="required">*</span>
+        <label
+          htmlFor="addressLine1"
+          className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+        >
+          Address Line 1{' '}
+          <span className="text-[var(--color-red)]" aria-label="required">
+            *
+          </span>
         </label>
         <input
           type="text"
@@ -253,7 +297,9 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           onChange={handleChange}
           disabled={loading}
           className={`w-full min-h-[44px] px-4 py-3 border bg-[var(--bg-elevated)] text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent disabled:bg-[var(--bg-main)]/30 ${
-            errors.addressLine1 ? 'border-[var(--status-error-border)]' : 'border-[var(--border-default)]'
+            errors.addressLine1
+              ? 'border-[var(--status-error-border)]'
+              : 'border-[var(--border-default)]'
           }`}
           placeholder="123 Main Street"
           aria-required="true"
@@ -261,13 +307,23 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           aria-describedby={errors.addressLine1 ? 'addressLine1-error' : undefined}
         />
         {errors.addressLine1 && (
-          <p id="addressLine1-error" className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.addressLine1}</p>
+          <p
+            id="addressLine1-error"
+            className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+            role="alert"
+            aria-live="polite"
+          >
+            {errors.addressLine1}
+          </p>
         )}
       </div>
 
       {/* Address Line 2 */}
       <div>
-        <label htmlFor="addressLine2" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
+        <label
+          htmlFor="addressLine2"
+          className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+        >
           Address Line 2 <span className="text-[var(--text-muted)] text-sm">(Optional)</span>
         </label>
         <input
@@ -286,8 +342,14 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {/* City */}
         <div>
-          <label htmlFor="city" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
-            City <span className="text-[var(--color-red)]" aria-label="required">*</span>
+          <label
+            htmlFor="city"
+            className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+          >
+            City{' '}
+            <span className="text-[var(--color-red)]" aria-label="required">
+              *
+            </span>
           </label>
           <input
             type="text"
@@ -305,14 +367,27 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
             aria-describedby={errors.city ? 'city-error' : undefined}
           />
           {errors.city && (
-            <p id="city-error" className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.city}</p>
+            <p
+              id="city-error"
+              className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+              role="alert"
+              aria-live="polite"
+            >
+              {errors.city}
+            </p>
           )}
         </div>
 
         {/* State */}
         <div>
-          <label htmlFor="state" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
-            State/Province <span className="text-[var(--color-red)]" aria-label="required">*</span>
+          <label
+            htmlFor="state"
+            className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+          >
+            State/Province{' '}
+            <span className="text-[var(--color-red)]" aria-label="required">
+              *
+            </span>
           </label>
           <input
             type="text"
@@ -322,7 +397,9 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
             onChange={handleChange}
             disabled={loading}
             className={`w-full min-h-[44px] px-4 py-3 border bg-[var(--bg-elevated)] text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent disabled:bg-[var(--bg-main)]/30 ${
-              errors.state ? 'border-[var(--status-error-border)]' : 'border-[var(--border-default)]'
+              errors.state
+                ? 'border-[var(--status-error-border)]'
+                : 'border-[var(--border-default)]'
             }`}
             placeholder="NY"
             aria-required="true"
@@ -330,7 +407,14 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
             aria-describedby={errors.state ? 'state-error' : undefined}
           />
           {errors.state && (
-            <p id="state-error" className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.state}</p>
+            <p
+              id="state-error"
+              className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+              role="alert"
+              aria-live="polite"
+            >
+              {errors.state}
+            </p>
           )}
         </div>
       </div>
@@ -339,8 +423,14 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {/* Postal Code */}
         <div>
-          <label htmlFor="postalCode" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
-            Postal Code <span className="text-[var(--color-red)]" aria-label="required">*</span>
+          <label
+            htmlFor="postalCode"
+            className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+          >
+            Postal Code{' '}
+            <span className="text-[var(--color-red)]" aria-label="required">
+              *
+            </span>
           </label>
           <input
             type="text"
@@ -350,7 +440,9 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
             onChange={handleChange}
             disabled={loading}
             className={`w-full min-h-[44px] px-4 py-3 border bg-[var(--bg-elevated)] text-[var(--text-main)] rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent disabled:bg-[var(--bg-main)]/30 ${
-              errors.postalCode ? 'border-[var(--status-error-border)]' : 'border-[var(--border-default)]'
+              errors.postalCode
+                ? 'border-[var(--status-error-border)]'
+                : 'border-[var(--border-default)]'
             }`}
             placeholder="10001"
             aria-required="true"
@@ -358,14 +450,27 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
             aria-describedby={errors.postalCode ? 'postalCode-error' : undefined}
           />
           {errors.postalCode && (
-            <p id="postalCode-error" className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.postalCode}</p>
+            <p
+              id="postalCode-error"
+              className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+              role="alert"
+              aria-live="polite"
+            >
+              {errors.postalCode}
+            </p>
           )}
         </div>
 
         {/* Country */}
         <div>
-          <label htmlFor="country" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
-            Country <span className="text-[var(--color-red)]" aria-label="required">*</span>
+          <label
+            htmlFor="country"
+            className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+          >
+            Country{' '}
+            <span className="text-[var(--color-red)]" aria-label="required">
+              *
+            </span>
           </label>
           <CustomDropdown
             id="country"
@@ -377,7 +482,7 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
               { value: 'Australia', label: 'Australia' },
               { value: 'Germany', label: 'Germany' },
               { value: 'France', label: 'France' },
-              { value: 'Other', label: 'Other' }
+              { value: 'Other', label: 'Other' },
             ]}
             value={formData.country}
             onChange={handleChange}
@@ -388,14 +493,23 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
             maxVisibleItems={5}
           />
           {errors.country && (
-            <p className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.country}</p>
+            <p
+              className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+              role="alert"
+              aria-live="polite"
+            >
+              {errors.country}
+            </p>
           )}
         </div>
       </div>
 
       {/* Phone */}
       <div>
-        <label htmlFor="phone" className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2">
+        <label
+          htmlFor="phone"
+          className="block text-sm sm:text-base font-medium text-[var(--text-main)] mb-2"
+        >
           Phone Number <span className="text-[var(--text-muted)] text-sm">(Optional)</span>
         </label>
         <input
@@ -413,7 +527,14 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           aria-describedby={errors.phone ? 'phone-error' : undefined}
         />
         {errors.phone && (
-          <p id="phone-error" className="mt-1 text-sm sm:text-base text-[var(--color-red)]" role="alert" aria-live="polite">{errors.phone}</p>
+          <p
+            id="phone-error"
+            className="mt-1 text-sm sm:text-base text-[var(--color-red)]"
+            role="alert"
+            aria-live="polite"
+          >
+            {errors.phone}
+          </p>
         )}
       </div>
 
@@ -440,7 +561,9 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           type="submit"
           disabled={loading}
           className="flex-1 min-h-[44px] px-4 sm:px-6 md:px-10 py-3 bg-[var(--accent)] text-black rounded-xl sm:rounded-2xl hover:bg-[var(--accent)]/90 transition font-medium disabled:bg-[var(--text-muted)] disabled:text-[var(--text-muted)] disabled:cursor-not-allowed cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-          aria-label={loading ? 'Saving address' : initialAddress ? 'Update address' : 'Add address'}
+          aria-label={
+            loading ? 'Saving address' : initialAddress ? 'Update address' : 'Add address'
+          }
         >
           {loading ? 'Saving...' : initialAddress ? 'Update Address' : 'Add Address'}
         </button>
@@ -450,19 +573,19 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
           disabled={loading}
           className="min-h-[44px] px-4 sm:px-6 md:px-10 py-3 bg-[var(--bg-elevated)] text-[var(--text-main)] rounded-xl sm:rounded-2xl transition font-medium disabled:opacity-50 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           style={{
-            backgroundColor: isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.04)' : undefined
+            backgroundColor: isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.04)' : undefined,
           }}
-          onMouseEnter={(e) => {
+          onMouseEnter={e => {
             if (!e.currentTarget.disabled) {
-              e.currentTarget.style.backgroundColor = isLightTheme 
-                ? 'rgba(var(--bg-dark-rgb), 0.08)' 
-                : 'rgba(var(--text-main-rgb), 0.1)';
+              e.currentTarget.style.backgroundColor = isLightTheme
+                ? 'rgba(var(--bg-dark-rgb), 0.08)'
+                : 'rgba(var(--text-main-rgb), 0.1)'
             }
           }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = isLightTheme 
-              ? 'rgba(var(--bg-dark-rgb), 0.04)' 
-              : '';
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = isLightTheme
+              ? 'rgba(var(--bg-dark-rgb), 0.04)'
+              : ''
           }}
           aria-label="Cancel"
         >
@@ -474,4 +597,3 @@ function AddressForm({ initialAddress = null, onSubmit, onCancel, loading = fals
 }
 
 export default AddressForm
-

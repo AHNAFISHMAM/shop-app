@@ -1,6 +1,10 @@
-/**
- * Type declarations for menu image utilities
- */
-export function getMealImage(meal: any): string;
-export function getMealImageWithDefault(meal: any, defaultImage?: string): string;
+export interface Meal {
+  image_url?: string | null;
+  images?: string[];
+  id?: string;
+  [key: string]: unknown;
+}
+
+export function getMealImageUrl(meal: Meal | null | undefined): string;
+export function getMealImages(meal: Meal | null | undefined): string[];
 

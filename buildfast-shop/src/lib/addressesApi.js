@@ -38,7 +38,7 @@ export async function fetchUserAddresses(userId) {
       phone: address.phone,
       isDefault: address.is_default,
       createdAt: address.created_at,
-      updatedAt: address.updated_at
+      updatedAt: address.updated_at,
     }))
 
     return { success: true, data: addresses }
@@ -85,7 +85,7 @@ export async function getDefaultAddress(userId) {
       phone: data.phone,
       isDefault: data.is_default,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
     }
 
     return { success: true, data: address }
@@ -125,7 +125,7 @@ export async function createAddress(addressData) {
       postal_code: addressData.postalCode,
       country: addressData.country,
       phone: addressData.phone || null,
-      is_default: addressData.isDefault || false
+      is_default: addressData.isDefault || false,
     }
 
     const { data, error } = await supabase
@@ -151,7 +151,7 @@ export async function createAddress(addressData) {
       phone: data.phone,
       isDefault: data.is_default,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
     }
 
     return { success: true, data: address }
@@ -206,7 +206,7 @@ export async function updateAddress(addressId, updates) {
       phone: data.phone,
       isDefault: data.is_default,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
     }
 
     return { success: true, data: address }
@@ -223,10 +223,7 @@ export async function updateAddress(addressId, updates) {
  */
 export async function deleteAddress(addressId) {
   try {
-    const { error } = await supabase
-      .from('customer_addresses')
-      .delete()
-      .eq('id', addressId)
+    const { error } = await supabase.from('customer_addresses').delete().eq('id', addressId)
 
     if (error) throw error
 
@@ -246,7 +243,7 @@ export async function deleteAddress(addressId) {
 export async function setDefaultAddress(addressId, userId) {
   try {
     // The database trigger will handle unsetting other addresses
-    const { data, error} = await supabase
+    const { data, error } = await supabase
       .from('customer_addresses')
       .update({ is_default: true })
       .eq('id', addressId)
@@ -271,7 +268,7 @@ export async function setDefaultAddress(addressId, userId) {
       phone: data.phone,
       isDefault: data.is_default,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
     }
 
     return { success: true, data: address }

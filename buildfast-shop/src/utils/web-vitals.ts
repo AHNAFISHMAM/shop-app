@@ -1,6 +1,6 @@
 /**
  * Web Vitals Performance Monitoring
- * 
+ *
  * Tracks Core Web Vitals (LCP, FID, CLS) and other performance metrics
  * for production monitoring and optimization.
  */
@@ -13,13 +13,13 @@ import { onCLS, onFID, onLCP, onINP, onTTFB, Metric } from 'web-vitals'
  */
 function sendToAnalytics(metric: Metric) {
   // Development: log to console
-  const isDev: boolean = !!(import.meta.env?.DEV ?? false);
+  const isDev: boolean = !!(import.meta.env?.DEV ?? false)
   if (isDev) {
     console.log('[Web Vitals]', metric.name, metric.value, metric.id)
   }
 
   // Production: send to analytics service
-  const isProd: boolean = !!(import.meta.env?.PROD ?? false);
+  const isProd: boolean = !!(import.meta.env?.PROD ?? false)
   if (isProd) {
     // Example: Google Analytics 4
     // gtag('event', metric.name, {
@@ -28,7 +28,6 @@ function sendToAnalytics(metric: Metric) {
     //   event_label: metric.id,
     //   non_interaction: true,
     // })
-
     // Example: Custom analytics endpoint
     // fetch('/api/analytics', {
     //   method: 'POST',
@@ -52,7 +51,7 @@ export function initWebVitals() {
   onLCP(sendToAnalytics) // Largest Contentful Paint
   onTTFB(sendToAnalytics) // Time to First Byte
 
-  const isDev: boolean = !!(import.meta.env?.DEV ?? false);
+  const isDev: boolean = !!(import.meta.env?.DEV ?? false)
   if (isDev) {
     console.log('[Web Vitals] Performance monitoring initialized')
   }
@@ -69,4 +68,3 @@ export const PERFORMANCE_BUDGETS = {
   CLS: 0.1, // Good: < 0.1, Needs Improvement: 0.1-0.25, Poor: > 0.25
   TTFB: 800, // Good: < 800ms, Needs Improvement: 800-1800ms, Poor: > 1800ms
 } as const
-

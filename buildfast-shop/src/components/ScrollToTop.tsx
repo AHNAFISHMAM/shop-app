@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 
 /**
  * ScrollToTop Component
@@ -14,22 +14,21 @@ import { useLocation } from 'react-router-dom';
  * - No visual output (returns null)
  */
 function ScrollToTop(): null {
-  const { pathname } = useLocation();
+  const { pathname } = useLocation()
 
   useEffect(() => {
     // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     // Scroll to top when pathname changes
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: prefersReducedMotion ? 'auto' : 'instant' // Use 'instant' for immediate scroll
-    });
-  }, [pathname]);
+      behavior: prefersReducedMotion ? 'auto' : 'instant', // Use 'instant' for immediate scroll
+    })
+  }, [pathname])
 
-  return null; // This component doesn't render anything
+  return null // This component doesn't render anything
 }
 
-export default ScrollToTop;
-
+export default ScrollToTop

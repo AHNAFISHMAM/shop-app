@@ -39,14 +39,17 @@ export function GuestEmailSection({
         Checking out as a guest. You&apos;ll receive your order confirmation at this email address.
       </p>
       <div>
-        <label htmlFor="guestEmail" className="block text-sm font-medium text-[var(--text-main)] mb-2">
+        <label
+          htmlFor="guestEmail"
+          className="block text-sm font-medium text-[var(--text-main)] mb-2"
+        >
           Email Address <span className="text-red-400">*</span>
         </label>
         <input
           type="email"
           id="guestEmail"
           value={guestEmail}
-          onChange={(e) => onEmailChange(e.target.value)}
+          onChange={e => onEmailChange(e.target.value)}
           placeholder="your@email.com"
           required
           disabled={disabled}
@@ -71,8 +74,8 @@ export function GuestEmailSection({
           Want to save your order history? You can{' '}
           <Link to="/signup" className="text-accent hover:text-accent/80 font-medium">
             create an account
-          </Link>
-          {' '}or{' '}
+          </Link>{' '}
+          or{' '}
           <Link to="/login" className="text-accent hover:text-accent/80 font-medium">
             sign in
           </Link>
@@ -81,4 +84,3 @@ export function GuestEmailSection({
     </div>
   )
 }
-

@@ -37,7 +37,7 @@ export interface HeroProps {
  *
  * Displays a hero section with title, subtitle, CTA buttons, and optional image collage.
  * Supports dynamic background styling from store settings.
- * 
+ *
  * @component
  * @param props - Hero component props
  */
@@ -47,7 +47,7 @@ const Hero: React.FC<HeroProps> = ({
   subtitle,
   ctaButtons = [],
   images = [],
-  className = ''
+  className = '',
 }) => {
   const { settings } = useStoreSettings()
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
@@ -57,12 +57,12 @@ const Hero: React.FC<HeroProps> = ({
   // Detect reduced motion preference
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
-    
+
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const handleChange = (e: MediaQueryListEvent | { matches: boolean }): void => {
       setPrefersReducedMotion('matches' in e ? e.matches : false)
     }
-    
+
     if (mediaQuery.addEventListener) {
       setPrefersReducedMotion(mediaQuery.matches)
       mediaQuery.addEventListener('change', handleChange)
@@ -76,7 +76,7 @@ const Hero: React.FC<HeroProps> = ({
   }, [])
 
   const backgroundStyle = useMemo(() => {
-    return settings ? getBackgroundStyle(settings, 'hero') : {}
+    return settings ? getBackgroundStyle(settings as unknown as Record<string, string | null | undefined>, 'hero') : {}
   }, [settings])
 
   const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>): void => {
@@ -88,7 +88,7 @@ const Hero: React.FC<HeroProps> = ({
   return (
     <section
       id={id}
-      data-animate={prefersReducedMotion ? undefined : "fade-scale"}
+      data-animate={prefersReducedMotion ? undefined : 'fade-scale'}
       data-animate-active="false"
       className={`py-3 sm:py-4 md:py-5 px-4 -mx-4 rounded-xl sm:rounded-2xl ${className}`}
       style={backgroundStyle}
@@ -98,19 +98,22 @@ const Hero: React.FC<HeroProps> = ({
       <div className="grid md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center">
         {/* Left: Content */}
         <div
-          data-animate={prefersReducedMotion ? undefined : "slide-up"}
+          data-animate={prefersReducedMotion ? undefined : 'slide-up'}
           data-animate-active="false"
           style={{ transitionDelay: prefersReducedMotion ? undefined : '80ms' }}
           className="space-y-4 sm:space-y-6"
         >
           {subtitle && (
-            <p className="text-xs sm:text-sm uppercase tracking-wider sm:tracking-widest text-accent" aria-label="Hero subtitle">
+            <p
+              className="text-xs sm:text-sm uppercase tracking-wider sm:tracking-widest text-accent"
+              aria-label="Hero subtitle"
+            >
               {subtitle}
             </p>
           )}
-          <h1 
+          <h1
             id={id ? `${id}-title` : undefined}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight" 
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight"
             style={{ color: 'var(--text-main)' }}
           >
             {title}
@@ -118,8 +121,12 @@ const Hero: React.FC<HeroProps> = ({
 
           {/* CTA Buttons */}
           {ctaButtons.length > 0 && (
-            <div className="flex flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4" role="group" aria-label="Call to action buttons">
-              {ctaButtons.map((button) => (
+            <div
+              className="flex flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4"
+              role="group"
+              aria-label="Call to action buttons"
+            >
+              {ctaButtons.map(button => (
                 <Link
                   key={button.label}
                   to={button.to}
@@ -136,7 +143,7 @@ const Hero: React.FC<HeroProps> = ({
         {/* Right: Images Collage */}
         {images.length > 0 && (
           <div
-            data-animate={prefersReducedMotion ? undefined : "drift-left"}
+            data-animate={prefersReducedMotion ? undefined : 'drift-left'}
             data-animate-active="false"
             style={{ transitionDelay: prefersReducedMotion ? undefined : '140ms' }}
             className="grid grid-cols-2 gap-3 sm:gap-4"
@@ -146,9 +153,11 @@ const Hero: React.FC<HeroProps> = ({
             {images.map((image, index) => (
               <div
                 key={image.src}
-                data-animate={prefersReducedMotion ? undefined : "rise"}
+                data-animate={prefersReducedMotion ? undefined : 'rise'}
                 data-animate-active="false"
-                style={{ transitionDelay: prefersReducedMotion ? undefined : `${220 + index * 90}ms` }}
+                style={{
+                  transitionDelay: prefersReducedMotion ? undefined : `${220 + index * 90}ms`,
+                }}
                 className={`rounded-xl sm:rounded-2xl overflow-hidden ${
                   index === 0 ? 'col-span-2' : ''
                 }`}
@@ -157,9 +166,9 @@ const Hero: React.FC<HeroProps> = ({
                   src={image.src}
                   alt={image.alt || `Hero image ${index + 1}`}
                   className="w-full h-48 sm:h-56 md:h-64 object-cover hover:scale-105 transition-transform duration-300"
-                  style={{ 
+                  style={{
                     transition: prefersReducedMotion ? 'none' : undefined,
-                    transform: prefersReducedMotion ? 'none' : undefined
+                    transform: prefersReducedMotion ? 'none' : undefined,
                   }}
                   onLoad={handleImageLoad}
                   loading="lazy"
@@ -174,4 +183,3 @@ const Hero: React.FC<HeroProps> = ({
 }
 
 export default Hero
-

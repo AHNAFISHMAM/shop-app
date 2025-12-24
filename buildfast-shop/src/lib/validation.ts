@@ -228,8 +228,15 @@ export function validateAmount(
  * @param fieldName - Field name for error message
  * @returns Error message or null if valid
  */
-export function validateRequired(value: string | number | null | undefined, fieldName: string): string | null {
-  if (value === null || value === undefined || (typeof value === 'string' && value.trim().length === 0)) {
+export function validateRequired(
+  value: string | number | null | undefined,
+  fieldName: string
+): string | null {
+  if (
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && value.trim().length === 0)
+  ) {
     return `${fieldName} is required`
   }
   return null
@@ -349,4 +356,3 @@ export function validateNumber(
 
   return null
 }
-

@@ -78,11 +78,8 @@ export function validateShippingAddress(
 /**
  * Check if address is valid (quick check)
  */
-export function isAddressValid(
-  address: ShippingAddress,
-  requirePhone: boolean
-): boolean {
-  const baseValidation = (
+export function isAddressValid(address: ShippingAddress, requirePhone: boolean): boolean {
+  const baseValidation =
     address.fullName?.trim() &&
     address.fullName.trim().length >= 2 &&
     address.streetAddress?.trim() &&
@@ -94,7 +91,6 @@ export function isAddressValid(
     address.postalCode?.trim() &&
     address.postalCode.trim().length >= 3 &&
     address.country?.trim()
-  )
 
   if (!baseValidation) return false
 
@@ -121,4 +117,3 @@ export function validateEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email.trim())
 }
-

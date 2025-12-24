@@ -1,22 +1,14 @@
-/**
- * Type declarations for message utilities
- */
-export interface MessageClearer {
-  clear: () => void;
-  scheduleClear: () => void;
-}
-
 export function createMessageClearer(
   setMessage: (message: string | null) => void,
   setMessageType?: ((type: string) => void) | null,
   delay?: number
-): MessageClearer;
+): { clear: () => void; scheduleClear: () => void };
 
 export function setMessageWithAutoClear(
   setMessage: (message: string | null) => void,
   setMessageType: (type: string) => void,
   message: string,
-  type?: 'success' | 'error',
+  type?: string,
   delay?: number
 ): () => void;
 

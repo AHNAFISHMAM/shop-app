@@ -1,32 +1,26 @@
-/**
- * Type declarations for addresses API
- */
 export interface Address {
   id: string;
   userId: string;
   label: string;
-  fullName: string;
-  addressLine1: string;
-  addressLine2?: string | null;
+  street: string;
   city: string;
   state: string;
-  postalCode: string;
+  zipCode: string;
   country: string;
-  phone: string;
   isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
+  [key: string]: unknown;
 }
 
 export interface AddressResult {
   success: boolean;
-  data?: Address | Address[];
-  error?: any;
+  data?: Address[];
+  error?: unknown;
 }
 
 export function fetchUserAddresses(userId: string): Promise<AddressResult>;
-export function createAddress(userId: string, address: Partial<Address>): Promise<AddressResult>;
-export function updateAddress(addressId: string, updates: Partial<Address>): Promise<AddressResult>;
-export function deleteAddress(addressId: string): Promise<AddressResult>;
-export function setDefaultAddress(addressId: string, userId: string): Promise<AddressResult>;
+export function getDefaultAddress(userId: string): Promise<{ success: boolean; data?: Address | null; error?: unknown }>;
+export function createAddress(address: Partial<Address>): Promise<{ success: boolean; data?: Address; error?: unknown }>;
+export function updateAddress(addressId: string, address: Partial<Address>): Promise<{ success: boolean; error?: unknown }>;
+export function deleteAddress(addressId: string): Promise<{ success: boolean; error?: unknown }>;
+export function setDefaultAddress(addressId: string, userId: string): Promise<{ success: boolean; data?: Address; error?: unknown }>;
 

@@ -1,15 +1,15 @@
-import { m } from 'framer-motion';
+import { m } from 'framer-motion'
 
 /**
  * EmptyCartState component props
  */
 interface EmptyCartStateProps {
   /** Callback when user clicks "Browse Menu" */
-  onBrowseMenu?: () => void;
+  onBrowseMenu?: () => void
   /** Callback when user clicks "View Favorites" */
-  onViewFavorites?: () => void;
+  onViewFavorites?: () => void
   /** Whether the user has favorites */
-  hasFavorites?: boolean;
+  hasFavorites?: boolean
 }
 
 /**
@@ -24,9 +24,14 @@ interface EmptyCartStateProps {
  * - Accessibility compliant (ARIA, keyboard navigation, 44px touch targets)
  * - Respects prefers-reduced-motion
  */
-const EmptyCartState = ({ onBrowseMenu, onViewFavorites, hasFavorites = false }: EmptyCartStateProps) => {
+const EmptyCartState = ({
+  onBrowseMenu,
+  onViewFavorites,
+  hasFavorites = false,
+}: EmptyCartStateProps) => {
   // Check for reduced motion preference
-  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReducedMotion =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   return (
     <m.div
@@ -41,7 +46,9 @@ const EmptyCartState = ({ onBrowseMenu, onViewFavorites, hasFavorites = false }:
       <m.div
         initial={prefersReducedMotion ? false : { scale: 0.8, opacity: 0 }}
         animate={prefersReducedMotion ? false : { scale: 1, opacity: 1 }}
-        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.1, type: 'spring', stiffness: 200 }}
+        transition={
+          prefersReducedMotion ? { duration: 0 } : { delay: 0.1, type: 'spring', stiffness: 200 }
+        }
         className="cart-empty-icon-container"
         aria-hidden="true"
       >
@@ -105,8 +112,7 @@ const EmptyCartState = ({ onBrowseMenu, onViewFavorites, hasFavorites = false }:
         )}
       </m.div>
     </m.div>
-  );
-};
+  )
+}
 
-export default EmptyCartState;
-
+export default EmptyCartState

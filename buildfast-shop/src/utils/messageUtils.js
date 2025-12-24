@@ -1,6 +1,6 @@
 /**
  * Message Utility Functions
- * 
+ *
  * Provides consistent message management patterns across the application.
  * Handles auto-clearing messages with timeouts.
  */
@@ -13,27 +13,27 @@
  * @returns {Function} Clear function that can be called to clear immediately
  */
 export function createMessageClearer(setMessage, setMessageType = null, delay = 5000) {
-  let timeoutId = null;
+  let timeoutId = null
 
   const clear = () => {
     if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
+      clearTimeout(timeoutId)
+      timeoutId = null
     }
-    setMessage(null);
+    setMessage(null)
     if (setMessageType) {
-      setMessageType('success');
+      setMessageType('success')
     }
-  };
+  }
 
   const scheduleClear = () => {
     if (timeoutId) {
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId)
     }
-    timeoutId = setTimeout(clear, delay);
-  };
+    timeoutId = setTimeout(clear, delay)
+  }
 
-  return { clear, scheduleClear };
+  return { clear, scheduleClear }
 }
 
 /**
@@ -45,15 +45,24 @@ export function createMessageClearer(setMessage, setMessageType = null, delay = 
  * @param {number} delay - Delay in milliseconds before clearing (default: 5000)
  * @returns {Function} Clear function
  */
-export function setMessageWithAutoClear(setMessage, setMessageType, message, type = 'success', delay = 5000) {
-  setMessage(message);
-  setMessageType(type);
-  
+export function setMessageWithAutoClear(
+  setMessage,
+  setMessageType,
+  message,
+  type = 'success',
+  delay = 5000
+) {
+  setMessage(message)
+  if (setMessageType) {
+    setMessageType(type)
+  }
+
   const timeoutId = setTimeout(() => {
-    setMessage(null);
-    setMessageType('success');
-  }, delay);
+    setMessage(null)
+    if (setMessageType) {
+      setMessageType('success')
+    }
+  }, delay)
 
-  return () => clearTimeout(timeoutId);
+  return () => clearTimeout(timeoutId)
 }
-

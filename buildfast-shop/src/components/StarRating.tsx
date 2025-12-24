@@ -1,19 +1,19 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react'
 
 /**
  * StarRating component props
  */
 interface StarRatingProps {
   /** Current rating (0-5) */
-  rating?: number;
+  rating?: number
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg'
   /** Whether stars are clickable */
-  interactive?: boolean;
+  interactive?: boolean
   /** Callback when rating changes (interactive mode only) */
-  onChange?: (value: number) => void;
+  onChange?: (value: number) => void
   /** Whether to show numeric value */
-  showValue?: boolean;
+  showValue?: boolean
 }
 
 /**
@@ -29,42 +29,61 @@ interface StarRatingProps {
  * - Accessibility compliant (ARIA, keyboard navigation, 44px touch targets)
  * - Performance optimized (memoized callbacks)
  */
-function StarRating({ rating = 0, size = 'md', interactive = false, onChange, showValue = false }: StarRatingProps) {
-  const [hoverRating, setHoverRating] = useState<number>(0);
+function StarRating({
+  rating = 0,
+  size = 'md',
+  interactive = false,
+  onChange,
+  showValue = false,
+}: StarRatingProps) {
+  const [hoverRating, setHoverRating] = useState<number>(0)
 
-  const sizeClasses = useMemo(() => ({
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6 min-w-[44px] min-h-[44px]',
-    lg: 'w-8 h-8 min-w-[44px] min-h-[44px]'
-  }), []);
+  const sizeClasses = useMemo(
+    () => ({
+      sm: 'w-4 h-4',
+      md: 'w-6 h-6 min-w-[44px] min-h-[44px]',
+      lg: 'w-8 h-8 min-w-[44px] min-h-[44px]',
+    }),
+    []
+  )
 
-  const sizeClass = sizeClasses[size] || sizeClasses.md;
+  const sizeClass = sizeClasses[size] || sizeClasses.md
 
-  const handleClick = useCallback((value: number) => {
-    if (interactive && onChange) {
-      onChange(value);
-    }
-  }, [interactive, onChange]);
+  const handleClick = useCallback(
+    (value: number) => {
+      if (interactive && onChange) {
+        onChange(value)
+      }
+    },
+    [interactive, onChange]
+  )
 
-  const handleMouseEnter = useCallback((value: number) => {
-    if (interactive) {
-      setHoverRating(value);
-    }
-  }, [interactive]);
+  const handleMouseEnter = useCallback(
+    (value: number) => {
+      if (interactive) {
+        setHoverRating(value)
+      }
+    },
+    [interactive]
+  )
 
   const handleMouseLeave = useCallback(() => {
     if (interactive) {
-      setHoverRating(0);
+      setHoverRating(0)
     }
-  }, [interactive]);
+  }, [interactive])
 
-  const displayRating = hoverRating || rating;
+  const displayRating = hoverRating || rating
 
   return (
-    <div className="flex items-center gap-2" role="group" aria-label={`Rating: ${rating} out of 5 stars`}>
+    <div
+      className="flex items-center gap-2"
+      role="group"
+      aria-label={`Rating: ${rating} out of 5 stars`}
+    >
       <div className="flex items-center gap-1" role="radiogroup" aria-label="Star rating">
-        {[1, 2, 3, 4, 5].map((value) => {
-          const filled = value <= displayRating;
+        {[1, 2, 3, 4, 5].map(value => {
+          const filled = value <= displayRating
 
           return (
             <button
@@ -101,18 +120,20 @@ function StarRating({ rating = 0, size = 'md', interactive = false, onChange, sh
                 />
               </svg>
             </button>
-          );
+          )
         })}
       </div>
 
       {showValue && (
-        <span className="text-sm font-medium text-[var(--text-main)]" aria-label={`${rating > 0 ? rating.toFixed(1) : '0.0'} out of 5`}>
+        <span
+          className="text-sm font-medium text-[var(--text-main)]"
+          aria-label={`${rating > 0 ? rating.toFixed(1) : '0.0'} out of 5`}
+        >
           {rating > 0 ? rating.toFixed(1) : '0.0'}
         </span>
       )}
     </div>
-  );
+  )
 }
 
-export default StarRating;
-
+export default StarRating

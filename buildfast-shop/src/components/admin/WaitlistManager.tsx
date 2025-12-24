@@ -5,27 +5,27 @@ import GlowPanel from '../ui/GlowPanel'
 import { logger } from '../../utils/logger'
 
 interface WaitlistEntry {
-  id: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_email?: string;
-  party_size: number;
-  special_requests?: string;
-  is_priority: boolean;
-  status: 'waiting' | 'notified' | 'seated';
-  added_at: string;
-  estimated_wait_time?: number;
-  notified_at?: string;
-  seated_at?: string;
+  id: string
+  customer_name: string
+  customer_phone: string
+  customer_email?: string
+  party_size: number
+  special_requests?: string
+  is_priority: boolean
+  status: 'waiting' | 'notified' | 'seated'
+  added_at: string
+  estimated_wait_time?: number
+  notified_at?: string
+  seated_at?: string
 }
 
 interface NewEntry {
-  customer_name: string;
-  customer_phone: string;
-  customer_email: string;
-  party_size: number;
-  special_requests: string;
-  is_priority: boolean;
+  customer_name: string
+  customer_phone: string
+  customer_email: string
+  party_size: number
+  special_requests: string
+  is_priority: boolean
 }
 
 /**
@@ -35,28 +35,28 @@ interface NewEntry {
 function WaitlistManager(): JSX.Element {
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
-  
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
+
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
+    if (typeof document === 'undefined') return
+
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
-    
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
+
+    checkTheme()
+
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
-    
-    return () => observer.disconnect();
-  }, []);
+      attributeFilter: ['class'],
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,7 +67,7 @@ function WaitlistManager(): JSX.Element {
     customer_email: '',
     party_size: 2,
     special_requests: '',
-    is_priority: false
+    is_priority: false,
   })
 
   useEffect(() => {
@@ -81,7 +81,7 @@ function WaitlistManager(): JSX.Element {
         {
           event: '*',
           schema: 'public',
-          table: 'waitlist'
+          table: 'waitlist',
         },
         () => {
           fetchWaitlist()
@@ -116,13 +116,13 @@ function WaitlistManager(): JSX.Element {
 
   const addToWaitlist = async () => {
     try {
-      const { error } = await supabase
-        .from('waitlist')
-        .insert([{
-          ...newEntry,
-          estimated_wait_time: 30, // Default 30 mins
-          status: 'waiting'
-        }])
+      const insertData = {
+        ...newEntry,
+        estimated_wait_time: 30, // Default 30 mins
+        status: 'waiting' as const,
+        added_at: new Date().toISOString(),
+      }
+      const { error } = await supabase.from('waitlist').insert([insertData as never])
 
       if (error) throw error
 
@@ -134,7 +134,7 @@ function WaitlistManager(): JSX.Element {
         customer_email: '',
         party_size: 2,
         special_requests: '',
-        is_priority: false
+        is_priority: false,
       })
       fetchWaitlist()
     } catch (err) {
@@ -154,7 +154,7 @@ function WaitlistManager(): JSX.Element {
 
       const { error } = await supabase
         .from('waitlist')
-        .update(updates)
+        .update(updates as never)
         .eq('id', id)
 
       if (error) throw error
@@ -169,10 +169,7 @@ function WaitlistManager(): JSX.Element {
 
   const removeFromWaitlist = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('waitlist')
-        .delete()
-        .eq('id', id)
+      const { error } = await supabase.from('waitlist').delete().eq('id', id)
 
       if (error) throw error
 
@@ -218,8 +215,18 @@ function WaitlistManager(): JSX.Element {
         </div>
       ) : waitlist.length === 0 ? (
         <div className="py-12 text-center">
-          <svg className="mx-auto mb-4 h-16 w-16 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          <svg
+            className="mx-auto mb-4 h-16 w-16 text-muted"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
           </svg>
           <p className="text-muted">No one is waiting</p>
         </div>
@@ -248,7 +255,8 @@ function WaitlistManager(): JSX.Element {
                   )}
                 </div>
                 <p className="text-sm text-muted">
-                  {entry.party_size} {entry.party_size === 1 ? 'guest' : 'guests'} • {entry.customer_phone}
+                  {entry.party_size} {entry.party_size === 1 ? 'guest' : 'guests'} •{' '}
+                  {entry.customer_phone}
                   {entry.special_requests && ` • ${entry.special_requests}`}
                 </p>
                 <p className="text-xs text-muted">Waiting: {getWaitTime(entry.added_at)}</p>
@@ -283,34 +291,40 @@ function WaitlistManager(): JSX.Element {
 
       {/* Add to Waitlist Modal */}
       {showAddModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{
-            backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.5)'
+            backgroundColor: isLightTheme ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.5)',
           }}
           onClick={() => setShowAddModal(false)}
         >
-          <div 
+          <div
             className="w-full max-w-md rounded-2xl border border-theme p-6"
             style={{
-              backgroundColor: isLightTheme 
-                ? 'rgba(255, 255, 255, 0.95)' 
-                : 'rgba(5, 5, 9, 0.95)',
-              boxShadow: isLightTheme 
-                ? '0 25px 50px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)' 
-                : '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+              backgroundColor: isLightTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(5, 5, 9, 0.95)',
+              boxShadow: isLightTheme
+                ? '0 25px 50px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)'
+                : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <h3 className="mb-4 text-xl font-semibold">Add to Waitlist</h3>
 
-            <form onSubmit={(e: FormEvent) => { e.preventDefault(); addToWaitlist(); }} className="space-y-4">
+            <form
+              onSubmit={(e: FormEvent) => {
+                e.preventDefault()
+                addToWaitlist()
+              }}
+              className="space-y-4"
+            >
               <div>
                 <label className="mb-2 block text-sm font-medium text-muted">Name *</label>
                 <input
                   type="text"
                   value={newEntry.customer_name}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, customer_name: e.target.value })}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setNewEntry({ ...newEntry, customer_name: e.target.value })
+                  }
                   className="input-themed w-full rounded-lg border px-4 py-2"
                   placeholder="Customer name"
                   required
@@ -322,7 +336,9 @@ function WaitlistManager(): JSX.Element {
                 <input
                   type="tel"
                   value={newEntry.customer_phone}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, customer_phone: e.target.value })}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setNewEntry({ ...newEntry, customer_phone: e.target.value })
+                  }
                   className="input-themed w-full rounded-lg border px-4 py-2"
                   placeholder="Phone number"
                   required
@@ -330,11 +346,15 @@ function WaitlistManager(): JSX.Element {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-muted">Email (optional)</label>
+                <label className="mb-2 block text-sm font-medium text-muted">
+                  Email (optional)
+                </label>
                 <input
                   type="email"
                   value={newEntry.customer_email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, customer_email: e.target.value })}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setNewEntry({ ...newEntry, customer_email: e.target.value })
+                  }
                   className="input-themed w-full rounded-lg border px-4 py-2"
                   placeholder="email@example.com"
                 />
@@ -346,17 +366,23 @@ function WaitlistManager(): JSX.Element {
                   type="number"
                   min="1"
                   value={newEntry.party_size}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, party_size: parseInt(e.target.value) || 1 })}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setNewEntry({ ...newEntry, party_size: parseInt(e.target.value) || 1 })
+                  }
                   className="input-themed w-full rounded-lg border px-4 py-2"
                   required
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-muted">Special Requests</label>
+                <label className="mb-2 block text-sm font-medium text-muted">
+                  Special Requests
+                </label>
                 <textarea
                   value={newEntry.special_requests}
-                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewEntry({ ...newEntry, special_requests: e.target.value })}
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    setNewEntry({ ...newEntry, special_requests: e.target.value })
+                  }
                   rows={2}
                   className="input-themed w-full resize-none rounded-lg border px-4 py-2"
                   placeholder="Any special requests..."
@@ -368,10 +394,14 @@ function WaitlistManager(): JSX.Element {
                   type="checkbox"
                   id="priority"
                   checked={newEntry.is_priority}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewEntry({ ...newEntry, is_priority: e.target.checked })}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setNewEntry({ ...newEntry, is_priority: e.target.checked })
+                  }
                   className="h-4 w-4 rounded border-theme"
                 />
-                <label htmlFor="priority" className="text-sm text-muted">Mark as priority</label>
+                <label htmlFor="priority" className="text-sm text-muted">
+                  Mark as priority
+                </label>
               </div>
 
               <div className="mt-6 flex gap-3">
@@ -399,4 +429,3 @@ function WaitlistManager(): JSX.Element {
 }
 
 export default WaitlistManager
-

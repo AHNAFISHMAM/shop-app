@@ -1,18 +1,18 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { useCountUp } from '../../hooks/useCountUp';
-import GlowPanel from '../ui/GlowPanel';
+import { useState, useEffect, useMemo, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { useCountUp } from '../../hooks/useCountUp'
+import GlowPanel from '../ui/GlowPanel'
 
 /**
  * Trend data interface
  */
 interface TrendData {
   /** Trend percentage value */
-  value: number;
+  value: number
   /** Trend direction */
-  direction: 'up' | 'down' | 'flat';
+  direction: 'up' | 'down' | 'flat'
   /** Trend label (e.g., "vs last week") */
-  label?: string;
+  label?: string
 }
 
 /**
@@ -20,27 +20,27 @@ interface TrendData {
  */
 interface StatCardProps {
   /** Card title (e.g., "Total Dishes") */
-  title: string;
+  title: string
   /** Stat value to display (number or string) */
-  value: number | string;
+  value: number | string
   /** Optional subtitle (e.g., "Today: 12") */
-  subtitle?: string;
+  subtitle?: string
   /** Optional subtitle color */
-  subtitleColor?: string;
+  subtitleColor?: string
   /** SVG icon element */
-  icon?: ReactNode;
+  icon?: ReactNode
   /** Icon color class (default: 'text-[var(--accent)]') */
-  iconColor?: string;
+  iconColor?: string
   /** Icon background class (default: 'bg-[var(--accent)]/20') */
-  iconBg?: string;
+  iconBg?: string
   /** Navigation link */
-  link?: string;
+  link?: string
   /** Loading state */
-  loading?: boolean;
+  loading?: boolean
   /** Optional trend data */
-  trend?: TrendData;
+  trend?: TrendData
   /** Entrance animation delay in ms */
-  animationDelay?: number;
+  animationDelay?: number
 }
 
 /**
@@ -81,65 +81,63 @@ function StatCard({
   link,
   loading = false,
   trend,
-  animationDelay = 0
+  animationDelay = 0,
 }: StatCardProps) {
   // Detect current theme from document element
   const [isLightTheme, setIsLightTheme] = useState<boolean>(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.classList.contains('theme-light');
-  });
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('theme-light')
+  })
 
   // Watch for theme changes
   useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
+    if (typeof document === 'undefined') return undefined
 
     const checkTheme = () => {
-      setIsLightTheme(document.documentElement.classList.contains('theme-light'));
-    };
+      setIsLightTheme(document.documentElement.classList.contains('theme-light'))
+    }
 
-    checkTheme();
+    checkTheme()
 
-    const observer = new MutationObserver(checkTheme);
+    const observer = new MutationObserver(checkTheme)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
-    });
+      attributeFilter: ['class'],
+    })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Animated count-up effect (only for numbers)
-  const isNumeric = typeof value === 'number';
-  const animatedValue = isNumeric ? useCountUp(loading ? 0 : value, 1500, animationDelay) : value;
+  const isNumeric = typeof value === 'number'
+  const animatedValue = isNumeric ? useCountUp(loading ? 0 : value, 1500, animationDelay) : value
 
   // Memoized skeleton background colors
   const skeletonBg = useMemo(() => {
-    return isLightTheme
-      ? 'rgba(var(--bg-dark-rgb), 0.08)'
-      : 'rgba(var(--text-main-rgb), 0.1)';
-  }, [isLightTheme]);
+    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.08)' : 'rgba(var(--text-main-rgb), 0.1)'
+  }, [isLightTheme])
 
   // Memoized card background
   const cardBackground = useMemo(() => {
-    return isLightTheme ? 'bg-white/95' : 'bg-[rgba(var(--text-main-rgb),0.05)]';
-  }, [isLightTheme]);
+    return isLightTheme ? 'bg-white/95' : 'bg-[rgba(var(--text-main-rgb),0.05)]'
+  }, [isLightTheme])
 
   // Memoized box shadow
   const boxShadow = useMemo(() => {
     return isLightTheme
       ? '0 4px 24px rgba(var(--bg-dark-rgb), 0.15), 0 1px 2px rgba(var(--bg-dark-rgb), 0.1), 0 0 0 1px rgba(var(--bg-dark-rgb), 0.05)'
-      : '0 4px 24px rgba(var(--bg-dark-rgb), 0.1), 0 1px 2px rgba(var(--bg-dark-rgb), 0.08)';
-  }, [isLightTheme]);
+      : '0 4px 24px rgba(var(--bg-dark-rgb), 0.1), 0 1px 2px rgba(var(--bg-dark-rgb), 0.08)'
+  }, [isLightTheme])
 
   // Memoized trend color
   const trendColor = useMemo(() => {
-    if (!trend) return undefined;
+    if (!trend) return undefined
     return trend.direction === 'up'
       ? 'text-[var(--color-emerald)]'
       : trend.direction === 'down'
-      ? 'text-[var(--color-rose)]'
-      : 'text-[var(--color-amber)]';
-  }, [trend]);
+        ? 'text-[var(--color-rose)]'
+        : 'text-[var(--color-amber)]'
+  }, [trend])
 
   // Skeleton loading state
   if (loading) {
@@ -155,7 +153,10 @@ function StatCard({
         role="status"
       >
         {/* Skeleton shimmer effect */}
-        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[rgba(var(--text-main-rgb),0.05)] to-transparent" aria-hidden="true" />
+        <div
+          className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[rgba(var(--text-main-rgb),0.05)] to-transparent"
+          aria-hidden="true"
+        />
 
         <div className="flex items-center justify-between">
           <div className="space-y-3 flex-1">
@@ -179,12 +180,15 @@ function StatCard({
             />
           </div>
           {/* Icon skeleton */}
-          <div className={`${iconBg} p-4 rounded-2xl animate-pulse min-h-[44px] min-w-[44px] flex items-center justify-center`} aria-hidden="true">
+          <div
+            className={`${iconBg} p-4 rounded-2xl animate-pulse min-h-[44px] min-w-[44px] flex items-center justify-center`}
+            aria-hidden="true"
+          >
             <div className="w-8 h-8 opacity-30">{icon}</div>
           </div>
         </div>
       </GlowPanel>
-    );
+    )
   }
 
   // Main stat card
@@ -198,19 +202,23 @@ function StatCard({
       data-animate-active="false"
       style={{
         boxShadow,
-        animationDelay: `${animationDelay}ms`
+        animationDelay: `${animationDelay}ms`,
       }}
       role="article"
       aria-label={`${title}: ${isNumeric ? animatedValue.toLocaleString() : animatedValue}`}
     >
       {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/0 to-[var(--accent)]/0 group-hover:from-[var(--accent)]/5 group-hover:to-[var(--accent)]/10 transition-all duration-300" aria-hidden="true" />
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/0 to-[var(--accent)]/0 group-hover:from-[var(--accent)]/5 group-hover:to-[var(--accent)]/10 transition-all duration-300"
+        aria-hidden="true"
+      />
 
       {/* Glow effect on hover */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
         style={{
-          boxShadow: '0 0 40px rgba(var(--accent-rgb), 0.2), 0 8px 32px rgba(var(--bg-dark-rgb), 0.2)'
+          boxShadow:
+            '0 0 40px rgba(var(--accent-rgb), 0.2), 0 8px 32px rgba(var(--bg-dark-rgb), 0.2)',
         }}
         aria-hidden="true"
       />
@@ -221,7 +229,7 @@ function StatCard({
         style={{
           borderColor: 'rgba(var(--accent-rgb), 0.3)',
           borderWidth: '1px',
-          borderStyle: 'solid'
+          borderStyle: 'solid',
         }}
         aria-hidden="true"
       />
@@ -231,7 +239,10 @@ function StatCard({
         {/* Stats content - Left side */}
         <div className="flex-1 min-w-0 space-y-2">
           {/* Title */}
-          <p className="text-sm font-medium tracking-wide" style={{ color: 'var(--text-subtitle)' }}>
+          <p
+            className="text-sm font-medium tracking-wide"
+            style={{ color: 'var(--text-subtitle)' }}
+          >
             {title}
           </p>
 
@@ -246,26 +257,56 @@ function StatCard({
 
           {/* Subtitle or trend */}
           {subtitle && !trend && (
-            <p className="text-sm font-medium pt-1 whitespace-nowrap" style={{ color: subtitleColor || 'var(--color-emerald)' }}>
+            <p
+              className="text-sm font-medium pt-1 whitespace-nowrap"
+              style={{ color: subtitleColor || 'var(--color-emerald)' }}
+            >
               {subtitle}
             </p>
           )}
 
           {/* Trend indicator */}
           {trend && (
-            <div className="flex items-center gap-2 pt-1" role="status" aria-label={`Trend: ${trend.direction} ${trend.value}%`}>
+            <div
+              className="flex items-center gap-2 pt-1"
+              role="status"
+              aria-label={`Trend: ${trend.direction} ${trend.value}%`}
+            >
               <span className={`text-sm font-semibold flex items-center gap-1 ${trendColor}`}>
                 {trend.direction === 'up' && (
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                    />
                   </svg>
                 )}
                 {trend.direction === 'down' && (
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                    />
                   </svg>
                 )}
-                {trend.value > 0 && '+'}{trend.value}%
+                {trend.value > 0 && '+'}
+                {trend.value}%
               </span>
               <span className="text-sm" style={{ color: 'var(--text-body-muted-light)' }}>
                 {trend.label || 'vs last week'}
@@ -278,11 +319,13 @@ function StatCard({
         <div
           className={`${iconBg} p-4 rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 flex-shrink-0 self-start min-h-[44px] min-w-[44px] flex items-center justify-center`}
           style={{
-            boxShadow: '0 2px 8px rgba(var(--accent-rgb), 0.15)'
+            boxShadow: '0 2px 8px rgba(var(--accent-rgb), 0.15)',
           }}
           aria-hidden="true"
         >
-          <div className={`w-8 h-8 ${iconColor} transition-transform duration-300 group-hover:scale-110 flex items-center justify-center`}>
+          <div
+            className={`w-8 h-8 ${iconColor} transition-transform duration-300 group-hover:scale-110 flex items-center justify-center`}
+          >
             {icon}
           </div>
         </div>
@@ -291,13 +334,16 @@ function StatCard({
       {/* Clickable hint - Bottom */}
       {link && (
         <div className="relative">
-          <p className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ color: 'var(--text-body-muted-lighter)' }}>
+          <p
+            className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ color: 'var(--text-body-muted-lighter)' }}
+          >
             Click to manage →
           </p>
         </div>
       )}
     </GlowPanel>
-  );
+  )
 
   // Wrap in Link if provided
   if (link) {
@@ -309,12 +355,10 @@ function StatCard({
       >
         {CardContent}
       </Link>
-    );
+    )
   }
 
-  return CardContent;
+  return CardContent
 }
 
-export default StatCard;
-
-
+export default StatCard

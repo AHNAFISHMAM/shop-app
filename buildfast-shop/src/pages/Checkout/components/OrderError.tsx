@@ -32,4 +32,3 @@ export function OrderError({ error }: OrderErrorProps) {
     </div>
   )
 }
-

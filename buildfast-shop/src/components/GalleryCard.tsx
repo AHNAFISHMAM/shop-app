@@ -1,23 +1,23 @@
-import { memo, useMemo, useState, useEffect, useCallback } from 'react';
+import { memo, useMemo, useState, useEffect, useCallback } from 'react'
 import {
   parseEffects,
   parseEffectVariants,
   buildEffectVariants,
   CAPTION_EFFECT_KEYS,
-} from '../utils/effects';
+} from '../utils/effects'
 
-const CAPTION_DEPENDENT_EFFECTS = new Set(CAPTION_EFFECT_KEYS);
+const CAPTION_DEPENDENT_EFFECTS = new Set(CAPTION_EFFECT_KEYS)
 
 /**
  * GalleryCardProps interface
  */
 export interface GalleryCardProps {
-  defaultImage: string;
-  hoverImage: string;
-  effect?: string | string[];
-  alt?: string;
-  caption?: string;
-  effectVariants?: string | string[] | string[][];
+  defaultImage: string
+  hoverImage: string
+  effect?: string | string[]
+  alt?: string
+  caption?: string
+  effectVariants?: string | string[] | string[][]
 }
 
 /**
@@ -36,37 +36,39 @@ const GalleryCard = memo(function GalleryCard({
   caption = undefined,
   effectVariants = undefined,
 }: GalleryCardProps) {
-  const baseEffects = useMemo(() => parseEffects(effect), [effect]);
+  const baseEffects = useMemo(() => parseEffects(effect), [effect])
   const variantSequence = useMemo(() => {
     if (effectVariants !== undefined && effectVariants !== null) {
-      return parseEffectVariants(effectVariants, baseEffects);
+      const variants = typeof effectVariants === 'string' ? effectVariants : Array.isArray(effectVariants) ? JSON.stringify(effectVariants) : null
+      return parseEffectVariants(variants, baseEffects)
     }
-    return buildEffectVariants(baseEffects);
-  }, [effectVariants, baseEffects]);
-  const [hoverSequence, setHoverSequence] = useState<number>(0);
+    return buildEffectVariants(baseEffects)
+  }, [effectVariants, baseEffects])
+  const [hoverSequence, setHoverSequence] = useState<number>(0)
 
   useEffect(() => {
-    setHoverSequence(0);
-  }, [variantSequence]);
+    setHoverSequence(0)
+  }, [variantSequence])
 
-  const variantCount = variantSequence.length || 1;
-  const activeVariant = variantSequence[hoverSequence % variantCount] || [];
+  const variantCount = variantSequence.length || 1
+  const activeVariant = variantSequence[hoverSequence % variantCount] || []
 
   const effectClassNames = useMemo(
     () => (activeVariant || []).map((effectName: string) => `gallery-card-${effectName}`).join(' '),
-    [activeVariant],
-  );
+    [activeVariant]
+  )
 
   const needsCaption = useMemo(
-    () => (activeVariant || []).some((effectName: string) => CAPTION_DEPENDENT_EFFECTS.has(effectName)),
-    [activeVariant],
-  );
+    () =>
+      (activeVariant || []).some((effectName: string) => CAPTION_DEPENDENT_EFFECTS.has(effectName)),
+    [activeVariant]
+  )
 
-  const captionContent = needsCaption ? caption ?? alt ?? '' : undefined;
+  const captionContent = needsCaption ? (caption ?? alt ?? '') : undefined
 
   const advanceHoverSequence = useCallback(() => {
-    setHoverSequence((prev) => prev + 1);
-  }, []);
+    setHoverSequence(prev => prev + 1)
+  }, [])
 
   return (
     <div
@@ -96,8 +98,7 @@ const GalleryCard = memo(function GalleryCard({
         aria-hidden="true"
       />
     </div>
-  );
-});
+  )
+})
 
-export default GalleryCard;
-
+export default GalleryCard
