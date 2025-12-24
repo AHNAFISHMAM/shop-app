@@ -1,0 +1,64 @@
+/**
+ * Group TypeScript Errors by Type
+ * 
+ * Analyzes TypeScript error output and groups errors by error code.
+ * Helps prioritize which errors to fix first.
+ * 
+ * Usage: npm run typecheck:group
+ */
+
+import { execSync } from 'child_process'
+import { readFileSync } from 'fs'
+
+try {
+  // Run TypeScript compiler and capture output
+  const output = execSync('tsc --noEmit 2>&1', { encoding: 'utf-8' })
+  
+  // Parse errors
+  const errorRegex = /error TS(\d+):/g
+  const errors = []
+  let match
+  
+  while ((match = errorRegex.exec(output)) !== null) {
+    const errorCode = match[1]
+    const lineStart = match.index
+    const lineEnd = output.indexOf('\n', lineStart)
+    const errorLine = output.substring(lineStart, lineEnd)
+    
+    errors.push({
+      code: `TS${errorCode}`,
+      message: errorLine,
+    })
+  }
+  
+  // Group by error code
+  const grouped = errors.reduce((acc, error) => {
+    if (!acc[error.code]) {
+      acc[error.code] = []
+    }
+    acc[error.code].push(error.message)
+    return acc
+  }, {})
+  
+  // Display grouped errors
+  console.log('\n📊 TypeScript Errors by Type:\n')
+  
+  const sortedGroups = Object.entries(grouped)
+    .sort((a, b) => b[1].length - a[1].length)
+  
+  sortedGroups.forEach(([code, messages]) => {
+    console.log(`\n${code}: ${messages.length} error(s)`)
+    console.log('─'.repeat(50))
+    messages.slice(0, 5).forEach(msg => console.log(`  ${msg}`))
+    if (messages.length > 5) {
+      console.log(`  ... and ${messages.length - 5} more`)
+    }
+  })
+  
+  console.log(`\n\nTotal: ${errors.length} errors across ${sortedGroups.length} error types\n`)
+  
+} catch (error) {
+  console.error('Error running typecheck:', error.message)
+  process.exit(1)
+}
+

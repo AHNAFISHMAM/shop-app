@@ -57,10 +57,16 @@ After running the prompt, verify:
 
 **Prompts that are usually stack-agnostic (minimal changes needed):**
 - `MASTER_TYPESCRIPT_PATTERNS_PROMPT.md` - Mostly generic
+- `MASTER_TYPESCRIPT_MULTI_CONFIG_PROMPT.md` - Multi-config patterns (generic)
 - `MASTER_UI_UX_PROMPT.md` - Framework-agnostic
 - `MASTER_REFACTORING_PROMPT.md` - Generic patterns
 - `MASTER_ERROR_HANDLING_LOGGING_PROMPT.md` - Universal patterns
-- `MASTER_TESTING_PROMPT.md` - May need test framework update
+- `MASTER_FEATURE_STRUCTURE_PROMPT.md` - Organization patterns (generic)
+
+**Build Tool Prompts (customize for your build tool):**
+- `MASTER_VITE_CONFIGURATION_PROMPT.md` - Vite-specific (if using Vite)
+- `MASTER_ESLINT_FLAT_CONFIG_PROMPT.md` - ESLint 9+ flat config (modern standard)
+- `MASTER_VITEST_TESTING_PROMPT.md` - Vitest testing (if using Vitest)
 
 **Prompts that need customization:**
 - `MASTER_SUPABASE_*.md` - If not using Supabase, adapt or remove

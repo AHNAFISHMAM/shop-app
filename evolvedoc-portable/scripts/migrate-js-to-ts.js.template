@@ -1,0 +1,188 @@
+#!/usr/bin/env node
+
+/**
+ * JavaScript to TypeScript Migration Helper
+ * 
+ * Identifies JavaScript files that can be migrated to TypeScript
+ * and generates migration suggestions.
+ * 
+ * Usage: node scripts/migrate-js-to-ts.js [--dry-run]
+ */
+
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const DRY_RUN = process.argv.includes('--dry-run')
+
+function findJSFiles(dir, extensions = ['.js', '.jsx']) {
+  const files = []
+  
+  function traverse(currentDir) {
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true })
+    
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name)
+      
+      // Skip node_modules, dist, build, etc.
+      if (entry.isDirectory()) {
+        if (!['node_modules', 'dist', 'build', '.git'].includes(entry.name)) {
+          traverse(fullPath)
+        }
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name)
+        if (extensions.includes(ext)) {
+          files.push(fullPath)
+        }
+      }
+    }
+  }
+  
+  traverse(dir)
+  return files
+}
+
+function analyzeFile(filePath) {
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const ext = path.extname(filePath)
+  const newExt = ext === '.jsx' ? '.tsx' : '.ts'
+  const newPath = filePath.replace(ext, newExt)
+  
+  const analysis = {
+    file: filePath,
+    newFile: newPath,
+    lines: content.split('\n').length,
+    hasImports: /^import\s+/.test(content) || /^export\s+/.test(content),
+    hasReact: /react/i.test(content) || ext === '.jsx',
+    hasTypes: /:\s*\w+/.test(content) || /interface\s+\w+/.test(content),
+    complexity: estimateComplexity(content),
+    dependencies: extractDependencies(content),
+  }
+  
+  return analysis
+}
+
+function estimateComplexity(content) {
+  let score = 0
+  
+  // Count functions
+  score += (content.match(/function\s+\w+/g) || []).length
+  score += (content.match(/=>\s*{/g) || []).length
+  
+  // Count classes
+  score += (content.match(/class\s+\w+/g) || []).length * 2
+  
+  // Count hooks
+  score += (content.match(/use\w+\(/g) || []).length
+  
+  // Count conditionals
+  score += (content.match(/if\s*\(/g) || []).length * 0.5
+  
+  if (score < 5) return 'low'
+  if (score < 15) return 'medium'
+  return 'high'
+}
+
+function extractDependencies(content) {
+  const imports = []
+  const importRegex = /^import\s+(?:.*\s+from\s+)?['"]([^'"]+)['"]/gm
+  let match
+  
+  while ((match = importRegex.exec(content)) !== null) {
+    imports.push(match[1])
+  }
+  
+  return imports
+}
+
+function generateMigrationPlan(files) {
+  const plan = {
+    low: [],
+    medium: [],
+    high: [],
+  }
+  
+  files.forEach(file => {
+    const analysis = analyzeFile(file)
+    plan[analysis.complexity].push(analysis)
+  })
+  
+  return plan
+}
+
+function generateReport(plan) {
+  let report = '# JavaScript to TypeScript Migration Plan\n\n'
+  
+  const total = plan.low.length + plan.medium.length + plan.high.length
+  report += `Total files to migrate: ${total}\n\n`
+  
+  report += `## Migration Priority\n\n`
+  report += `1. **Low Complexity** (${plan.low.length} files) - Start here\n`
+  report += `2. **Medium Complexity** (${plan.medium.length} files) - Migrate after low\n`
+  report += `3. **High Complexity** (${plan.high.length} files) - Migrate last\n\n`
+  
+  ;['low', 'medium', 'high'].forEach(complexity => {
+    if (plan[complexity].length === 0) return
+    
+    report += `## ${complexity.toUpperCase()} Complexity Files\n\n`
+    
+    plan[complexity].forEach(file => {
+      report += `### ${path.basename(file.file)}\n\n`
+      report += `- **Current:** \`${file.file}\`\n`
+      report += `- **Target:** \`${file.newFile}\`\n`
+      report += `- **Lines:** ${file.lines}\n`
+      report += `- **Has React:** ${file.hasReact ? 'Yes' : 'No'}\n`
+      report += `- **Dependencies:** ${file.dependencies.length}\n`
+      
+      if (file.dependencies.length > 0) {
+        report += `  - ${file.dependencies.slice(0, 5).join(', ')}\n`
+      }
+      
+      report += `\n**Migration Steps:**\n`
+      report += `1. Rename \`${file.file}\` to \`${file.newFile}\`\n`
+      report += `2. Add type annotations to function parameters\n`
+      report += `3. Add return types to functions\n`
+      report += `4. Add interface/type definitions for objects\n`
+      report += `5. Fix any type errors\n`
+      report += `6. Update imports if needed\n\n`
+    })
+  })
+  
+  return report
+}
+
+// Main execution
+const srcDir = path.join(process.cwd(), 'src')
+if (!fs.existsSync(srcDir)) {
+  console.error('❌ src/ directory not found')
+  process.exit(1)
+}
+
+console.log('🔍 Scanning for JavaScript files...')
+const jsFiles = findJSFiles(srcDir)
+
+if (jsFiles.length === 0) {
+  console.log('✅ No JavaScript files found to migrate!')
+  process.exit(0)
+}
+
+console.log(`📦 Found ${jsFiles.length} JavaScript file(s)`)
+
+const plan = generateMigrationPlan(jsFiles)
+const report = generateReport(plan)
+
+if (DRY_RUN) {
+  console.log('\n📝 Migration Plan (Dry Run):\n')
+  console.log(report)
+} else {
+  const reportPath = path.join(process.cwd(), 'migration-plan.md')
+  fs.writeFileSync(reportPath, report)
+  console.log(`\n📝 Migration plan written to ${reportPath}`)
+  console.log(`\nStart with low complexity files first!`)
+}
+
+process.exit(0)
+

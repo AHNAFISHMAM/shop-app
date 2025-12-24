@@ -1,0 +1,198 @@
+#!/usr/bin/env node
+
+/**
+ * TypeScript Error Fix Suggestions
+ * 
+ * Analyzes TypeScript errors and provides specific fix suggestions
+ * grouped by error type and priority.
+ * 
+ * Usage: node scripts/typecheck-fix-suggestions.js
+ */
+
+import { execSync } from 'child_process'
+import fs from 'fs'
+
+const ERROR_PATTERNS = {
+  'TS2322': {
+    name: 'Type Assignment Error',
+    priority: 1,
+    suggestions: [
+      'Add type assertion: `value as Type`',
+      'Add type guard: `if (isType(value)) { ... }`',
+      'Update type definition to match actual usage',
+      'Use `unknown` instead of `any` and add type guard',
+    ],
+  },
+  'TS2339': {
+    name: 'Property Does Not Exist',
+    priority: 1,
+    suggestions: [
+      'Add property to type definition',
+      'Use optional chaining: `obj?.property`',
+      'Add type assertion if property exists at runtime',
+      'Check if property exists: `if ("property" in obj) { ... }`',
+    ],
+  },
+  'TS2345': {
+    name: 'Argument Type Mismatch',
+    priority: 1,
+    suggestions: [
+      'Cast argument: `func(arg as ExpectedType)`',
+      'Update function signature to accept actual type',
+      'Transform argument before passing',
+      'Add type guard before function call',
+    ],
+  },
+  'TS18046': {
+    name: 'Unknown Type Error',
+    priority: 2,
+    suggestions: [
+      'Add type guard: `if (err instanceof Error) { ... }`',
+      'Use type assertion: `value as Type`',
+      'Add type narrowing with `typeof` or `instanceof`',
+      'Handle unknown type explicitly',
+    ],
+  },
+  'TS2532': {
+    name: 'Object Possibly Undefined',
+    priority: 2,
+    suggestions: [
+      'Add null check: `if (obj) { ... }`',
+      'Use optional chaining: `obj?.property`',
+      'Use nullish coalescing: `obj ?? defaultValue`',
+      'Add type guard before access',
+    ],
+  },
+  'TS6133': {
+    name: 'Unused Variable',
+    priority: 3,
+    suggestions: [
+      'Remove unused variable',
+      'Prefix with underscore: `_unusedVar`',
+      'Use variable or remove it',
+      'Add to ignore pattern in tsconfig',
+    ],
+  },
+  'TS2769': {
+    name: 'No Overload Matches',
+    priority: 1,
+    suggestions: [
+      'Check function signature matches call',
+      'Update function overloads',
+      'Cast arguments to expected types',
+      'Review function definition',
+    ],
+  },
+}
+
+function runTypeCheck() {
+  try {
+    const output = execSync('npx tsc --noEmit 2>&1', { 
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    })
+    return { errors: [], output }
+  } catch (error) {
+    const output = error.stdout?.toString() || error.stderr?.toString() || ''
+    return { errors: parseErrors(output), output }
+  }
+}
+
+function parseErrors(output) {
+  const errorRegex = /error TS(\d+): (.+)/g
+  const errors = []
+  let match
+
+  while ((match = errorRegex.exec(output)) !== null) {
+    const [, code, message] = match
+    const lineMatch = output.substring(0, match.index).match(/\((\d+),(\d+)\):/)
+    
+    errors.push({
+      code: `TS${code}`,
+      message: message.trim(),
+      line: lineMatch ? parseInt(lineMatch[1]) : null,
+      column: lineMatch ? parseInt(lineMatch[2]) : null,
+      file: extractFile(output, match.index),
+    })
+  }
+
+  return errors
+}
+
+function extractFile(output, errorIndex) {
+  const beforeError = output.substring(0, errorIndex)
+  const fileMatch = beforeError.match(/([^\s]+\.(ts|tsx)):(\d+):(\d+)/)
+  return fileMatch ? fileMatch[1] : 'unknown'
+}
+
+function groupErrorsByType(errors) {
+  const grouped = {}
+  
+  errors.forEach(error => {
+    if (!grouped[error.code]) {
+      grouped[error.code] = {
+        pattern: ERROR_PATTERNS[error.code] || {
+          name: `Error ${error.code}`,
+          priority: 99,
+          suggestions: ['Review error message and fix accordingly'],
+        },
+        errors: [],
+      }
+    }
+    grouped[error.code].errors.push(error)
+  })
+  
+  return grouped
+}
+
+function generateReport(groupedErrors) {
+  const sortedGroups = Object.entries(groupedErrors)
+    .sort(([, a], [, b]) => a.pattern.priority - b.pattern.priority)
+  
+  let report = '# TypeScript Error Fix Suggestions\n\n'
+  report += `Total Errors: ${Object.values(groupedErrors).reduce((sum, group) => sum + group.errors.length, 0)}\n\n`
+  
+  sortedGroups.forEach(([code, group]) => {
+    const { pattern, errors } = group
+    report += `## ${pattern.name} (${code}) - ${errors.length} occurrence(s)\n\n`
+    report += `**Priority:** ${pattern.priority === 1 ? 'High' : pattern.priority === 2 ? 'Medium' : 'Low'}\n\n`
+    report += `**Suggested Fixes:**\n`
+    pattern.suggestions.forEach((suggestion, i) => {
+      report += `${i + 1}. ${suggestion}\n`
+    })
+    report += `\n**Affected Files:**\n`
+    
+    const files = [...new Set(errors.map(e => e.file))]
+    files.forEach(file => {
+      const fileErrors = errors.filter(e => e.file === file)
+      report += `- \`${file}\` (${fileErrors.length} error(s))\n`
+      fileErrors.forEach(error => {
+        if (error.line) {
+          report += `  - Line ${error.line}: ${error.message}\n`
+        }
+      })
+    })
+    report += '\n'
+  })
+  
+  return report
+}
+
+// Main execution
+const { errors } = runTypeCheck()
+
+if (errors.length === 0) {
+  console.log('✅ No TypeScript errors found!')
+  process.exit(0)
+}
+
+const grouped = groupErrorsByType(errors)
+const report = generateReport(grouped)
+
+// Write report
+fs.writeFileSync('typecheck-fix-suggestions.md', report)
+console.log('📝 Fix suggestions written to typecheck-fix-suggestions.md')
+console.log(`\n${report}`)
+
+process.exit(1)
+

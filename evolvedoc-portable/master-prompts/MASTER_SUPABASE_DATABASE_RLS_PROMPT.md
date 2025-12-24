@@ -1924,6 +1924,111 @@ Always update `src/lib/database.types.ts` when schema changes:
 
 ---
 
+## 🔒 PHASE 10: TYPE-SAFE SUPABASE OPERATIONS
+
+### Step 10.1: Remove Unnecessary Type Casts
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Unnecessary as any cast
+const { error } = await (supabase.from('menu_items') as any).insert([...])
+
+// ✅ Good: Supabase is already typed, use proper type assertions
+const insertData = {
+  category_id: formData.category_id,
+  name: formData.name.trim(),
+  price: parseFloat(formData.price),
+  // ... other fields
+} as Record<string, unknown>
+
+const { error } = await supabase
+  .from('menu_items')
+  .insert([
+    insertData as unknown as Database['public']['Tables']['menu_items']['Insert']
+  ])
+```
+
+### Step 10.2: Type-Safe RPC Calls
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Using as any for RPC
+const { data } = await (supabase.rpc as any)('function_name', { arg: value })
+
+// ✅ Good: Proper typing - TypeScript will infer from database.types.ts
+const { data, error } = await supabase.rpc('function_name', { arg: value })
+
+// For complex RPC arguments:
+const { data } = await supabase.rpc('function_name', {
+  arg1: value1,
+  arg2: value2,
+} as never) // Use 'as never' for RPC arguments if types are complex
+```
+
+### Step 10.3: Type-Safe Update Operations
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Using as any
+const { error } = await supabase
+  .from('menu_items')
+  .update({ is_available: !item.is_available } as any)
+  .eq('id', item.id)
+
+// ✅ Good: Use proper type assertions
+const updateData = {
+  is_available: !item.is_available,
+  updated_at: new Date().toISOString(),
+} as Record<string, unknown>
+
+const { error } = await supabase
+  .from('menu_items')
+  .update(updateData as unknown as Database['public']['Tables']['menu_items']['Update'])
+  .eq('id', item.id)
+```
+
+### Step 10.4: Batch Operations
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ✅ Good: Type-safe batch updates
+const updates = []
+if (toMakeAvailable.length > 0) {
+  updates.push(
+    supabase
+      .from('menu_items')
+      .update({ is_available: true } as unknown as Database['public']['Tables']['menu_items']['Update'])
+      .in('id', toMakeAvailable)
+  )
+}
+if (toMakeUnavailable.length > 0) {
+  updates.push(
+    supabase
+      .from('menu_items')
+      .update({ is_available: false } as unknown as Database['public']['Tables']['menu_items']['Update'])
+      .in('id', toMakeUnavailable)
+  )
+}
+
+await Promise.all(updates)
+```
+
+### Step 10.5: Checklist for Type-Safe Operations
+
+- [ ] Remove all `as any` casts from Supabase operations
+- [ ] Use `Database['public']['Tables'][TableName]['Insert']` for inserts
+- [ ] Use `Database['public']['Tables'][TableName]['Update']` for updates
+- [ ] Use `Database['public']['Tables'][TableName]['Row']` for selects
+- [ ] Use `as unknown as` for complex type assertions
+- [ ] Use `as never` for RPC arguments when types are complex
+- [ ] Verify all operations are type-safe (no TypeScript errors)
+
+---
+
 ## 📅 Version History
 
 > **Note:** This section is automatically maintained by the Documentation Evolution System. Each entry documents when, why, and how the documentation was updated based on actual codebase changes.

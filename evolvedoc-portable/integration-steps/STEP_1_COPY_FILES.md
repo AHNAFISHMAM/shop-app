@@ -4,6 +4,8 @@
 
 Copies all EvolveDoc files from `evolvedoc-portable/` to your new project's `docs/` folder structure.
 
+**⭐ Before starting:** Review `NEW_PROJECT_SETUP_CHECKLIST.md` in the root of `evolvedoc-portable/` to understand what will be set up and prevent common issues.
+
 ---
 
 ## 🚀 Copy This Prompt to Cursor/AI:

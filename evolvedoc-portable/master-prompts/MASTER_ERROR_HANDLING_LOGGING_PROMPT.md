@@ -259,6 +259,44 @@ export function handleAsyncError(
 }
 
 /**
+ * Create a safe async wrapper that automatically handles errors
+ *
+ * @param asyncFn - Async function to wrap
+ * @param context - Context for error logging
+ * @returns Wrapped function that returns { success, data/error }
+ *
+ * @example
+ * ```typescript
+ * const safeFetchUser = createSafeAsync(fetchUser, 'UserService.fetchUser')
+ * const result = await safeFetchUser(userId)
+ *
+ * if (result.success) {
+ *   console.log(result.data) // TypeScript knows data exists
+ * } else {
+ *   console.error(result.error) // TypeScript knows error exists
+ * }
+ * ```
+ */
+export function createSafeAsync<T extends (...args: unknown[]) => Promise<unknown>>(
+  asyncFn: T,
+  context: string
+): (
+  ...args: Parameters<T>
+) => Promise<
+  | { success: true; data: Awaited<ReturnType<T>> }
+  | { success: false; error: string; code?: string | null; details?: unknown }
+> {
+  return async (...args: Parameters<T>) => {
+    try {
+      const data = (await asyncFn(...args)) as Awaited<ReturnType<T>>
+      return { success: true, data }
+    } catch (error) {
+      return handleAsyncError(error, context, 'Operation failed')
+    }
+  }
+}
+
+/**
  * Handle database errors with specific error code handling
  *
  * @param error - The error object
@@ -353,26 +391,39 @@ export async function handleApiError(
 /**
  * Create a safe async wrapper that automatically handles errors
  *
- * ⚠️ NOTE: Uses `any[]` and `Promise<any>` in generic constraint because:
- * 1. This utility must accept functions with any parameter signature
- * 2. TypeScript requires `any[]` for variadic function parameters in constraints
- * 3. The actual types are preserved via `Parameters<T>` and `ReturnType<T>`
- * 4. This is a valid use case for `any` in generic constraints
+ * Type-safe version using `unknown` instead of `any` for better type safety.
+ * The actual types are preserved via `Parameters<T>` and `ReturnType<T>`.
  *
  * @param asyncFn - Async function to wrap
  * @param context - Context for error logging
  * @returns Wrapped function that returns { success, data/error }
+ *
+ * @example
+ * ```typescript
+ * // Wrap any async function
+ * const safeFetchUser = createSafeAsync(fetchUser, 'UserService.fetchUser')
+ *
+ * // Use with discriminated union
+ * const result = await safeFetchUser(userId)
+ * if (result.success) {
+ *   console.log(result.data) // TypeScript knows this is User type
+ * } else {
+ *   console.error(result.error) // TypeScript knows this is error string
+ * }
+ * ```
  */
-export function createSafeAsync<T extends (...args: any[]) => Promise<any>>(
+export function createSafeAsync<T extends (...args: unknown[]) => Promise<unknown>>(
   asyncFn: T,
   context: string
-): (...args: Parameters<T>) => Promise<
+): (
+  ...args: Parameters<T>
+) => Promise<
   | { success: true; data: Awaited<ReturnType<T>> }
   | { success: false; error: string; code?: string | null; details?: unknown }
 > {
   return async (...args: Parameters<T>) => {
     try {
-      const data = await asyncFn(...args)
+      const data = (await asyncFn(...args)) as Awaited<ReturnType<T>>
       return { success: true, data }
     } catch (error) {
       return handleAsyncError(error, context, 'Operation failed')
@@ -380,6 +431,48 @@ export function createSafeAsync<T extends (...args: any[]) => Promise<any>>(
   }
 }
 ```
+
+**Usage in Services (Real Example from buildfast-shop):**
+
+```typescript
+// ✅ CORRECT - Wrapping service functions
+import { createSafeAsync } from '@/lib/error-handler'
+
+async function fetchMenuItem(id: string): Promise<MenuItem> {
+  const { data, error } = await supabase
+    .from('menu_items')
+    .select('*')
+    .eq('id', id)
+    .single()
+  
+  if (error) throw error
+  if (!data) throw new Error('Menu item not found')
+  
+  return data
+}
+
+// Create safe wrapper
+const safeFetchMenuItem = createSafeAsync(fetchMenuItem, 'MenuService.fetchMenuItem')
+
+// Usage in component
+const result = await safeFetchMenuItem(itemId)
+
+if (result.success) {
+  // TypeScript knows result.data is MenuItem
+  setMenuItem(result.data)
+} else {
+  // TypeScript knows result.error is string
+  showError(result.error)
+}
+```
+
+**Benefits:**
+- ✅ Consistent error handling across all async operations
+- ✅ Type-safe discriminated union return type
+- ✅ Automatic error logging with context
+- ✅ No need for try-catch in every function
+- ✅ User-friendly error messages automatically applied
+- ✅ Preserves original function types via generics
 
 ### Step 1.2: Logger Utility
 

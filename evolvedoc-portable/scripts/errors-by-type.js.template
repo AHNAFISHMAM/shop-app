@@ -1,0 +1,74 @@
+/**
+ * Group TypeScript Errors by Error Type
+ * 
+ * Analyzes TypeScript error output and groups errors by error code.
+ * Provides fix suggestions for common error types.
+ * 
+ * Usage: npm run typecheck:by-type
+ */
+
+import { execSync } from 'child_process'
+
+// Common error types and their fix suggestions
+const errorFixes = {
+  'TS6133': 'Unused variable - Remove or prefix with underscore',
+  'TS2322': 'Type mismatch - Check types and add type assertions if needed',
+  'TS2345': 'Argument type mismatch - Verify function signatures',
+  'TS7006': 'Implicit any - Add explicit type annotations',
+  'TS18046': 'Null/undefined check - Add type guards or optional chaining',
+  'TS2339': 'Property missing - Add to type definition or use type assertion',
+  'TS7053': 'Index signature - Add index signature to type',
+  'TS2769': 'No overload matches - Check function overloads or types',
+  'TS1005': 'Syntax error - Check for typos or missing tokens',
+  'TS1381': 'JSX syntax error - Check JSX structure and closing tags',
+}
+
+try {
+  // Run TypeScript compiler and capture output
+  const output = execSync('tsc --noEmit 2>&1', { encoding: 'utf-8' })
+  
+  // Parse errors
+  const errorRegex = /error TS(\d+):/g
+  const errors = []
+  let match
+  
+  while ((match = errorRegex.exec(output)) !== null) {
+    const errorCode = `TS${match[1]}`
+    errors.push(errorCode)
+  }
+  
+  // Count errors by type
+  const errorCounts = errors.reduce((acc, code) => {
+    acc[code] = (acc[code] || 0) + 1
+    return acc
+  }, {})
+  
+  // Display grouped errors with fix suggestions
+  console.log('\n🔍 TypeScript Errors by Type:\n')
+  
+  const sortedErrors = Object.entries(errorCounts)
+    .sort((a, b) => b[1] - a[1])
+  
+  sortedErrors.forEach(([code, count]) => {
+    const fix = errorFixes[code] || 'Check TypeScript documentation'
+    console.log(`\n${code}: ${count} error(s)`)
+    console.log(`  💡 Fix: ${fix}`)
+  })
+  
+  console.log(`\n\nTotal: ${errors.length} errors across ${sortedErrors.length} error types\n`)
+  
+  // Priority order suggestion
+  console.log('📋 Suggested Fix Order:')
+  console.log('  1. TS6133 (Unused vars) - Quick wins')
+  console.log('  2. TS2322 (Type mismatch) - Most common')
+  console.log('  3. TS2345 (Argument type) - Pattern-based')
+  console.log('  4. TS7006 (Implicit any) - Add types')
+  console.log('  5. TS18046 (Null checks) - Add guards')
+  console.log('  6. TS2339 (Property missing) - Add to types')
+  console.log('  7. Others - Case by case\n')
+  
+} catch (error) {
+  console.error('Error running typecheck:', error.message)
+  process.exit(1)
+}
+

@@ -1421,6 +1421,86 @@ A custom hook is complete when:
 
 ## 🚨 COMMON PITFALLS
 
+### Pitfall 1: Conditional Hook Calls
+
+**Problem:** Hooks called conditionally violate Rules of Hooks
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Conditional hook call
+function CartItemCard({ item }: Props) {
+  if (!item) return null
+  const memoizedValue = useMemo(() => compute(item), [item]) // ERROR!
+}
+
+// ✅ Good: Always call hooks unconditionally
+function CartItemCard({ item }: Props) {
+  // Call ALL hooks at the top, before any early returns
+  const memoizedValue = useMemo(() => {
+    if (!item) return null
+    return compute(item)
+  }, [item])
+  
+  if (!item) return null
+  // ... rest of component
+}
+```
+
+**Solution Pattern:**
+- Always call hooks at the top level of the component
+- Move conditional logic inside the hook (useMemo, useCallback)
+- Use early returns only after all hooks are called
+
+### Pitfall 2: Missing Dependencies in useEffect/useCallback
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Missing dependencies
+const handleAddToCart = useCallback(() => {
+  // Uses: currentStock, hasVariants
+}, []) // Missing dependencies!
+
+// ✅ Good: Include all dependencies
+const handleAddToCart = useCallback(() => {
+  // Uses: currentStock, hasVariants
+}, [currentStock, hasVariants]) // Include all used values
+
+// ✅ Good: Use refs for stable values that shouldn't trigger re-renders
+const queryClientRef = useRef(queryClient)
+useEffect(() => {
+  queryClientRef.current = queryClient
+}, [queryClient])
+
+// Then use queryClientRef.current in callbacks
+const debouncedInvalidate = useCallback(() => {
+  queryClientRef.current.invalidateQueries({ queryKey })
+}, [queryKey]) // queryClient not needed - using ref
+```
+
+### Pitfall 3: Unused Variables
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Unused variable warning
+const categories = useState([]) // Warning: unused
+
+// ✅ Good: Prefix with _ to explicitly mark as intentionally unused
+const [_categories, setCategories] = useState([])
+const _unusedFunction = () => {} // Will be used later
+
+// ESLint config should allow this:
+'@typescript-eslint/no-unused-vars': [
+  'warn',
+  { 
+    argsIgnorePattern: '^_',
+    varsIgnorePattern: '^_',
+  },
+]
+```
+
 ### ❌ Don't:
 
 - Forget cleanup in effects (memory leaks)
@@ -1431,6 +1511,8 @@ A custom hook is complete when:
 - Skip TypeScript types (type safety)
 - Return inconsistent structures (confusing API)
 - Mix concerns in one hook (hard to maintain)
+- **Call hooks conditionally (Rules of Hooks violation)**
+- **Omit dependencies from dependency arrays**
 
 ### ✅ Do:
 
@@ -1442,6 +1524,9 @@ A custom hook is complete when:
 - Type everything
 - Return consistent structures
 - Keep hooks focused and single-purpose
+- **Always call hooks unconditionally at the top level**
+- **Include all dependencies in dependency arrays**
+- **Use refs for values that shouldn't trigger re-renders**
 
 ---
 

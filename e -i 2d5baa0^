@@ -1,0 +1,30 @@
+[33m66361d2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m chore: remove vercel.json for manual deployment
+[33m791ce0a[m fix: resolve TypeScript errors and React Hooks violations in Checkout and OrderHistory
+[33m4e58dd2[m fix: resolve TypeScript type inference errors in Checkout and OrderHistory
+[33m77745bb[m fix: resolve all ESLint errors and warnings
+[33m3d14ab0[m fix: resolve TypeScript errors and build issues
+[33mc6ec0a3[m fix: resolve build errors
+[33m6ad9eb6[m fix: resolve all linting errors and warnings
+[33m98758e5[m chore: update components, pages, and documentation
+[33m4ffdbe3[m chore: update components, services, and documentation - fix linting issues, improve type safety, and add status documentation
+[33m1093fd1[m fix: resolve remaining React import and formatting issues
+[33me6f5aac[m fix: resolve all Prettier formatting and React import issues
+[33m06d3ecd[m fix: resolve ESLint and Prettier errors in test files and type declarations
+[33mf845c5e[m fix: resolve ESLint CI errors - fix prettier formatting in .d.ts files - replace process.env with import.meta.env in performance.ts - fix unused variables with _ prefix - exclude supabase functions from ESLint parser
+[33m6f20507[m fix: resolve all TypeScript code errors - fix implicit any types, unused variables, type mismatches - add type annotations across codebase - fix variable declaration order in Checkout.tsx - fix nested error handling in AdminMenuItems.tsx - use supabase-helpers for type-safe updates/inserts - all TS7006 and TS6133 errors resolved - only config errors (TS6305/TS6310) remain
+[33m52866f3[m[33m ([m[1;32magent-8-worktree[m[33m, [m[1;32magent-7-worktree[m[33m, [m[1;32magent-6-worktree[m[33m, [m[1;32magent-5-worktree[m[33m, [m[1;32magent-4-worktree[m[33m, [m[1;32magent-3-worktree[m[33m, [m[1;32magent-2-worktree[m[33m, [m[1;32magent-1-worktree[m[33m)[m Fix: Consolidate duplicates and resolve GitHub blocking issues
+[33m6f917db[m fix: remove duplicate declarations causing build failures
+[33m9225989[m fix(types): fix all remaining TypeScript errors in admin pages
+[33m8a60f9f[m fix(types): fix all TypeScript errors in AdminReservations and AdminSettings
+[33me9b4af1[m fix(types): final fixes for import.meta.env type safety
+[33md98953f[m fix(types): fix all TypeScript errors in admin pages, error boundaries, and utilities
+[33meeb4ef2[m fix(types): fix App.tsx, AboutGalleryUploader, and BackgroundManager type errors
+[33mf9ca4e1[m fix(types): add missing exports to type declarations
+[33mde3cc16[m Chore: Remove temporary commit message fix documentation files
+[33mb3e9d28[m update
+[33m2d5baa0[m fix(types): add missing type declarations and fix critical type errors
+[33md3cac16[m feat(types): add TypeScript declarations for .js modules and fix type errors
+[33mc472853[m fix(test): remove invalid false value from validateRequired test
+[33m7d7a55b[m fix(test): correct validatePostalCode test - '123' is valid (3 chars)
+[33m1d40a7e[m fix(ci): fix ESLint config for ES modules and update tests to match implementations
+[33m852b3f7[m fix(lint): configure ESLint for Node.js scripts and fix unused variables

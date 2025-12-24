@@ -8,6 +8,8 @@
 
 This guide provides a quick summary of all integration steps. Each step has a detailed file with copy-paste prompts.
 
+**⭐ IMPORTANT:** Before starting, check `NEW_PROJECT_SETUP_CHECKLIST.md` in the root of `evolvedoc-portable/` to ensure you don't run into common issues!
+
 ---
 
 ## Integration Steps Summary
@@ -84,7 +86,58 @@ Verify EvolveDoc setup:
 
 ---
 
-### Step 6: Set Up Quality Gates
+### Step 6: Set Up Pre-Commit Hooks
+**File:** `STEP_6_PRE_COMMIT_HOOKS.md`
+
+Set up Husky and lint-staged to automatically run quality checks before commits.
+
+**Quick Prompt:**
+```
+Set up pre-commit hooks:
+1. Install Husky and lint-staged
+2. Initialize Husky
+3. Configure lint-staged in package.json
+4. Update .husky/pre-commit hook
+5. Test the setup
+```
+
+---
+
+### Step 7: Supabase Setup (Optional)
+**File:** `STEP_7_SUPABASE_SETUP.md`
+
+Set up Supabase backend integration if your project uses Supabase.
+
+**Quick Prompt:**
+```
+Set up Supabase integration:
+1. Create environment variables (.env.example)
+2. Create Supabase client configuration
+3. Generate TypeScript types
+4. Set up authentication utilities
+5. Configure real-time subscriptions
+```
+
+---
+
+### Step 8: Payment Integration (Optional)
+**File:** `STEP_8_PAYMENT_INTEGRATION.md`
+
+Set up payment processing (Stripe, PayPal, etc.) if your project needs payments.
+
+**Quick Prompt:**
+```
+Set up payment integration:
+1. Install payment provider SDK
+2. Create payment configuration
+3. Set up payment components/hooks
+4. Configure server-side payment intent creation
+5. Add security best practices
+```
+
+---
+
+### Step 9: Verify Quality Gates
 **File:** `QUALITY_GATES_CHECKLIST.md` (reference)
 
 Ensure quality gates are properly configured to prevent commit failures.
@@ -122,7 +175,13 @@ STEP 4: Run sync script to initialize docs/all-docs/
 
 STEP 5: Verify setup and test Cursor @Folders access
 
-STEP 6: Verify quality gates are configured (see QUALITY_GATES_CHECKLIST.md)
+STEP 6: Set up pre-commit hooks (Husky + lint-staged)
+
+STEP 7: Set up Supabase (if using Supabase)
+
+STEP 8: Set up payment integration (if needed)
+
+STEP 9: Verify quality gates are configured (see QUALITY_GATES_CHECKLIST.md)
 
 My project details:
 - App Name: [YOUR_APP_NAME]
@@ -166,6 +225,6 @@ your-project/
 
 ---
 
-**Version:** 1.2.0  
+**Version:** 1.4.0  
 **Last Updated:** 2025-01-27
 

@@ -1046,6 +1046,170 @@ import { formatPrice, getCurrencySymbol } from '../../lib/priceUtils';
 
 ---
 
+## 🔒 PHASE 6.5: ELIMINATING `any` TYPES - PRODUCTION PATTERNS
+
+### Step 6.5.1: Replace `any` with `unknown` for Truly Unknown Types
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Using any
+function extractErrorInfo(error: any): ErrorInfo {
+  const code = error.code || error.statusCode
+}
+
+// ✅ Good: Using unknown with type guards
+export function extractErrorInfo(error: unknown): ErrorInfo {
+  if (error instanceof Error) {
+    const code =
+      ('code' in error ? (error as { code?: string }).code : undefined) ||
+      ('statusCode' in error ? (error as { statusCode?: string }).statusCode : undefined)
+    const status =
+      ('status' in error ? (error as { status?: number }).status : undefined) ||
+      ('statusCode' in error ? (error as { statusCode?: number }).statusCode : undefined)
+    // ... rest of logic
+  }
+  return { /* default error */ }
+}
+```
+
+### Step 6.5.2: Replace Empty Object Types `{}` with Specific Types
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Empty object type
+function handleDatabaseError(
+  error: unknown,
+  context: string,
+  options: {} = {}
+)
+
+// ✅ Good: Use Record types or explicit interfaces
+function handleDatabaseError(
+  error: unknown,
+  context: string,
+  options: {
+    onTableNotFound?: (error: unknown) => { success: false; error: string; code?: string }
+    onPermissionDenied?: (error: unknown) => { success: false; error: string; code?: string }
+  } = {} as {
+    onTableNotFound?: (error: unknown) => { success: false; error: string; code?: string }
+    onPermissionDenied?: (error: unknown) => { success: false; error: string; code?: string }
+  }
+)
+
+// For truly empty types in Supabase function definitions:
+// ❌ Bad: {}
+// ✅ Good: Record<PropertyKey, never>
+```
+
+### Step 6.5.3: Type Guards for Safe Type Narrowing
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// Type guard pattern for error handling
+if (
+  ('code' in err && (err as { code?: string }).code === '42P01') ||
+  (err instanceof Error && err.message?.includes('does not exist'))
+) {
+  // Safe to access err.code or err.message
+}
+
+// For unknown objects with optional properties:
+if (hookGuestCheckoutData && typeof hookGuestCheckoutData === 'object' && 'email' in hookGuestCheckoutData) {
+  const email = String((hookGuestCheckoutData as { email?: unknown }).email || '')
+}
+```
+
+### Step 6.5.4: Remove Unnecessary Supabase Type Casts
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: Unnecessary as any cast
+const { error } = await (supabase.from('menu_items') as any).insert([...])
+
+// ✅ Good: Supabase is already typed, use proper type assertions
+const insertData = {
+  category_id: formData.category_id,
+  name: formData.name.trim(),
+  // ... other fields
+} as Record<string, unknown>
+
+const { error } = await supabase
+  .from('menu_items')
+  .insert([
+    insertData as unknown as Database['public']['Tables']['menu_items']['Insert']
+  ])
+```
+
+### Step 6.5.5: Type-Safe Index Signatures
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: any in index signature
+interface Product {
+  [key: string]: any
+}
+
+// ✅ Good: Use unknown
+interface Product {
+  [key: string]: unknown
+}
+
+// Or be more specific with extensibility:
+interface SavedAddress {
+  id?: string
+  fullName?: string
+  addressLine1?: string
+  [key: string]: unknown  // For extensibility while maintaining type safety
+}
+```
+
+### Step 6.5.6: Type-Safe Function Parameters
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// ❌ Bad: any in function parameters
+function createSafeAsync(asyncFn: (...args: any[]) => Promise<any>, context: string)
+
+// ✅ Good: Use generics and unknown
+export function createSafeAsync<T extends (...args: unknown[]) => Promise<unknown>>(
+  asyncFn: T,
+  context: string
+): (
+  ...args: Parameters<T>
+) => Promise<
+  | { success: true; data: Awaited<ReturnType<T>> }
+  | { success: false; error: string; code?: string | null; details?: unknown }
+> {
+  return async (...args: Parameters<T>) => {
+    try {
+      const data = (await asyncFn(...args)) as Awaited<ReturnType<T>>
+      return { success: true, data }
+    } catch (error) {
+      return handleAsyncError(error, context, 'Operation failed')
+    }
+  }
+}
+```
+
+### Step 6.5.7: Checklist for Eliminating `any` Types
+
+- [ ] Replace all `any` with `unknown` for truly unknown types
+- [ ] Add type guards for `unknown` types before accessing properties
+- [ ] Replace `{}` with `Record<string, unknown>` or explicit interfaces
+- [ ] Remove unnecessary `as any` casts from Supabase operations
+- [ ] Use proper type assertions with type guards
+- [ ] Replace `any[]` with `unknown[]` and add type guards
+- [ ] Use generics for reusable type-safe functions
+- [ ] Verify no `any` types remain (use ESLint rule: `@typescript-eslint/no-explicit-any`)
+
+---
+
 ## ⚛️ PHASE 7: REACT COMPONENT TYPES
 
 ### Step 6.1: Component Prop Types
@@ -1420,6 +1584,124 @@ type ApiEndpoint =
 - [ ] Template literal types for strings
 - [ ] Branded types for type safety
 - [ ] Nominal typing patterns
+
+---
+
+## 🔧 PHASE 10: SUPABASE TYPE HELPERS
+
+### Step 10.1: Type-Safe Supabase Helper Functions
+
+**Real Example from buildfast-shop:**
+
+```typescript
+// src/lib/supabase-helpers.ts
+
+import type { Database, Updates } from './database.types'
+
+/**
+ * Type-safe helper for Supabase update operations
+ * 
+ * @example
+ * ```typescript
+ * await supabase
+ *   .from('menu_items')
+ *   .update(asUpdate('menu_items', { is_available: true }))
+ *   .eq('id', itemId)
+ * ```
+ */
+export function asUpdate<T extends keyof Database['public']['Tables']>(
+  _table: T,
+  data: Partial<Database['public']['Tables'][T]['Row']>
+): Updates<T> {
+  return data as Updates<T>
+}
+
+/**
+ * Type-safe helper for Supabase insert operations
+ * 
+ * @example
+ * ```typescript
+ * await supabase
+ *   .from('menu_items')
+ *   .insert(asInsert('menu_items', { name: 'Pizza', price: 10 }))
+ * ```
+ */
+export function asInsert<T extends keyof Database['public']['Tables']>(
+  _table: T,
+  data: Database['public']['Tables'][T]['Insert']
+): Database['public']['Tables'][T]['Insert'] {
+  return data
+}
+```
+
+**Usage in Components:**
+
+```typescript
+// ✅ CORRECT - Using asUpdate helper
+import { asUpdate } from '@/lib/supabase-helpers'
+
+const handleUpdate = async (itemId: string, updates: Partial<MenuItem>) => {
+  const { error } = await supabase
+    .from('menu_items')
+    .update(asUpdate('menu_items', updates))
+    .eq('id', itemId)
+  
+  if (error) {
+    console.error('Update failed:', error)
+  }
+}
+
+// ✅ CORRECT - Using asInsert helper
+import { asInsert } from '@/lib/supabase-helpers'
+
+const handleCreate = async (newItem: MenuItemInsert) => {
+  const { data, error } = await supabase
+    .from('menu_items')
+    .insert(asInsert('menu_items', newItem))
+  
+  if (error) {
+    console.error('Insert failed:', error)
+    return null
+  }
+  
+  return data
+}
+```
+
+**Before vs After:**
+
+```typescript
+// ❌ BEFORE - Complex type assertions
+const { error } = await supabase
+  .from('menu_items')
+  .update({
+    is_available: true
+  } as unknown as Database['public']['Tables']['menu_items']['Update'])
+  .eq('id', itemId)
+
+// ✅ AFTER - Clean helper function
+const { error } = await supabase
+  .from('menu_items')
+  .update(asUpdate('menu_items', { is_available: true }))
+  .eq('id', itemId)
+```
+
+**Benefits:**
+- ✅ Eliminates need for `as any` or complex type assertions
+- ✅ Type-safe table name checking (autocomplete works)
+- ✅ Autocomplete for table and column names
+- ✅ Reduces boilerplate code significantly
+- ✅ Consistent error handling pattern
+- ✅ Self-documenting code (table name is explicit)
+
+### Step 10.2: Supabase Helpers Checklist
+
+- [ ] Created `supabase-helpers.ts` with `asUpdate` and `asInsert`
+- [ ] All update operations use `asUpdate` helper
+- [ ] All insert operations use `asInsert` helper
+- [ ] Removed all `as any` casts from Supabase operations
+- [ ] Type safety verified with `tsc --noEmit`
+- [ ] Helper functions exported from `@/lib/supabase-helpers`
 
 ---
 
