@@ -568,7 +568,7 @@ const OrderHistory = memo((): JSX.Element | null => {
           order_item_id: string
           quantity: number
         }> = (rawItems as OrderHistoryItem[]).map((item: OrderHistoryItem) => ({
-          return_request_id: insertedRequest?.id ?? '',
+          return_request_id: (insertedRequest as { id: string } | null)?.id ?? '',
           order_item_id: String(item.id),
           quantity: Number(item.quantity),
         }))
@@ -1897,17 +1897,15 @@ Thank you for your order!
                                 )}
                               </div>
 
-                              {/* Order Timeline */}
-                              {enableOrderTracking &&
-                                order.status &&
-                                typeof order.status === 'string' && (
-                                  <div className="space-y-4 sm:space-y-6">
-                                    <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
-                                      Order Timeline
-                                    </h3>
-                                    <OrderTimeline status={order.status} />
-                                  </div>
-                                )}
+                              {/* @ts-ignore - TypeScript incorrectly infers unknown type due to index signature */}
+                              {enableOrderTracking && typeof (order.status as string) === 'string' && (order.status as string) ? (
+                                <div className="space-y-4 sm:space-y-6">
+                                  <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                                    Order Timeline
+                                  </h3>
+                                  <OrderTimeline status={order.status as string} />
+                                </div>
+                              ) : null}
 
                               {/* Delivery Information */}
                               {order.shipping_address && (

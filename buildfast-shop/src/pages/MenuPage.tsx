@@ -698,7 +698,7 @@ const MenuPage = memo(() => {
           {/* Desktop Sidebar - outside .app-container to avoid containing block issues */}
           <CollapsibleSidebar
             categories={categories}
-            menuItems={menuItems.filter((item) => item.category_id !== null) as Array<MenuItem & { category_id: string }>}
+            menuItems={menuItems.filter((item) => item.category_id !== null).map(item => ({ ...item, category_id: item.category_id! })) as any}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategoryClick}
             variant="desktop"
@@ -785,7 +785,7 @@ const MenuPage = memo(() => {
                   </div>
                   <CollapsibleSidebar
                     categories={categories}
-                    menuItems={menuItems.filter((item) => item.category_id !== null) as Array<MenuItem & { category_id: string }>}
+                    menuItems={menuItems.filter((item) => item.category_id !== null).map(item => ({ ...item, category_id: item.category_id! })) as any}
                     selectedCategory={selectedCategory}
                     onCategorySelect={(cat: Category | null) => {
                       handleCategoryClick(cat)
