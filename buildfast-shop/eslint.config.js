@@ -61,10 +61,61 @@ export default [
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
+  // Test files configuration
+  {
+    files: ['**/*.test.{ts,tsx}', '**/test/**/*.{ts,tsx}', '**/setup.ts'],
+    languageOptions: {
+      parser: tsparser,
+      ecmaVersion: 2022,
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
+    },
+    settings: { react: { version: '18.3' } },
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+      '@typescript-eslint': tseslint,
+      prettier: prettierPlugin,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...react.configs.recommended.rules,
+      ...react.configs['jsx-runtime'].rules,
+      ...reactHooks.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      ...prettierConfig.rules,
+      'no-undef': 'off', // Test files can use globals
+      'react/jsx-no-target-blank': 'off',
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      'prettier/prettier': 'warn',
+    },
+  },
   // TypeScript/TSX configuration for source files
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['scripts/**', '*.config.ts', '*.config.js', 'tailwind.config.js', 'eslint.config.js', 'supabase/**'],
+    ignores: ['scripts/**', '*.config.ts', '*.config.js', 'tailwind.config.js', 'eslint.config.js', 'supabase/**', '**/*.test.{ts,tsx}', '**/test/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsparser,
       ecmaVersion: 2022,

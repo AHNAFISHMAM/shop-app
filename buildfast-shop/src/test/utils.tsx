@@ -4,10 +4,10 @@
  * Custom render function and test helpers with all providers.
  */
 
+import React, { type ReactElement } from 'react'
 import { render, type RenderOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
-import { type ReactElement } from 'react'
 import { AuthProvider } from '../contexts/AuthContext'
 import { ThemeProvider } from '../contexts/ThemeContext'
 
@@ -49,7 +49,7 @@ export function renderWithProviders(
   ui: ReactElement,
   {
     queryClient = createTestQueryClient(),
-    initialEntries = ['/'],
+    initialEntries: _initialEntries = ['/'],
     ...renderOptions
   }: CustomRenderOptions = {}
 ) {

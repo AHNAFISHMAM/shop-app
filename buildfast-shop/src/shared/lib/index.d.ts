@@ -1,8 +1,8 @@
-export { BaseService, createSuccessResponse, createErrorResponse } from './base-service';
-export { ApiClient, apiClient, createApiClient } from './api-client';
-export { edgeFunctionClient } from './api-client-edge';
-export * from './service-types';
-export { queryKeys } from './query-keys';
+export { BaseService, createSuccessResponse, createErrorResponse } from './base-service'
+export { ApiClient, apiClient, createApiClient } from './api-client'
+export { edgeFunctionClient } from './api-client-edge'
+export * from './service-types'
+export { queryKeys } from './query-keys'
 export {
   defaultQueryConfig,
   defaultMutationConfig,
@@ -10,5 +10,4 @@ export {
   shortLivedQueryConfig,
   realTimeQueryConfig,
   createOptimisticMutationConfig,
-} from './query-config';
-
+} from './query-config'

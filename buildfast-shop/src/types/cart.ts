@@ -1,6 +1,6 @@
 /**
  * Shared Cart Types
- * 
+ *
  * Centralized type definitions for cart-related components
  */
 
@@ -39,7 +39,4 @@ export interface CartItem {
 /**
  * Function to get image URL for a cart item or product
  */
-export type GetImageUrlFunction = (
-  item: CartItem | Product | { [key: string]: unknown }
-) => string
-
+export type GetImageUrlFunction = (item: CartItem | Product | { [key: string]: unknown }) => string

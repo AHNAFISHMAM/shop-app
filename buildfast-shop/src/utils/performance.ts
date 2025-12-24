@@ -94,7 +94,7 @@ export function measure(markName: string, measureName: string): void {
       if (measure && (import.meta.env.DEV ?? false)) {
         logger.log(`📊 ${measureName}: ${measure.duration.toFixed(2)}ms`)
       }
-    } catch (_error) {
+    } catch {
       // Mark might not exist yet
       if (import.meta.env.DEV ?? false) {
         logger.warn(`Performance mark "${markName}" not found`)
@@ -131,7 +131,7 @@ export async function getCoreWebVitals(): Promise<{
         vitals.lcp = lastEntry.renderTime || lastEntry.loadTime || 0
       })
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
-    } catch (_e) {
+    } catch {
       // LCP not supported
     }
 
@@ -147,7 +147,7 @@ export async function getCoreWebVitals(): Promise<{
         })
       })
       fidObserver.observe({ entryTypes: ['first-input'] })
-    } catch (_e) {
+    } catch {
       // FID not supported
     }
 
@@ -165,7 +165,7 @@ export async function getCoreWebVitals(): Promise<{
         vitals.cls = clsValue
       })
       clsObserver.observe({ entryTypes: ['layout-shift'] })
-    } catch (_e) {
+    } catch {
       // CLS not supported
     }
   }
