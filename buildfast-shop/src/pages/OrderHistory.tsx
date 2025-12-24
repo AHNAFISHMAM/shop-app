@@ -551,6 +551,7 @@ const OrderHistory = memo((): JSX.Element | null => {
           customer_email: user?.email ?? selectedOrderForReturn.customer_email,
           reason: returnReason,
           reason_details: returnDetails || null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any)
         .select()
         .single()
@@ -1897,8 +1898,10 @@ Thank you for your order!
                                 )}
                               </div>
 
-                              {/* @ts-ignore - TypeScript incorrectly infers unknown type due to index signature */}
-                              {enableOrderTracking && typeof (order.status as string) === 'string' && (order.status as string) ? (
+                              {/* @ts-expect-error - TypeScript incorrectly infers unknown type due to index signature */}
+                              {enableOrderTracking &&
+                              typeof (order.status as string) === 'string' &&
+                              (order.status as string) ? (
                                 <div className="space-y-4 sm:space-y-6">
                                   <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
                                     Order Timeline

@@ -5,14 +5,7 @@
  * Handles user sessions, admin status, and auth operations.
  */
 
-import {
-  createContext,
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-  type ReactNode,
-} from 'react'
+import { createContext, useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { clearInvalidAuthTokens } from '../lib/authUtils'

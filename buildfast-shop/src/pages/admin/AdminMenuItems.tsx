@@ -412,6 +412,7 @@ export default function AdminMenuItems() {
         is_discount_combo: formData.is_discount_combo,
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('menu_items') as any).insert([insertData])
 
       if (error) throw error
@@ -478,6 +479,7 @@ export default function AdminMenuItems() {
         is_discount_combo: formData.is_discount_combo,
         updated_at: new Date().toISOString(),
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('menu_items') as any)
         .update(updateData)
         .eq('id', editingItem.id)
@@ -531,6 +533,7 @@ export default function AdminMenuItems() {
   // Toggle availability
   async function toggleAvailability(item: MenuItem) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('menu_items') as any)
         .update({
           is_available: !item.is_available,
@@ -569,6 +572,7 @@ export default function AdminMenuItems() {
       const updates = []
       if (toMakeAvailable.length > 0) {
         updates.push(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (supabase.from('menu_items') as any)
             .update({
               is_available: true,
@@ -578,6 +582,7 @@ export default function AdminMenuItems() {
       }
       if (toMakeUnavailable.length > 0) {
         updates.push(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (supabase.from('menu_items') as any)
             .update({
               is_available: false,
@@ -1045,6 +1050,7 @@ export default function AdminMenuItems() {
     if (!currentItemForImage) return
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('menu_items') as any)
         .update({
           image_url: url || null,

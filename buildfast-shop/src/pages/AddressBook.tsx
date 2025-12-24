@@ -150,7 +150,9 @@ const AddressBook = memo((): JSX.Element | null => {
         let result
         if (editingAddress) {
           // Update existing - exclude id from formData and convert to addressesApi.Address format
-          const { id: _id, ...updateData } = formData as AddressFormAddress & { id?: string | number }
+          const { id: _id, ...updateData } = formData as AddressFormAddress & {
+            id?: string | number
+          }
           result = await updateAddress(
             String(editingAddress.id),
             updateData as Partial<import('../lib/addressesApi').Address>

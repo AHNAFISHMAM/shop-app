@@ -570,19 +570,20 @@ export function useCheckoutOrder({
     }
   }, [user, guestEmail, createdOrderId, grandTotal])
 
-  const handlePaymentError = useCallback((error: Error) => {
-    logger.error('Payment error:', error)
-    if (errorClearRef.current) errorClearRef.current()
-    errorClearRef.current = setMessageWithAutoClear(
-      setOrderError,
-      null,
-      error.message || 'Payment failed. Please try again.',
-      'error',
-      8000
-    )
-  },
-  [setOrderError]
-)
+  const handlePaymentError = useCallback(
+    (error: Error) => {
+      logger.error('Payment error:', error)
+      if (errorClearRef.current) errorClearRef.current()
+      errorClearRef.current = setMessageWithAutoClear(
+        setOrderError,
+        null,
+        error.message || 'Payment failed. Please try again.',
+        'error',
+        8000
+      )
+    },
+    [setOrderError]
+  )
 
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false)

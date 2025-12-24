@@ -199,6 +199,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
       .channel(finalChannelName)
       .on(
         'postgres_changes' as const,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         postgresConfig as any,
         (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
           if (!isMountedRef.current) return

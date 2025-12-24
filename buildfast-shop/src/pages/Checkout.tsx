@@ -1918,7 +1918,7 @@ const Checkout = memo(function Checkout() {
                     </div>
                   </div>
 
-                  {/* @ts-ignore - TypeScript incorrectly infers unknown type */}
+                  {/* @ts-expect-error - TypeScript incorrectly infers unknown type due to index signature */}
                   <div className="mb-4 pb-4 border-b border-theme">
                     {/* Discount Code Section */}
                     {appliedDiscountCode === null ? (

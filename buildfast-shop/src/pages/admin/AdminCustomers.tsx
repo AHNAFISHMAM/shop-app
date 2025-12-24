@@ -565,6 +565,7 @@ const AdminCustomers = (): JSX.Element => {
         is_blacklisted: makeBlacklisted,
         blacklist_reason: makeBlacklisted ? 'Admin action' : null,
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('customers') as any)
         .update(updateData)
         .eq('id', customer.id)
