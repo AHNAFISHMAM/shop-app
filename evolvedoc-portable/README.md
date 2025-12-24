@@ -6,9 +6,18 @@
 
 ## 📦 Version
 
-**Current Version:** 1.1.0  
+**Current Version:** 1.2.0  
 **System Name:** EvolveDoc  
 **Last Updated:** 2025-01-27
+
+**What's New in 1.2.0:**
+- Added mandatory development quality gates to prevent commit failures
+- Added `.cursorrules.template` with quality gates built-in
+- Added `QUALITY_GATES_CHECKLIST.md` for verification
+- Added `package.json.scripts.template` for required scripts
+- Updated AI agent rules to enforce quality checks during development
+- Enhanced integration steps to include quality gate setup
+- Updated verification steps to check quality gates configuration
 
 ---
 
@@ -17,6 +26,9 @@
 ```
 evolvedoc-portable/
 ├── README.md                    ← You are here
+├── .cursorrules.template        ← Template .cursorrules with quality gates
+├── QUALITY_GATES_CHECKLIST.md   ← Quality gates setup checklist
+├── package.json.scripts.template ← Required npm scripts template
 ├── core-system/                 ← Core EvolveDoc system files
 ├── master-prompts/              ← All MASTER_* prompt files
 ├── integration-steps/           ← Step-by-step integration prompts (copy-paste ready)
@@ -93,6 +105,30 @@ Additional guides:
 - `MASTER_PROMPTS_USAGE_GUIDE.md` - How to use master prompts
 - `MIGRATION_GUIDE_OTHER_PROJECTS.md` - Migration details
 
+### `.cursorrules.template`
+Template `.cursorrules` file with mandatory quality gates:
+- Includes Section 13: Development Checklist (MANDATORY)
+- Includes Section 6: Mandatory Quality Checks workflow
+- Includes Section 11: TypeScript Workflow (MANDATORY DURING DEVELOPMENT)
+- Prevents commit failures by catching errors during development
+- Copy to your project root and customize for your tech stack
+
+### `QUALITY_GATES_CHECKLIST.md`
+Standalone checklist for verifying quality gates are set up:
+- Verification steps for `.cursorrules` configuration
+- Required `package.json` scripts checklist
+- Pre-commit hooks setup verification
+- Testing instructions
+- Common issues and solutions
+- Reference during project setup
+
+### `package.json.scripts.template`
+Template showing required npm scripts for quality gates:
+- TypeScript checking scripts
+- Linting and formatting scripts
+- Pre-commit hooks configuration
+- Use as reference when setting up `package.json`
+
 ---
 
 ## 🎯 How It Works
@@ -121,7 +157,7 @@ Additional guides:
 
 ---
 
-**Version:** 1.1.0  
+**Version:** 1.2.0  
 **System Name:** EvolveDoc  
 **Last Updated:** 2025-01-27
 

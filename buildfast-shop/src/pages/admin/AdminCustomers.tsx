@@ -565,11 +565,8 @@ const AdminCustomers = (): JSX.Element => {
         is_blacklisted: makeBlacklisted,
         blacklist_reason: makeBlacklisted ? 'Admin action' : null,
       }
-      const { error } = await supabase
-        .from('customers')
-        .update(
-          updateData as unknown as import('../../lib/database.types').Database['public']['Tables']['customers']['Update']
-        )
+      const { error } = await (supabase.from('customers') as any)
+        .update(updateData)
         .eq('id', customer.id)
 
       if (error) throw error

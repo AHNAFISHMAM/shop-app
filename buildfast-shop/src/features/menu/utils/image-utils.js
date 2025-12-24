@@ -51,3 +51,10 @@ export function getMealImageWithDefault(meal, defaultImage = PLACEHOLDER_IMAGE) 
   const image = getMealImage(meal)
   return image || defaultImage
 }
+
+/**
+ * Alias for getMealImage for backward compatibility
+ * @param {Object} meal - Meal/item object
+ * @returns {string} Image URL
+ */
+export const getMealImageUrl = getMealImage

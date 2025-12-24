@@ -68,6 +68,36 @@ After running the prompt, verify:
 - `MASTER_AUTHENTICATION_SECURITY_PROMPT.md` - If different auth system
 - Domain-specific prompts (e-commerce, reservations) - Adapt to your domain
 
+### Setting Up .cursorrules with Quality Gates
+
+**After customizing your stack, ensure `.cursorrules` includes:**
+
+1. **Mandatory Quality Checks (Section 13):**
+   - TypeScript checks after each page/component
+   - Linting checks after each page/component
+   - Format checks after each page/component
+   - Watch mode recommendations
+
+2. **Development Workflow (Section 6):**
+   - Updated flow: `Build → Validate → Fix → Ship → Improve`
+   - Mandatory checks after each feature
+   - Real-time feedback with watch mode
+
+3. **TypeScript Workflow (Section 11):**
+   - Renamed to "MANDATORY DURING DEVELOPMENT"
+   - Required checks after each page/component
+   - Emphasis on fixing during development, not at commit
+
+**Template:** Reference the updated `.cursorrules` from this project for the complete structure, or use `.cursorrules.template` from `evolvedoc-portable/` if available.
+
+**Critical Sections to Include:**
+- Section 3: Speed > Perfection (WITH Quality Gates)
+- Section 6: Mandatory Quality Checks workflow
+- Section 11: TypeScript Error Fixing (MANDATORY DURING DEVELOPMENT)
+- Section 13: Development Checklist (MANDATORY)
+
+**These sections prevent commit failures by catching errors during development.**
+
 ---
 
 ## ➡️ Next Step

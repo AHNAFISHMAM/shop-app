@@ -79,6 +79,22 @@ Verify EvolveDoc setup:
 - Verify file counts
 - Test Cursor @Folders access
 - Check for old references
+- Verify quality gates are configured
+```
+
+---
+
+### Step 6: Set Up Quality Gates
+**File:** `QUALITY_GATES_CHECKLIST.md` (reference)
+
+Ensure quality gates are properly configured to prevent commit failures.
+
+**Quick Checklist:**
+```
+1. Verify .cursorrules includes Section 13 (Development Checklist)
+2. Verify package.json has required scripts (typecheck, lint:fix, format)
+3. Verify pre-commit hooks are configured (Husky + lint-staged)
+4. Test quality checks: npm run typecheck && npm run lint:fix && npm run format
 ```
 
 ---
@@ -105,6 +121,8 @@ STEP 3: Customize for my tech stack:
 STEP 4: Run sync script to initialize docs/all-docs/
 
 STEP 5: Verify setup and test Cursor @Folders access
+
+STEP 6: Verify quality gates are configured (see QUALITY_GATES_CHECKLIST.md)
 
 My project details:
 - App Name: [YOUR_APP_NAME]
@@ -136,6 +154,7 @@ your-project/
 1. **Start coding** - EvolveDoc learns automatically
 2. **Use master prompts** - Reference them when implementing features
 3. **Check troubleshooting** - If issues arise after 3 failed attempts
+4. **⚠️ IMPORTANT:** Ensure `.cursorrules` includes mandatory quality gates (Section 13) to prevent commit failures
 
 ---
 
@@ -147,6 +166,6 @@ your-project/
 
 ---
 
-**Version:** 1.1.0  
+**Version:** 1.2.0  
 **Last Updated:** 2025-01-27
 

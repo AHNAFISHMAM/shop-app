@@ -198,8 +198,8 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
     const channel = supabase
       .channel(finalChannelName)
       .on(
-        'postgres_changes',
-        postgresConfig as Parameters<RealtimeChannel['on']>[1],
+        'postgres_changes' as const,
+        postgresConfig as any,
         (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
           if (!isMountedRef.current) return
 

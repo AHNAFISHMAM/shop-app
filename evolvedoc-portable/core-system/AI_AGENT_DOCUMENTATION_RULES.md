@@ -66,6 +66,13 @@ Monitor ALL code changes for these triggers:
    - CSRF protection
    - Auth improvements
 
+8. **Development Quality Gates**
+   - TypeScript errors introduced
+   - Linting issues accumulated
+   - Missing type checks after page/component creation
+   - Pre-commit hook failures
+   - Code committed without validation
+
 ---
 
 ## 🔬 RESEARCH REQUIREMENTS
@@ -469,6 +476,49 @@ See `AI_PROCESS_IMPROVEMENTS.md` for:
 
 ---
 
+## ⚡ MANDATORY DEVELOPMENT WORKFLOW
+
+### Quality Gates During Development (REQUIRED)
+
+**YOU MUST:** Ensure all code follows these quality gates during development:
+
+**After building each page/component/feature:**
+1. **TypeScript Check (MANDATORY):**
+   - Run `npm run typecheck:fast` after each page/component
+   - Fix all TypeScript errors immediately
+   - Don't accumulate errors — fix incrementally
+   - Takes ~5-10 seconds, prevents commit failures
+
+2. **Linting Check (MANDATORY):**
+   - Run `npm run lint:fix` after each page/component
+   - Auto-fix linting issues
+   - Fix remaining warnings if critical
+
+3. **Format Check (MANDATORY):**
+   - Run `npm run format` after each page/component
+   - Ensure consistent code formatting
+
+**During Active Development:**
+- Keep `npm run typecheck:watch` running in background
+- Fix errors as they appear (real-time feedback)
+- Don't let errors accumulate
+
+**Goal:** Zero errors before commit, not after. Pre-commit hooks are a safety net, not the primary check.
+
+**When setting up new projects:**
+- Ensure `.cursorrules` includes mandatory quality gates (Section 13)
+- Verify pre-commit hooks are configured (Husky + lint-staged)
+- Set up watch mode scripts for real-time feedback
+- Include development checklist in project setup
+
+**This prevents:**
+- Commit failures due to TypeScript errors
+- Accumulated linting issues
+- Surprise failures at CI/CD time
+- Developer frustration from blocked commits
+
+---
+
 **Last Updated:** 2025-01-27
-**Rules Version:** 1.1.0
+**Rules Version:** 1.2.0
 

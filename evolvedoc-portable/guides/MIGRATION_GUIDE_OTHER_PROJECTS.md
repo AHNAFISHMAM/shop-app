@@ -260,6 +260,14 @@ cp buildfast-shop/.cursorrules /new-project/.cursorrules
 - File structure (Section 4)
 - Master prompts list (Section 11)
 
+**CRITICAL: Ensure these sections are present:**
+- ✅ Section 3: Speed > Perfection (WITH Quality Gates)
+- ✅ Section 6: Mandatory Quality Checks (after each page/component)
+- ✅ Section 11: TypeScript Workflow (MANDATORY DURING DEVELOPMENT)
+- ✅ Section 13: Development Checklist (mandatory steps)
+
+**These sections prevent commit failures by catching errors during development.**
+
 **Example customization:**
 ```markdown
 # Before
@@ -276,6 +284,11 @@ cp buildfast-shop/.cursorrules /new-project/.cursorrules
 # After (if different)
 - **Backend:** [Your backend] (PostgreSQL + Auth + Storage + Realtime)
 ```
+
+**Quality Gates Setup:**
+- Verify pre-commit hooks are configured (Husky + lint-staged)
+- Ensure `typecheck:fast`, `lint:fix`, and `format` scripts exist in `package.json`
+- Set up watch mode for real-time feedback during development
 
 ### Step 7: Create Usage Guide
 
@@ -316,6 +329,10 @@ cp docs/MASTER_PROMPTS_USAGE_GUIDE.md /new-project/docs/
 - [ ] Update master prompts list
 - [ ] Remove prompts that don't apply
 - [ ] Add prompts for your specific stack/domain
+- [ ] **VERIFY Section 13 (Development Checklist) is present**
+- [ ] **VERIFY Section 6 (Mandatory Quality Checks) is present**
+- [ ] **VERIFY Section 11 (TypeScript Workflow) includes mandatory checks**
+- [ ] **Verify pre-commit hooks are configured**
 
 ---
 

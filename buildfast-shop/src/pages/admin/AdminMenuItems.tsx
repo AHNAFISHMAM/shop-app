@@ -9,7 +9,6 @@ import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTri
 import { pageFade } from '../../components/animations/menuAnimations'
 import { logger } from '../../utils/logger'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
-import type { Database } from '../../lib/database.types'
 
 interface CropArea {
   x: number
@@ -413,7 +412,7 @@ export default function AdminMenuItems() {
         is_discount_combo: formData.is_discount_combo,
       }
 
-      const { error } = await supabase.from('menu_items').insert([insertData])
+      const { error } = await (supabase.from('menu_items') as any).insert([insertData])
 
       if (error) throw error
 
@@ -479,8 +478,7 @@ export default function AdminMenuItems() {
         is_discount_combo: formData.is_discount_combo,
         updated_at: new Date().toISOString(),
       }
-      const { error } = await supabase
-        .from('menu_items')
+      const { error } = await (supabase.from('menu_items') as any)
         .update(updateData)
         .eq('id', editingItem.id)
 
@@ -533,11 +531,10 @@ export default function AdminMenuItems() {
   // Toggle availability
   async function toggleAvailability(item: MenuItem) {
     try {
-      const { error } = await supabase
-        .from('menu_items')
+      const { error } = await (supabase.from('menu_items') as any)
         .update({
           is_available: !item.is_available,
-        } as unknown as Database['public']['Tables']['menu_items']['Update'])
+        })
         .eq('id', item.id)
 
       if (error) throw error
@@ -572,8 +569,7 @@ export default function AdminMenuItems() {
       const updates = []
       if (toMakeAvailable.length > 0) {
         updates.push(
-          supabase
-            .from('menu_items')
+          (supabase.from('menu_items') as any)
             .update({
               is_available: true,
             })
@@ -582,8 +578,7 @@ export default function AdminMenuItems() {
       }
       if (toMakeUnavailable.length > 0) {
         updates.push(
-          supabase
-            .from('menu_items')
+          (supabase.from('menu_items') as any)
             .update({
               is_available: false,
             })
@@ -1050,11 +1045,10 @@ export default function AdminMenuItems() {
     if (!currentItemForImage) return
 
     try {
-      const { error } = await supabase
-        .from('menu_items')
+      const { error } = await (supabase.from('menu_items') as any)
         .update({
           image_url: url || null,
-        } as unknown as Database['public']['Tables']['menu_items']['Update'])
+        })
         .eq('id', currentItemForImage.id)
 
       if (error) throw error
@@ -3132,3 +3126,4 @@ export default function AdminMenuItems() {
     </m.main>
   )
 }
+    

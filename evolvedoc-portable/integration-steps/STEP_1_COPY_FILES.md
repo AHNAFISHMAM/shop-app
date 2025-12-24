@@ -25,8 +25,12 @@ I'm setting up EvolveDoc in my new project. Please:
    - troubleshooting/ files → docs/troubleshooting/
    - scripts/ files → docs/scripts/
    - guides/ files → docs/guides/
-4. Copy TROUBLESHOOTING.md from troubleshooting/ to project root (optional)
-5. Confirm all files are copied correctly
+4. Copy template files to project root:
+   - `.cursorrules.template` → `.cursorrules` (IMPORTANT: This sets up quality gates)
+   - `QUALITY_GATES_CHECKLIST.md` → project root (for reference)
+   - `package.json.scripts.template` → keep in docs/ or project root (for reference)
+5. Copy TROUBLESHOOTING.md from troubleshooting/ to project root (optional)
+6. Confirm all files are copied correctly
 
 My project path is: [YOUR_PROJECT_PATH]
 My project structure: [DESCRIBE YOUR PROJECT STRUCTURE]
@@ -44,6 +48,8 @@ After running the prompt, verify:
 - [ ] `docs/scripts/` folder exists with sync-docs.ps1
 - [ ] `docs/guides/` folder exists with guide files
 - [ ] `docs/all-docs/` empty folder created
+- [ ] **`.cursorrules` copied to project root from `.cursorrules.template`**
+- [ ] **`QUALITY_GATES_CHECKLIST.md` copied to project root (for reference)**
 - [ ] All files copied without errors
 
 ---
@@ -51,8 +57,10 @@ After running the prompt, verify:
 ## 📝 Notes
 
 - The `docs/all-docs/` folder will be populated in STEP 4
+- **IMPORTANT:** Copying `.cursorrules.template` to `.cursorrules` sets up mandatory quality gates that prevent commit failures
 - You can skip copying TROUBLESHOOTING.md to root if you prefer it in `docs/troubleshooting/`
 - Keep the `integration-steps/` folder for reference (or delete after setup)
+- After copying `.cursorrules`, customize it for your tech stack in STEP 3
 
 ---
 

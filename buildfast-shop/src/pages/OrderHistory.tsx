@@ -551,7 +551,7 @@ const OrderHistory = memo((): JSX.Element | null => {
           customer_email: user?.email ?? selectedOrderForReturn.customer_email,
           reason: returnReason,
           reason_details: returnDetails || null,
-        } as never)
+        } as any)
         .select()
         .single()
 
@@ -568,7 +568,7 @@ const OrderHistory = memo((): JSX.Element | null => {
           order_item_id: string
           quantity: number
         }> = (rawItems as OrderHistoryItem[]).map((item: OrderHistoryItem) => ({
-          return_request_id: insertedRequest?.id || '',
+          return_request_id: insertedRequest?.id ?? '',
           order_item_id: String(item.id),
           quantity: Number(item.quantity),
         }))
