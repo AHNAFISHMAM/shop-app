@@ -1,4 +1,3 @@
-import { Stripe } from '@stripe/stripe-js';
+import { Stripe } from '@stripe/stripe-js'
 
-export const stripePromise: Promise<Stripe | null>;
-
+export const stripePromise: Promise<Stripe | null>

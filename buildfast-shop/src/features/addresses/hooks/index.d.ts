@@ -1,2 +1,1 @@
-export { useAddresses } from './use-addresses';
-
+export { useAddresses } from './use-addresses'

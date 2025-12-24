@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import { staggerContainer, fadeSlideUp, batchFadeSlideUp } from '../animations/menuAnimations'
 import { cn } from '../../utils/cn'
@@ -144,7 +144,7 @@ const CollapsibleSidebar = ({
   onAllergenToggle = () => {},
   quickReorderItems = [],
   onQuickReorder = null,
-}: CollapsibleSidebarProps): JSX.Element => {
+}: CollapsibleSidebarProps) => {
   const isDesktop = variant === 'desktop'
   const asideClasses = isDesktop
     ? 'hidden lg:block w-full lg:w-80 flex-shrink-0 z-20 sticky top-16 self-start'
@@ -324,7 +324,7 @@ const CollapsibleSidebar = ({
     if (!isDesktop) return
 
     // Run automatic diagnostics in development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       import('../../utils/stickySidebarDiagnostics')
         .then(({ runStickySidebarDiagnostics }) => {
           setTimeout(() => {

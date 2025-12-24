@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { getBackgroundStyle } from '../utils/backgroundUtils'
@@ -76,7 +76,9 @@ const Hero: React.FC<HeroProps> = ({
   }, [])
 
   const backgroundStyle = useMemo(() => {
-    return settings ? getBackgroundStyle(settings as unknown as Record<string, string | null | undefined>, 'hero') : {}
+    return settings
+      ? getBackgroundStyle(settings as unknown as Record<string, string | null | undefined>, 'hero')
+      : {}
   }, [settings])
 
   const handleImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>): void => {

@@ -1,3 +1,2 @@
-export function emitFavoritesChanged(): void;
-export function onFavoritesChanged(callback: () => void): () => void;
-
+export function emitFavoritesChanged(): void
+export function onFavoritesChanged(callback: () => void): () => void
