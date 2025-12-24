@@ -64,7 +64,7 @@ export default [
   // TypeScript/TSX configuration for source files
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['scripts/**', '*.config.ts', '*.config.js', 'tailwind.config.js', 'eslint.config.js'],
+    ignores: ['scripts/**', '*.config.ts', '*.config.js', 'tailwind.config.js', 'eslint.config.js', 'supabase/**'],
     languageOptions: {
       parser: tsparser,
       ecmaVersion: 2022,

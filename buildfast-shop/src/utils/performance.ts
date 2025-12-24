@@ -24,7 +24,7 @@ export function measurePerformance<T>(fn: () => T, label?: string): T {
   const end = performance.now()
   const duration = end - start
 
-  if (label && process.env.NODE_ENV === 'development') {
+  if (label && (import.meta.env.DEV ?? false)) {
     logger.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`)
   }
 
@@ -52,7 +52,7 @@ export async function measureAsyncPerformance<T>(fn: () => Promise<T>, label?: s
   const end = performance.now()
   const duration = end - start
 
-  if (label && process.env.NODE_ENV === 'development') {
+  if (label && (import.meta.env.DEV ?? false)) {
     logger.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`)
   }
 
@@ -91,12 +91,12 @@ export function measure(markName: string, measureName: string): void {
     try {
       performance.measure(measureName, markName)
       const measure = performance.getEntriesByName(measureName, 'measure')[0]
-      if (measure && process.env.NODE_ENV === 'development') {
+      if (measure && (import.meta.env.DEV ?? false)) {
         logger.log(`📊 ${measureName}: ${measure.duration.toFixed(2)}ms`)
       }
-    } catch (error) {
+    } catch (_error) {
       // Mark might not exist yet
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV ?? false) {
         logger.warn(`Performance mark "${markName}" not found`)
       }
     }
@@ -131,7 +131,7 @@ export async function getCoreWebVitals(): Promise<{
         vitals.lcp = lastEntry.renderTime || lastEntry.loadTime || 0
       })
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
-    } catch (e) {
+    } catch (_e) {
       // LCP not supported
     }
 
@@ -147,7 +147,7 @@ export async function getCoreWebVitals(): Promise<{
         })
       })
       fidObserver.observe({ entryTypes: ['first-input'] })
-    } catch (e) {
+    } catch (_e) {
       // FID not supported
     }
 
@@ -157,14 +157,15 @@ export async function getCoreWebVitals(): Promise<{
       const clsObserver = new PerformanceObserver(list => {
         const entries = list.getEntries()
         entries.forEach(entry => {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value
+          const layoutShiftEntry = entry as { hadRecentInput?: boolean; value?: number }
+          if (!layoutShiftEntry.hadRecentInput) {
+            clsValue += layoutShiftEntry.value ?? 0
           }
         })
         vitals.cls = clsValue
       })
       clsObserver.observe({ entryTypes: ['layout-shift'] })
-    } catch (e) {
+    } catch (_e) {
       // CLS not supported
     }
   }
@@ -178,7 +179,7 @@ export async function getCoreWebVitals(): Promise<{
  * @param metrics - Metrics to log
  */
 export function logPerformanceMetrics(metrics: { lcp?: number; fid?: number; cls?: number }): void {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV ?? false) {
     logger.group('📊 Core Web Vitals', () => {
       if (metrics.lcp) {
         const status = metrics.lcp < 2500 ? '✅' : metrics.lcp < 4000 ? '⚠️' : '❌'
