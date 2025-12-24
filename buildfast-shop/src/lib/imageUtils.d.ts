@@ -49,7 +49,7 @@ export declare function getPlaceholderImage(width?: number, height?: number): st
 export declare function uploadMenuImage(
   file: File,
   dishName: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<{
   success: boolean
   url: string | null

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, memo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { m } from 'framer-motion'
+import { motion } from 'framer-motion'
+
+const MotionMain = motion.main
+const MotionSection = motion.section
 import { Elements } from '@stripe/react-stripe-js'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 // Removed unused imports: formatPrice, getCurrencySymbol (now using formatCurrency from utils)
 import { stripePromise } from '../lib/stripe'
@@ -182,7 +185,9 @@ const Checkout = memo(function Checkout() {
   const [appliedDiscountCode, setAppliedDiscountCode] = useState<{
     code: string
     discount: number
-    [key: string]: unknown
+    discount_type?: 'percentage' | 'fixed'
+    discount_value?: number | string
+    id?: string
   } | null>(null)
   const [discountAmount, setDiscountAmount] = useState(0)
   const [discountError, setDiscountError] = useState('')
@@ -617,7 +622,7 @@ const Checkout = memo(function Checkout() {
 
   if (loading) {
     return (
-      <m.main
+      <MotionMain
         className="min-h-screen"
         variants={pageFade}
         initial="hidden"
@@ -657,7 +662,7 @@ const Checkout = memo(function Checkout() {
             </div>
           </div>
         </div>
-      </m.main>
+      </MotionMain>
     )
   }
 
@@ -730,7 +735,7 @@ const Checkout = memo(function Checkout() {
   // - Not in any payment/success flow
   if (shouldShowEmptyCart) {
     return (
-      <m.main
+      <MotionMain
         className="min-h-screen flex items-center justify-center"
         variants={pageFade}
         initial="hidden"
@@ -806,7 +811,7 @@ const Checkout = memo(function Checkout() {
             </button>
           </div>
         </div>
-      </m.main>
+      </MotionMain>
     )
   }
 
@@ -814,7 +819,7 @@ const Checkout = memo(function Checkout() {
   // This happens when products were deleted or foreign keys are broken
   if (hasUnresolvedItems && !loadingCart) {
     return (
-      <m.main
+      <MotionMain
         className="min-h-screen flex items-center justify-center"
         variants={pageFade}
         initial="hidden"
@@ -894,14 +899,14 @@ const Checkout = memo(function Checkout() {
             </button>
           </div>
         </div>
-      </m.main>
+      </MotionMain>
     )
   }
 
   // Render checkout page (even if cart is empty, if modal is showing)
   return (
     <>
-      <m.main
+      <MotionMain
         className="min-h-screen"
         variants={pageFade}
         initial="hidden"
@@ -921,7 +926,7 @@ const Checkout = memo(function Checkout() {
         {/* Header */}
         <CheckoutHeader />
 
-        <m.section
+        <MotionSection
           className="app-container py-8"
           variants={fadeSlideUp}
           initial="hidden"
@@ -1896,9 +1901,12 @@ const Checkout = memo(function Checkout() {
                                   </li>
                                 ))}
                               </ul>
-                      </div>
-                    )}
-                  </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Total Items Count */}
                   <div className="mb-4 pb-4 border-b border-theme">
@@ -1969,9 +1977,13 @@ const Checkout = memo(function Checkout() {
                               Code: {appliedDiscountCode.code}
                             </p>
                             <p className="text-xs text-green-300 mt-0.5">
-                              {appliedDiscountCode.discount_type === 'percentage'
-                                ? `${String(appliedDiscountCode.discount_value || '0')}% off`
-                                : `${formatCurrency(parseFloat(String(appliedDiscountCode.discount_value || '0')))} off`}
+                              {(() => {
+                                if (appliedDiscountCode.discount_type === 'percentage') {
+                                  return `${String(appliedDiscountCode.discount_value ?? '0')}% off`
+                                }
+                                const value = appliedDiscountCode.discount_value ?? '0'
+                                return `${formatCurrency(parseFloat(String(value)))} off`
+                              })()}
                             </p>
                           </div>
                           <button
@@ -2102,8 +2114,8 @@ const Checkout = memo(function Checkout() {
               </div>
             </div>
           )}
-        </m.section>
-      </m.main>
+        </MotionSection>
+      </MotionMain>
 
       {/* Payment Success Modal - Render outside main to ensure it's always visible */}
       <PaymentSuccessModal

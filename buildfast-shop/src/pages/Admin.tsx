@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { m } from 'framer-motion'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import StatCard from '../components/admin/StatCard'
 import RecentActivity from '../components/admin/RecentActivity'
 import LowStockAlerts from '../components/admin/LowStockAlerts'

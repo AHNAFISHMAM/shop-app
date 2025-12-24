@@ -447,6 +447,7 @@ export function useCheckoutOrder({
       fulfillmentMode,
       scheduledSlot,
       orderNote,
+      setOrderError,
       enableMarketingOptins,
       emailUpdatesOptIn,
       smsUpdatesOptIn,
@@ -579,7 +580,9 @@ export function useCheckoutOrder({
       'error',
       8000
     )
-  }, [])
+  },
+  [setOrderError]
+)
 
   const handleModalClose = useCallback(() => {
     setShowSuccessModal(false)

@@ -1,6 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../contexts/ThemeContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { supabase } from '../lib/supabase'

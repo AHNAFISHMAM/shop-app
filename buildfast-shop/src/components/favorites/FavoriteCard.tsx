@@ -6,7 +6,7 @@ import { fadeSlideUp } from '../animations/menuAnimations'
 import { parsePrice, formatPrice, formatPriceWithCurrency } from '../../lib/priceUtils'
 import { removeFavorite } from '../../lib/favoritesUtils'
 import { addProductToCart, addMenuItemToCart } from '../../lib/cartUtils'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { logger } from '../../utils/logger'
 
 interface Product {

@@ -36,8 +36,7 @@
     "verify:setup": "node scripts/verify-agent-setup.js",
     "batch:generate": "powershell -ExecutionPolicy Bypass -File scripts/parallel-batch-processor.ps1",
     "batch:run": "powershell -ExecutionPolicy Bypass -File scripts/run-batch.ps1",
-    "preflight:check": "node scripts/pre-flight-check.js",
-    "prepare": "husky"
+    "preflight:check": "node scripts/pre-flight-check.js"
   },
   "dependencies": {
     "@internationalized/date": "^3.10.0",

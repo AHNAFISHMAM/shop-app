@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react'
 import Navbar from './Navbar'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { logger } from '../utils/logger'
 
 /**

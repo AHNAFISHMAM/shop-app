@@ -11,19 +11,19 @@ import { logError, getUserFriendlyError } from '../lib/error-handler'
 /**
  * Form field validation function type
  */
-export type FieldValidator<T = any> = (value: T) => string | null
+export type FieldValidator<T = unknown> = (value: T) => string | null
 
 /**
  * Form validation schema
  */
-export type ValidationSchema<T extends Record<string, any>> = {
+export type ValidationSchema<T extends Record<string, unknown>> = {
   [K in keyof T]?: FieldValidator<T[K]> | FieldValidator<T[K]>[]
 }
 
 /**
  * Form options
  */
-export interface UseFormOptions<T extends Record<string, any>> {
+export interface UseFormOptions<T extends Record<string, unknown>> {
   initialValues: T
   validationSchema?: ValidationSchema<T>
   onSubmit: (values: T) => Promise<void> | void
@@ -35,7 +35,7 @@ export interface UseFormOptions<T extends Record<string, any>> {
 /**
  * Form state
  */
-export interface FormState<T extends Record<string, any>> {
+export interface FormState<T extends Record<string, unknown>> {
   values: T
   errors: Partial<Record<keyof T, string>>
   touched: Partial<Record<keyof T, boolean>>
@@ -47,7 +47,7 @@ export interface FormState<T extends Record<string, any>> {
 /**
  * Form handlers
  */
-export interface FormHandlers<T extends Record<string, any>> {
+export interface FormHandlers<T extends Record<string, unknown>> {
   setValue: <K extends keyof T>(field: K, value: T[K]) => void
   setValues: (values: Partial<T>) => void
   setError: <K extends keyof T>(field: K, error: string | null) => void
@@ -65,7 +65,7 @@ export interface FormHandlers<T extends Record<string, any>> {
 /**
  * useForm hook return type
  */
-export interface UseFormReturn<T extends Record<string, any>>
+export interface UseFormReturn<T extends Record<string, unknown>>
   extends FormState<T>, FormHandlers<T> {}
 
 // Debounce utility removed - not used in current implementation
@@ -89,7 +89,7 @@ export interface UseFormReturn<T extends Record<string, any>>
  * })
  * ```
  */
-export function useForm<T extends Record<string, any>>(
+export function useForm<T extends Record<string, unknown>>(
   options: UseFormOptions<T>
 ): UseFormReturn<T> {
   const {

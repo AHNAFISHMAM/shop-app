@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, memo } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { useNavigate } from 'react-router-dom'
 import { m } from 'framer-motion'
@@ -150,7 +150,7 @@ const AddressBook = memo((): JSX.Element | null => {
         let result
         if (editingAddress) {
           // Update existing - exclude id from formData and convert to addressesApi.Address format
-          const { id, ...updateData } = formData as AddressFormAddress & { id?: string | number }
+          const { id: _id, ...updateData } = formData as AddressFormAddress & { id?: string | number }
           result = await updateAddress(
             String(editingAddress.id),
             updateData as Partial<import('../lib/addressesApi').Address>

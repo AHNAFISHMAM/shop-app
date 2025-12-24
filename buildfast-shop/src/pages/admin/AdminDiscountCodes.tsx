@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, ChangeEvent, FormEvent, KeyboardEvent } from 'react'
 import { m } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import {
   getAllDiscountCodes,
   createDiscountCode,

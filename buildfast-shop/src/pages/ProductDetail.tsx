@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { m } from 'framer-motion'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { addProductToCart, type Product } from '../lib/cartUtils'
 import { toggleFavorites, isInFavorites } from '../lib/favoritesUtils'
@@ -218,7 +218,7 @@ const ProductDetail = memo((): JSX.Element => {
     } finally {
       setTogglingFavorites(false)
     }
-  }, [user, id, isMenuItem, navigate])
+  }, [user, id, isMenuItem, navigate, isProductInFavorites, setErrorMessage])
 
   const handleImageSelect = useCallback((index: number) => {
     setSelectedImageIndex(index)
@@ -395,8 +395,8 @@ const ProductDetail = memo((): JSX.Element => {
     selectedCombination,
     getSelectedVariant,
     user,
-    isMenuItem,
     currentStock,
+    setErrorMessage,
     hasVariants,
   ])
   // navigate from useNavigate() is stable, doesn't need to be in deps

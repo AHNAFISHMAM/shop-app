@@ -413,7 +413,7 @@ export default function AdminMenuItems() {
         is_discount_combo: formData.is_discount_combo,
       }
 
-      const { error } = await (supabase.from('menu_items') as any).insert([insertData])
+      const { error } = await supabase.from('menu_items').insert([insertData])
 
       if (error) throw error
 
@@ -479,7 +479,8 @@ export default function AdminMenuItems() {
         is_discount_combo: formData.is_discount_combo,
         updated_at: new Date().toISOString(),
       }
-      const { error } = await (supabase.from('menu_items') as any)
+      const { error } = await supabase
+        .from('menu_items')
         .update(updateData)
         .eq('id', editingItem.id)
 
@@ -532,7 +533,8 @@ export default function AdminMenuItems() {
   // Toggle availability
   async function toggleAvailability(item: MenuItem) {
     try {
-      const { error } = await (supabase.from('menu_items') as any)
+      const { error } = await supabase
+        .from('menu_items')
         .update({
           is_available: !item.is_available,
         } as unknown as Database['public']['Tables']['menu_items']['Update'])
@@ -570,19 +572,21 @@ export default function AdminMenuItems() {
       const updates = []
       if (toMakeAvailable.length > 0) {
         updates.push(
-          (supabase.from('menu_items') as any)
+          supabase
+            .from('menu_items')
             .update({
               is_available: true,
-            } as unknown as Database['public']['Tables']['menu_items']['Update'])
+            })
             .in('id', toMakeAvailable)
         )
       }
       if (toMakeUnavailable.length > 0) {
         updates.push(
-          (supabase.from('menu_items') as any)
+          supabase
+            .from('menu_items')
             .update({
               is_available: false,
-            } as unknown as Database['public']['Tables']['menu_items']['Update'])
+            })
             .in('id', toMakeUnavailable)
         )
       }
@@ -1046,7 +1050,8 @@ export default function AdminMenuItems() {
     if (!currentItemForImage) return
 
     try {
-      const { error } = await (supabase.from('menu_items') as any)
+      const { error } = await supabase
+        .from('menu_items')
         .update({
           image_url: url || null,
         } as unknown as Database['public']['Tables']['menu_items']['Update'])
@@ -1065,7 +1070,7 @@ export default function AdminMenuItems() {
   }
 
   // Get image display with proper validation
-  function getImageDisplay(item: any) {
+  function getImageDisplay(item: MenuItem) {
     if (item.image_url && item.image_url.trim() !== '') {
       // Add cache-busting timestamp to FORCE browser reload
       const url = item.image_url.trim()

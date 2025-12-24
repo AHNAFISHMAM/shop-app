@@ -7,7 +7,6 @@
 
 import {
   createContext,
-  useContext,
   useEffect,
   useState,
   useRef,
@@ -61,21 +60,7 @@ export interface AuthContextType {
 /**
  * Create auth context
  */
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-/**
- * useAuth hook
- *
- * @throws {Error} If used outside AuthProvider
- * @returns AuthContextType
- */
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 /**
  * AuthProvider Component

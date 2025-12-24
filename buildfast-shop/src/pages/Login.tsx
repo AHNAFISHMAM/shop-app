@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { m } from 'framer-motion'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import AuthShell from '../components/auth-shell/auth-shell'
 import { pageFade, fadeSlideUp } from '../components/animations/menuAnimations'
 

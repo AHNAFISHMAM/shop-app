@@ -18,7 +18,7 @@
  * @component
  */
 import { useState, useCallback, useMemo, useEffect, memo } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { useCartManagement } from '../hooks/useCartManagement'
 import { useOrderFilters } from '../hooks/useOrderFilters'

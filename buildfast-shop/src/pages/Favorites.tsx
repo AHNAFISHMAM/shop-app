@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { getFavoriteItems, removeFavorite } from '../lib/favoritesUtils'
 // import { addProductToCart, addMenuItemToCart } from '../lib/cartUtils';
 import { handleAuthError } from '../lib/authUtils'

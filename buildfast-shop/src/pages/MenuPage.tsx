@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react'
 import { Link } from 'react-router-dom'
 import { m, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { addToGuestCart } from '../lib/guestSessionUtils'
 import toast from 'react-hot-toast'
@@ -698,7 +698,7 @@ const MenuPage = memo(() => {
           {/* Desktop Sidebar - outside .app-container to avoid containing block issues */}
           <CollapsibleSidebar
             categories={categories}
-            menuItems={menuItems as any}
+            menuItems={menuItems}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategoryClick}
             variant="desktop"
@@ -785,7 +785,7 @@ const MenuPage = memo(() => {
                   </div>
                   <CollapsibleSidebar
                     categories={categories}
-                    menuItems={menuItems as any}
+                    menuItems={menuItems}
                     selectedCategory={selectedCategory}
                     onCategorySelect={(cat: Category | null) => {
                       handleCategoryClick(cat)

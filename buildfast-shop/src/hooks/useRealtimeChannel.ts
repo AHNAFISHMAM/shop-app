@@ -41,7 +41,7 @@ export interface UseRealtimeChannelOptions {
   /** Debounce delay in milliseconds (default: 300ms) */
   debounceMs?: number
   /** Custom callback for handling payloads */
-  onPayload?: (payload: RealtimePostgresChangesPayload<any>) => void
+  onPayload?: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void
   /** Schema name (default: 'public') */
   schema?: string
 }
@@ -199,14 +199,14 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
       .channel(finalChannelName)
       .on(
         'postgres_changes',
-        postgresConfig as any,
+        postgresConfig as Parameters<RealtimeChannel['on']>[1],
         (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
           if (!isMountedRef.current) return
 
           // Call custom payload handler if provided
           if (onPayload) {
             try {
-              onPayload(payload as unknown as RealtimePostgresChangesPayload<any>)
+              onPayload(payload as RealtimePostgresChangesPayload<Record<string, unknown>>)
             } catch (error) {
               logError(error, 'useRealtimeChannel.onPayload')
             }
