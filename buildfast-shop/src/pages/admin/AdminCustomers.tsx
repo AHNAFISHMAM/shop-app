@@ -15,10 +15,11 @@ interface StatusOption {
   label: string
 }
 
-interface SegmentFilter {
-  value: string
-  label: string
-}
+// Removed unused SegmentFilter interface - was for commented-out code
+// interface SegmentFilter {
+//   value: string
+//   label: string
+// }
 
 interface SortOption {
   value: string
@@ -565,9 +566,9 @@ const AdminCustomers = (): JSX.Element => {
         .from('customers')
         .update(
           asUpdate('customers', {
-            // Note: is_blacklisted and blacklist_reason may not exist in schema
-            // Using type assertion for compatibility
-          } as any)
+            is_blacklisted: makeBlacklisted,
+            blacklist_reason: makeBlacklisted ? 'Admin action' : null,
+          } as Record<string, unknown>)
         )
         .eq('id', customer.id)
 

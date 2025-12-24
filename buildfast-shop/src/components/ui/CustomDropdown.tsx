@@ -184,12 +184,13 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           optionRefs.current[0]?.scrollIntoView({ block: 'nearest' })
           break
 
-        case 'End':
+        case 'End': {
           event.preventDefault()
           const lastIndex = options.length - 1
           setFocusedIndex(lastIndex)
           optionRefs.current[lastIndex]?.scrollIntoView({ block: 'nearest' })
           break
+        }
       }
     }
 
@@ -230,8 +231,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     }
   }, [disabled])
 
-  // Generate unique ID if not provided
-  const dropdownId = id || React.useId()
+  // Generate unique ID if not provided - always call hook
+  const generatedId = React.useId()
+  const dropdownId = id || generatedId
   const listboxId = `${dropdownId}-listbox`
 
   return (

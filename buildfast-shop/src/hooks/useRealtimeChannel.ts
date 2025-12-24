@@ -233,6 +233,8 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
               }
             }
           }, HEALTH_CHECK_INTERVAL)
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          // HEALTH_CHECK_INTERVAL is a constant, doesn't need to be in deps
 
           if (import.meta.env.DEV) {
             logger.log(`[Realtime] Subscribed to ${table}`, {
@@ -353,6 +355,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
     enabled,
     table,
     event,
+    // HEALTH_CHECK_INTERVAL is a constant, doesn't need to be in deps
     filter,
     schema,
     channelName,

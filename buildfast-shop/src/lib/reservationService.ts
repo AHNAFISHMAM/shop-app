@@ -157,7 +157,7 @@ export async function createReservation(
       _reservation_time: normalizedTime,
       _party_size: parseInt(String(partySize), 10),
       _special_requests: specialRequests?.trim() || null,
-    } as any)
+    } as Record<string, unknown>)
 
     let error: PostgrestError | null = rpcError
     let finalReservationId: string | null = null
@@ -499,7 +499,7 @@ export async function updateReservationStatus(
       }
     }
 
-    const updateData: any = { status }
+    const updateData: Record<string, unknown> = { status }
     if (adminNotes) {
       updateData.guest_notes = adminNotes
     }

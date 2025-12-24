@@ -69,8 +69,12 @@ const ERROR_MAP: Record<string, Omit<ErrorInfo, 'message' | 'code' | 'status'>> 
 export function extractErrorInfo(error: unknown): ErrorInfo {
   if (error instanceof Error) {
     const message = error.message
-    const code = (error as any).code || (error as any).statusCode
-    const status = (error as any).status || (error as any).statusCode
+    const code =
+      ('code' in error ? (error as { code?: string }).code : undefined) ||
+      ('statusCode' in error ? (error as { statusCode?: string }).statusCode : undefined)
+    const status =
+      ('status' in error ? (error as { status?: number }).status : undefined) ||
+      ('statusCode' in error ? (error as { statusCode?: number }).statusCode : undefined)
 
     // Check error map for user-friendly messages
     for (const [key, info] of Object.entries(ERROR_MAP)) {
@@ -188,7 +192,10 @@ export function handleDatabaseError(
   options: {
     onTableNotFound?: (error: unknown) => { success: false; error: string; code?: string }
     onPermissionDenied?: (error: unknown) => { success: false; error: string; code?: string }
-  } = {}
+  } = {} as {
+    onTableNotFound?: (error: unknown) => { success: false; error: string; code?: string }
+    onPermissionDenied?: (error: unknown) => { success: false; error: string; code?: string }
+  }
 ): { success: false; error: string; code?: string } {
   const { onTableNotFound, onPermissionDenied } = options
 
@@ -242,7 +249,7 @@ export async function handleApiError(
   // If it's a Response object, try to extract error message
   if (error instanceof Response) {
     try {
-      const errorData = await error.json().catch(() => ({}))
+      const errorData = await error.json().catch(() => ({}) as Record<string, unknown>)
       logError(error, context)
 
       const errorInfo = extractErrorInfo(error)
@@ -273,7 +280,7 @@ export async function handleApiError(
  * @param context - Context for error logging
  * @returns Wrapped function that returns { success, data/error }
  */
-export function createSafeAsync<T extends (...args: any[]) => Promise<any>>(
+export function createSafeAsync<T extends (...args: unknown[]) => Promise<unknown>>(
   asyncFn: T,
   context: string
 ): (

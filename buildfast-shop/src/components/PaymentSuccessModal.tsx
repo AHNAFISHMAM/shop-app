@@ -98,7 +98,7 @@ function PaymentSuccessModal({
       }, 500) // Small delay to ensure smooth transition
       return () => clearTimeout(closeTimer)
     }
-    
+
     return undefined
   }, [isOpen, countdown, onClose])
 

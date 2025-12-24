@@ -75,7 +75,8 @@ const ReservationBookingForm = ({
     checkInTime: '15:00',
     checkOutDate: '',
     guests: minGuests,
-    roomType: roomOptions.length > 0 && roomOptions[0] ? (roomOptions[0]?.value ?? 'standard') : 'standard',
+    roomType:
+      roomOptions.length > 0 && roomOptions[0] ? (roomOptions[0]?.value ?? 'standard') : 'standard',
     requests: '',
   })
 
@@ -195,7 +196,10 @@ const ReservationBookingForm = ({
         checkInTime: '15:00',
         checkOutDate: '',
         guests: minGuests,
-        roomType: (roomOptions.length > 0 && roomOptions[0]) ? (roomOptions[0]?.value ?? 'standard') : 'standard',
+        roomType:
+          roomOptions.length > 0 && roomOptions[0]
+            ? (roomOptions[0]?.value ?? 'standard')
+            : 'standard',
         requests: '',
       })
       setErrors({})

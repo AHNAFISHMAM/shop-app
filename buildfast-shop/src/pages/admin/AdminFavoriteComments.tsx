@@ -98,7 +98,10 @@ function AdminFavoriteComments(): JSX.Element {
       setComments(result.data as Comment[])
       setStats(result.stats as Stats)
     } else {
-      const errorMsg = result.error instanceof Error ? result.error.message : String(result.error || 'Failed to load favorite comments')
+      const errorMsg =
+        result.error instanceof Error
+          ? result.error.message
+          : String(result.error || 'Failed to load favorite comments')
       setError(errorMsg)
       setComments([])
       setStats({ total: 0, timeframeCount: 0, uniqueUsers: 0 })
@@ -188,7 +191,9 @@ function AdminFavoriteComments(): JSX.Element {
               { value: 'all', label: 'All time' },
             ]}
             value={timeframe}
-            onChange={(event: { target: { value: string | number; name?: string } }) => setTimeframe(String(event.target.value))}
+            onChange={(event: { target: { value: string | number; name?: string } }) =>
+              setTimeframe(String(event.target.value))
+            }
             placeholder="Current month"
             maxVisibleItems={5}
           />

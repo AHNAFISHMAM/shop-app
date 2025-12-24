@@ -262,8 +262,8 @@ const ContactPage = memo((): JSX.Element => {
                   className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight"
                   style={{ color: 'var(--text-main)' }}
                 >
-                  "The Star Café team confirmed our corporate dinner in under an hour and curated a
-                  bespoke tasting menu that wowed every guest."
+                  &quot;The Star Café team confirmed our corporate dinner in under an hour and
+                  curated a bespoke tasting menu that wowed every guest.&quot;
                 </p>
                 <footer className="flex flex-col text-sm sm:text-xs text-muted">
                   <span className="font-medium text-[var(--accent)]">

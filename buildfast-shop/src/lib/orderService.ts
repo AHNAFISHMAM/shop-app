@@ -220,7 +220,7 @@ export async function createOrderWithItems(orderData: OrderData): Promise<OrderR
     }
 
     // Call RPC function
-    const { data, error } = await (supabase.rpc as any)('create_order_with_items', {
+    const { data, error } = await supabase.rpc('create_order_with_items', {
       _user_id: userId || null,
       _customer_email: customerEmail.trim(),
       _customer_name: customerName.trim(),
@@ -518,9 +518,9 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
     }
 
     const updateData = { status } as Database['public']['Tables']['orders']['Update']
-    const { data, error } = await (supabase
-      .from('orders') as any)
-      .update(updateData)
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updateData as never)
       .eq('id', orderId)
       .select('id')
       .single()

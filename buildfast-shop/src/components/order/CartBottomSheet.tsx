@@ -226,7 +226,7 @@ const CartBottomSheet = ({
   const handleApplyReward = useCallback(
     (rewardId: string) => {
       try {
-        const reward = loyalty?.redeemableRewards?.find((r) => r.id === rewardId)
+        const reward = loyalty?.redeemableRewards?.find(r => r.id === rewardId)
         if (!reward) {
           toast.error('Reward not found')
           return

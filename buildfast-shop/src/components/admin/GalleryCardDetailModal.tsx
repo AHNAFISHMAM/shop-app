@@ -20,7 +20,7 @@ import {
 } from '../../utils/effects'
 import CustomDropdown from '../ui/CustomDropdown'
 
-interface GalleryCard {
+interface GalleryCardData {
   id: string
   position: number
   default_image_url: string
@@ -33,7 +33,7 @@ interface GalleryCard {
 }
 
 interface GalleryCardDetailModalProps {
-  card: GalleryCard | null
+  card: GalleryCardData | null
   isOpen: boolean
   onClose: () => void
   uploading: Record<string, boolean>

@@ -271,7 +271,10 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
       for (const attachment of attachments) {
         const uploadResult = await uploadReviewImage(attachment.file, userId)
         if (!uploadResult.success || !uploadResult.url) {
-          const errorMsg = typeof uploadResult.error === 'string' ? uploadResult.error : uploadResult.error?.message || 'Image upload failed'
+          const errorMsg =
+            typeof uploadResult.error === 'string'
+              ? uploadResult.error
+              : uploadResult.error?.message || 'Image upload failed'
           throw new Error(errorMsg)
         }
         imageUploads.push(uploadResult.url)
@@ -307,11 +310,12 @@ function FavoriteCommentsPanel({ favoriteItems = [], userId }: FavoriteCommentsP
       })
 
       if (!result?.success) {
-        const errorMsg = typeof result.error === 'string' 
-          ? result.error 
-          : result.error instanceof Error 
-            ? result.error.message 
-            : (result as { message?: string }).message ?? 'Failed to save comment.'
+        const errorMsg =
+          typeof result.error === 'string'
+            ? result.error
+            : result.error instanceof Error
+              ? result.error.message
+              : ((result as { message?: string }).message ?? 'Failed to save comment.')
         throw new Error(errorMsg)
       }
 

@@ -141,14 +141,18 @@ export type ProductId = Brand<string, 'ProductId'>
 /**
  * Extract function parameters as tuple
  */
-export type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any
+export type Parameters<T extends (...args: unknown[]) => unknown> = T extends (
+  ...args: infer P
+) => unknown
   ? P
   : never
 
 /**
  * Extract function return type
  */
-export type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R
+export type ReturnType<T extends (...args: unknown[]) => unknown> = T extends (
+  ...args: unknown[]
+) => infer R
   ? R
   : never
 

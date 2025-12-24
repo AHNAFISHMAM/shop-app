@@ -117,9 +117,9 @@ export const updateCartItemQuantity = async (
   const updateData: Database['public']['Tables']['cart_items']['Update'] = {
     quantity: newQuantity,
   }
-  const { error } = await (supabase
-    .from('cart_items') as any)
-    .update(updateData)
+  const { error } = await supabase
+    .from('cart_items')
+    .update(updateData as never)
     .eq('id', cartItemId)
     .eq('user_id', userId)
 
@@ -149,7 +149,7 @@ export const insertCartItem = async (
     product_id: productId,
     quantity: 1,
   } as Database['public']['Tables']['cart_items']['Insert']
-  const { error } = await supabase.from('cart_items').insert([insertData] as any)
+  const { error } = await supabase.from('cart_items').insert([insertData] as never)
 
   if (!error) {
     emitCartChanged() // Trigger immediate UI update
@@ -342,7 +342,7 @@ export const addMenuItemToCart = async (
         menu_item_id: menuItem.id,
         quantity: 1,
       } as Database['public']['Tables']['cart_items']['Insert']
-      const { error } = await supabase.from('cart_items').insert([insertData] as any)
+      const { error } = await supabase.from('cart_items').insert([insertData] as never)
 
       if (!error) {
         emitCartChanged()
@@ -381,9 +381,9 @@ export const updateMenuItemQuantity = async (
   const updateData: Database['public']['Tables']['cart_items']['Update'] = {
     quantity: newQuantity,
   }
-  const { error } = await (supabase
-    .from('cart_items') as any)
-    .update(updateData)
+  const { error } = await supabase
+    .from('cart_items')
+    .update(updateData as never)
     .eq('id', cartItemId)
     .eq('user_id', userId)
 

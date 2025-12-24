@@ -76,16 +76,18 @@ const MainLayout = ({ children }: MainLayoutProps): JSX.Element => {
   // Convert StoreSettings to BackgroundSettings format
   const backgroundSettings: BackgroundSettings | null = settings
     ? {
-        page_background_type: (settings as unknown as Record<string, unknown>).page_background_type as string | null,
-        page_background_color: (settings as unknown as Record<string, unknown>).page_background_color as string | null,
-        page_background_gradient: (settings as unknown as Record<string, unknown>).page_background_gradient as string | null,
-        page_background_image_url: (settings as unknown as Record<string, unknown>).page_background_image_url as string | null,
+        page_background_type: (settings as unknown as Record<string, unknown>)
+          .page_background_type as string | null,
+        page_background_color: (settings as unknown as Record<string, unknown>)
+          .page_background_color as string | null,
+        page_background_gradient: (settings as unknown as Record<string, unknown>)
+          .page_background_gradient as string | null,
+        page_background_image_url: (settings as unknown as Record<string, unknown>)
+          .page_background_image_url as string | null,
       }
     : null
 
-  const backgroundStyle = backgroundSettings
-    ? getBackgroundStyle(backgroundSettings, 'page')
-    : {}
+  const backgroundStyle = backgroundSettings ? getBackgroundStyle(backgroundSettings, 'page') : {}
   // Only apply inline style if it's not using theme variable
   const shouldApplyStyle =
     backgroundStyle.background &&

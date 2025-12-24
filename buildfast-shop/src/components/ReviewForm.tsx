@@ -77,6 +77,8 @@ function ReviewForm({
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
   const MAX_REVIEW_LENGTH = 1000
 
+  // Constants don't need to be in dependency arrays
+
   const handleImageSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return
@@ -116,7 +118,7 @@ function ReviewForm({
         )
 
         setImages([...images, ...files])
-        setImagePreviews([...imagePreviews, ...newPreviews])
+        setImagePreviews(prev => [...prev, ...newPreviews])
         setError('')
       } catch (error) {
         logger.error('Error reading image files:', error)
@@ -244,14 +246,21 @@ function ReviewForm({
           if (result.alreadyExists) {
             errorMessage = (result.message as string) || 'You have already reviewed this product'
           } else if (result.tableMissing) {
-            errorMessage = (result.message as string) || 'Reviews table not found. Please contact support.'
+            errorMessage =
+              (result.message as string) || 'Reviews table not found. Please contact support.'
           } else if (result.permissionDenied) {
             errorMessage =
-              (result.message as string) || 'Permission denied. Only verified purchasers can review.'
+              (result.message as string) ||
+              'Permission denied. Only verified purchasers can review.'
           } else if (result.message) {
             errorMessage = result.message as string
           } else if (result.error) {
-            const error = typeof result.error === 'string' ? result.error : result.error instanceof Error ? result.error.message : String(result.error)
+            const error =
+              typeof result.error === 'string'
+                ? result.error
+                : result.error instanceof Error
+                  ? result.error.message
+                  : String(result.error)
             errorMessage = `Error: ${error}`
           }
 

@@ -4,8 +4,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { getFavoriteItems, removeFavorite } from '../lib/favoritesUtils'
 // import { addProductToCart, addMenuItemToCart } from '../lib/cartUtils';
-// import { handleAuthError } from '../lib/authUtils';
-import { parsePrice, formatPrice } from '../lib/priceUtils'
+import { handleAuthError } from '../lib/authUtils'
+// import { parsePrice, formatPrice } from '../lib/priceUtils' // Unused - keeping for future use
 import FavoriteCommentsPanel from '../components/FavoriteCommentsPanel'
 import FavoriteCard from '../components/favorites/FavoriteCard'
 import EmptyFavoritesState from '../components/favorites/EmptyFavoritesState'

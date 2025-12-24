@@ -12,7 +12,7 @@ import { EFFECT_OPTIONS, parseEffects, parseEffectVariants } from '../../utils/e
 import { logger } from '../../utils/logger'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
 
-interface GalleryCard {
+interface GalleryCardData {
   id: string
   position: number
   default_image_url: string
@@ -28,7 +28,7 @@ interface GalleryCard {
 
 const AdminGallery = () => {
   const containerRef = useViewportAnimationTrigger()
-  const [galleryCards, setGalleryCards] = useState<GalleryCard[]>([])
+  const [galleryCards, setGalleryCards] = useState<GalleryCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<Record<string, boolean>>({})
   const [isAdmin, setIsAdmin] = useState(false)
@@ -65,7 +65,7 @@ const AdminGallery = () => {
         return
       }
 
-      if (!customer || !customer.is_admin) {
+      if (!customer || !(customer as { is_admin?: boolean }).is_admin) {
         setError('Access denied. Admin privileges required.')
         setCheckingAdmin(false)
         return
@@ -194,10 +194,13 @@ const AdminGallery = () => {
       // Update card in database
       const updateField = imageType === 'default' ? 'default_image_url' : 'hover_image_url'
 
-      const updateData = { [updateField]: imageUrl, updated_at: new Date().toISOString() } as any
-      const { error } = await (supabase
-        .from('gallery_cards') as any)
-        .update(updateData)
+      const updateData: Record<string, unknown> = {
+        [updateField]: imageUrl,
+        updated_at: new Date().toISOString(),
+      }
+      const { error } = await supabase
+        .from('gallery_cards')
+        .update(updateData as never)
         .eq('id', cardId)
 
       if (error) {
@@ -215,15 +218,20 @@ const AdminGallery = () => {
     const baseFallback =
       Array.isArray(nextVariants) && nextVariants.length > 0 ? nextVariants[0] : ['crossfade']
     const normalizedVariants = parseEffectVariants(nextVariants, baseFallback)
-    const primary = normalizedVariants[0] ?? ['crossfade']
+    const primary = (Array.isArray(normalizedVariants) && normalizedVariants.length > 0
+      ? normalizedVariants[0]
+      : ['crossfade']) as string[]
     const payload = {
       effect: primary,
       effect_variants: normalizedVariants,
     }
-    const updateData = { ...payload, updated_at: new Date().toISOString() } as any
-    const { error } = await (supabase
-      .from('gallery_cards') as any)
-      .update(updateData)
+    const updateData: Record<string, unknown> = {
+      ...payload,
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await supabase
+      .from('gallery_cards')
+      .update(updateData as never)
       .eq('id', cardId)
 
     if (error) {
@@ -237,8 +245,11 @@ const AdminGallery = () => {
         card.id === cardId
           ? {
               ...card,
-              effect: payload.effect,
-              effect_variants: payload.effect_variants,
+              effect: Array.isArray(payload.effect) ? payload.effect.join(',') : payload.effect,
+              effect_variants:
+                Array.isArray(normalizedVariants) && normalizedVariants.length > 0
+                  ? normalizedVariants[0]?.join(',') ?? card.effect_variants
+                  : card.effect_variants,
               updated_at: new Date().toISOString(),
             }
           : card
@@ -249,10 +260,13 @@ const AdminGallery = () => {
 
   // Toggle active status
   const toggleActive = async (cardId: string, currentStatus: boolean) => {
-    const updateData = { is_active: !currentStatus, updated_at: new Date().toISOString() } as any
-    const { error } = await (supabase
-      .from('gallery_cards') as any)
-      .update(updateData)
+    const updateData: Record<string, unknown> = {
+      is_active: !currentStatus,
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await supabase
+      .from('gallery_cards')
+      .update(updateData as never)
       .eq('id', cardId)
 
     if (error) {
@@ -297,14 +311,12 @@ const AdminGallery = () => {
 
     // Swap positions
     const updateData1 = { position: newPosition } as any
-    const { error: error1 } = await (supabase
-      .from('gallery_cards') as any)
+    const { error: error1 } = await (supabase.from('gallery_cards') as any)
       .update(updateData1)
       .eq('id', cardId)
 
     const updateData2 = { position: card.position } as any
-    const { error: error2 } = await (supabase
-      .from('gallery_cards') as any)
+    const { error: error2 } = await (supabase.from('gallery_cards') as any)
       .update(updateData2)
       .eq('id', targetCard.id)
 
@@ -325,7 +337,7 @@ const AdminGallery = () => {
       hover_image_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',
       effect: 'crossfade',
       is_active: true,
-    })
+    } as never)
 
     if (error) {
       toast.error('Failed to add card')
@@ -610,9 +622,12 @@ const AdminGallery = () => {
                       </div>
                       <span className="text-xs text-text-muted uppercase tracking-[0.18em]">
                         Updated{' '}
-                        {formatDistanceToNow(new Date(card.updated_at || card.created_at), {
-                          addSuffix: true,
-                        })}
+                        {formatDistanceToNow(
+                          new Date(card.updated_at || card.created_at || new Date().toISOString()),
+                          {
+                            addSuffix: true,
+                          }
+                        )}
                       </span>
                     </div>
                     <div className="mt-auto flex flex-col gap-3 sm:flex-row">

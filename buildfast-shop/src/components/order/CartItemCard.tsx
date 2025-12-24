@@ -75,15 +75,10 @@ const CartItemCard = memo(
       }
     }, [])
 
-    // Handle null/undefined product gracefully
-    if (!product) {
-      return null
-    }
-
-    // Memoized product data
-    const productName = useMemo(() => product.name || 'Unknown Item', [product.name])
-    const productPrice = useMemo(() => parsePrice(product.price), [product.price])
-    const productCurrency = useMemo(() => product.currency || 'BDT', [product.currency])
+    // Memoized product data - handle null product inside hooks
+    const productName = useMemo(() => product?.name || 'Unknown Item', [product?.name])
+    const productPrice = useMemo(() => (product ? parsePrice(product.price) : 0), [product])
+    const productCurrency = useMemo(() => product?.currency || 'BDT', [product?.currency])
     const imageUrl = useMemo(() => {
       if (!getImageUrl) {
         return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop'
@@ -96,24 +91,26 @@ const CartItemCard = memo(
 
     // Stock status (if available)
     const isMenuItem = useMemo(() => {
+      if (!product) return false
       return (
-        product?.isMenuItem ??
-        (product?.category_id !== undefined && product?.is_available !== undefined)
+        product.isMenuItem ??
+        (product.category_id !== undefined && product.is_available !== undefined)
       )
-    }, [product?.isMenuItem, product?.category_id, product?.is_available])
+    }, [product])
 
     // Note: menu_items don't have stock_quantity, this is for legacy products only
     const stockQuantity = useMemo(() => {
-      if (isMenuItem) return null // menu_items don't track stock
-      return product?.stock_quantity
-    }, [isMenuItem, product?.stock_quantity])
+      if (!product || isMenuItem) return null // menu_items don't track stock
+      return product.stock_quantity
+    }, [isMenuItem, product])
     const hasFiniteStock = useMemo(
       () => stockQuantity !== null && stockQuantity !== undefined,
       [stockQuantity]
     )
     const isOutOfStock = useMemo(() => {
-      return isMenuItem ? product?.is_available === false : hasFiniteStock && stockQuantity === 0
-    }, [isMenuItem, product?.is_available, hasFiniteStock, stockQuantity])
+      if (!product) return false
+      return isMenuItem ? product.is_available === false : hasFiniteStock && stockQuantity === 0
+    }, [isMenuItem, product, hasFiniteStock, stockQuantity])
 
     const isLowStock = useMemo(() => {
       return (
@@ -180,7 +177,8 @@ const CartItemCard = memo(
       target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop'
     }, [])
 
-    if (isRemoving) {
+    // Handle null/undefined product gracefully - after all hooks
+    if (!product || isRemoving) {
       return null
     }
 

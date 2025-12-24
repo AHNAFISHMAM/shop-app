@@ -12,7 +12,7 @@ import { cn } from '../../lib/utils'
 /**
  * FormField Props
  */
-export interface FormFieldProps<T = any> {
+export interface FormFieldProps<T = unknown> {
   /** Field name (for useForm integration) */
   name: string
   /** Field label */

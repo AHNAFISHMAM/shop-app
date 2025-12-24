@@ -161,7 +161,7 @@ const ReservationsPage = memo(() => {
   // Load settings
   useEffect(() => {
     loadSettings()
-  }, [])
+  }, [loadSettings])
 
   const loadSettings = useCallback(async () => {
     try {

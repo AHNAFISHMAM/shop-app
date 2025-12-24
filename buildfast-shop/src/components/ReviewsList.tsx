@@ -88,7 +88,7 @@ function ReviewsList({ productId, itemType = 'product', refreshTrigger = 0 }: Re
 
     logger.log('=== REVIEWS LIST: Load result ===')
     logger.log('Success:', result.success)
-    const reviewsData = Array.isArray(result.data) 
+    const reviewsData = Array.isArray(result.data)
       ? (result.data as ProductReview[])
       : Array.isArray(result.reviews)
         ? (result.reviews as ProductReview[])

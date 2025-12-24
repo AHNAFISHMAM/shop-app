@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, ChangeEvent, DragEvent } from 'react'
+import { useEffect, useMemo, useState, useRef, useCallback, ChangeEvent, DragEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { uploadMenuImage, compressImage } from '../../lib/imageUtils'
 import toast from 'react-hot-toast'
@@ -89,7 +89,7 @@ export default function ImageUploadModal({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen])
+  }, [isOpen, handleClose])
 
   // Focus management
   useEffect(() => {
@@ -241,7 +241,7 @@ export default function ImageUploadModal({
   }
 
   // Close modal
-  function handleClose() {
+  const handleClose = useCallback(() => {
     setSelectedFile(null)
     setPreview(null)
     setDragActive(false)
@@ -253,7 +253,7 @@ export default function ImageUploadModal({
       usageRights: '',
     })
     onClose()
-  }
+  }, [onClose])
 
   function handleMetadataChange(field: keyof Metadata, value: string) {
     setMetadata(prev => ({

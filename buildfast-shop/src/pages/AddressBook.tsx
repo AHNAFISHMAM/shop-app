@@ -150,10 +150,10 @@ const AddressBook = memo((): JSX.Element | null => {
         let result
         if (editingAddress) {
           // Update existing
-          result = await updateAddress(String(editingAddress.id), formData as any)
+          result = await updateAddress(String(editingAddress.id), formData as AddressFormAddress)
         } else {
           // Create new
-          result = await createAddress(data as any)
+          result = await createAddress(data as AddressFormAddress)
         }
 
         if (result.success) {
@@ -166,7 +166,10 @@ const AddressBook = memo((): JSX.Element | null => {
           await loadAddresses()
         } else {
           logger.error('Error saving address:', result.error)
-          const errorMsg = result.error instanceof Error ? result.error.message : String(result.error || 'Failed to save address')
+          const errorMsg =
+            result.error instanceof Error
+              ? result.error.message
+              : String(result.error || 'Failed to save address')
           setError(errorMsg)
         }
       } catch (err) {
@@ -378,7 +381,9 @@ const AddressBook = memo((): JSX.Element | null => {
                   >
                     <div
                       className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[var(--color-amber)] via-[var(--color-orange)] to-[var(--color-orange)] transition-all duration-700"
-                      style={{ width: `${Math.min(100, Math.max(loyalty.progressPercent ?? 0, 4))}%` }}
+                      style={{
+                        width: `${Math.min(100, Math.max(loyalty.progressPercent ?? 0, 4))}%`,
+                      }}
                     />
                   </div>
                   <span className="text-sm sm:text-xs font-semibold text-[var(--color-amber)] whitespace-nowrap">

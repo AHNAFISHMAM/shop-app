@@ -109,13 +109,11 @@ function AdminDiscountCodes(): JSX.Element {
               setCodes(prev => {
                 const exists = prev.some(c => c.id === payload.new.id)
                 if (exists) return prev
-                return [payload.new as DiscountCode, ...prev].sort(
-                  (a, b) => {
-                    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
-                    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
-                    return dateB - dateA
-                  }
-                )
+                return [payload.new as DiscountCode, ...prev].sort((a, b) => {
+                  const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+                  const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+                  return dateB - dateA
+                })
               })
             }
           } else if (payload.eventType === 'UPDATE') {
@@ -148,7 +146,10 @@ function AdminDiscountCodes(): JSX.Element {
       if (result.success && result.data) {
         setCodes(result.data as DiscountCode[])
       } else {
-        const errorMsg = result.error instanceof Error ? result.error.message : String(result.error || 'Unknown error')
+        const errorMsg =
+          result.error instanceof Error
+            ? result.error.message
+            : String(result.error || 'Unknown error')
         setError('Failed to load discount codes: ' + errorMsg)
       }
     } catch (err) {
@@ -160,7 +161,9 @@ function AdminDiscountCodes(): JSX.Element {
   }
 
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { value: string | number; name?: string } }
+    e:
+      | ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+      | { target: { value: string | number; name?: string } }
   ): void => {
     let name: string | undefined
     let value: string | number
@@ -340,7 +343,10 @@ function AdminDiscountCodes(): JSX.Element {
         }, 3000)
         fetchCodes()
       } else {
-        const errorMsg = result.error instanceof Error ? result.error.message : String(result.error || 'Unknown error')
+        const errorMsg =
+          result.error instanceof Error
+            ? result.error.message
+            : String(result.error || 'Unknown error')
         setError('Failed to delete discount code: ' + errorMsg)
       }
     } catch (err) {

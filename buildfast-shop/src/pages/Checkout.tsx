@@ -79,7 +79,14 @@ const Checkout = memo(function Checkout() {
   // IMPORTANT: Preserve ALL product data sources (database, embedded, already-resolved)
   // This ensures checkout works even when products can't be fetched from database
   const cartItems = useMemo(() => {
-    return (rawCartItems || []).map((item: any) => {
+    return (rawCartItems || []).map((item: {
+      resolvedProduct?: unknown
+      menu_items?: unknown
+      dishes?: unknown
+      products?: unknown
+      product?: unknown
+      [key: string]: unknown
+    }) => {
       // Priority order for product resolution:
       // 1. Already resolved product from hook (getGuestCartItems sets this)
       // 2. Database relations (menu_items, dishes, products)
@@ -165,7 +172,16 @@ const Checkout = memo(function Checkout() {
   // Refs for cleanup (managed by hook internally)
 
   // Handle selecting a saved address
-  const handleSelectSavedAddress = useCallback((address: any) => {
+  const handleSelectSavedAddress = useCallback((address: {
+    fullName?: string
+    addressLine1?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+    phone?: string
+    [key: string]: unknown
+  }) => {
     if (!address) return
 
     setSelectedSavedAddress(address)

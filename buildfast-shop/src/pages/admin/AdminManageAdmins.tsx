@@ -78,7 +78,7 @@ function AdminManageAdmins() {
   // Load list of admins
   const loadAdmins = async () => {
     try {
-      const { data, error: rpcError } = await (supabase.rpc as any)('list_admins')
+      const { data, error: rpcError } = await supabase.rpc('list_admins')
 
       if (rpcError) {
         logger.error('Failed to load admins:', rpcError)
@@ -88,7 +88,7 @@ function AdminManageAdmins() {
 
       const rpcData = data as { success?: boolean; admins?: unknown[]; error?: string } | null
       if (rpcData?.success) {
-        setAdmins((rpcData.admins || []) as any[])
+        setAdmins((rpcData.admins || []) as Admin[])
       } else {
         setError(rpcData?.error || 'Failed to load admin list')
       }

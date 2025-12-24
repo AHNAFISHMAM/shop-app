@@ -162,7 +162,7 @@ async function fetchProduct(productId: string): Promise<ProductData> {
     }
 
     addToRecentlyViewed(productId, 'product')
-    
+
     // Normalize dish to product format
     const dishRecord = dish as Dish & Record<string, unknown>
     const normalizedDish: NormalizedProduct = {
@@ -170,7 +170,10 @@ async function fetchProduct(productId: string): Promise<ProductData> {
       id: dishRecord.id,
       name: dishRecord.name || '',
       description: dishRecord.description || null,
-      price: typeof dishRecord.price === 'number' ? dishRecord.price : parseFloat(String(dishRecord.price || '0')) || 0,
+      price:
+        typeof dishRecord.price === 'number'
+          ? dishRecord.price
+          : parseFloat(String(dishRecord.price || '0')) || 0,
       image_url: dishRecord.image_url || null,
       isMenuItem: false,
       category: null,
@@ -178,7 +181,7 @@ async function fetchProduct(productId: string): Promise<ProductData> {
       stock_quantity: dishRecord.stock_quantity || null,
       currency: '৳',
     }
-    
+
     return {
       product: normalizedDish,
       source: 'dishes',

@@ -119,7 +119,12 @@ export default [
     languageOptions: {
       parser: tsparser,
       ecmaVersion: 2022,
-      globals: globals.browser,
+      globals: {
+        ...globals.browser,
+        React: 'readonly',
+        JSX: 'readonly',
+        NodeJS: 'readonly',
+      },
       parserOptions: {
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
@@ -142,6 +147,8 @@ export default [
       ...reactHooks.configs.recommended.rules,
       ...tseslint.configs.recommended.rules,
       ...prettierConfig.rules,
+      'no-undef': 'off', // TypeScript handles this
+      'react/prop-types': 'off', // TypeScript handles prop validation
       'react/jsx-no-target-blank': 'off',
       'react-refresh/only-export-components': [
         'warn',

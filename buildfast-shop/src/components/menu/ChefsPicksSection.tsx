@@ -91,7 +91,9 @@ const ChefsPicksSection = memo(
                         description: (item as { description?: string | null }).description ?? null,
                         price: (item as { price?: number }).price ?? 0,
                         currency: (item as { currency?: string }).currency ?? 'BDT',
-                        images: (item as { image_url?: string | null }).image_url ? [(item as { image_url?: string | null }).image_url!] : undefined,
+                        images: (item as { image_url?: string | null }).image_url
+                          ? [(item as { image_url?: string | null }).image_url!]
+                          : undefined,
                         is_available: (item as { is_available?: boolean }).is_available ?? true,
                       } as Product
                     }

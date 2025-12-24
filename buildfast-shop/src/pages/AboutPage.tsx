@@ -29,7 +29,7 @@ interface PurposeHighlight {
 /**
  * Interface for gallery card structure
  */
-interface GalleryCard {
+interface GalleryCardData {
   id: string
   default_image_url: string
   hover_image_url?: string
@@ -50,7 +50,7 @@ interface GalleryCard {
 const AboutPage = memo((): JSX.Element => {
   const { settings } = useStoreSettings()
   // const isLightTheme = useTheme()
-  const [galleryCards, setGalleryCards] = useState<GalleryCard[]>([])
+  const [galleryCards, setGalleryCards] = useState<GalleryCardData[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
@@ -131,7 +131,7 @@ const AboutPage = memo((): JSX.Element => {
         return
       }
 
-      setGalleryCards((data || []) as GalleryCard[])
+      setGalleryCards((data || []) as GalleryCardData[])
       if (!data || data.length === 0) {
         setError('No active gallery cards found. Please add cards in the admin panel.')
       }
@@ -336,7 +336,7 @@ const AboutPage = memo((): JSX.Element => {
         data-animate="drift-right"
         data-animate-active="false"
         className="glow-surface glow-soft relative overflow-hidden py-10 sm:py-12 px-4 -mx-4 rounded-2xl sm:rounded-3xl border border-theme bg-gradient-to-br from-[var(--accent)]/10 via-background to-[var(--accent)]/5 shadow-inner"
-        style={settings ? getBackgroundStyle(settings as any, 'gallery_section') : {}}
+        style={settings ? getBackgroundStyle(settings as Record<string, string | null | undefined>, 'gallery_section') : {}}
         aria-labelledby="gallery-heading"
       >
         <div

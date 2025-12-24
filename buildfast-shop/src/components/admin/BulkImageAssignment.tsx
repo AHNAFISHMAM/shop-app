@@ -576,7 +576,10 @@ export default function BulkImageAssignment({
 
       setUploadedImages(results.filter(result => result.success))
 
-      const matchResult = await autoMatchImages(results as Array<{ fileName: string; [key: string]: unknown }>, menuItems)
+      const matchResult = await autoMatchImages(
+        results as Array<{ fileName: string; [key: string]: unknown }>,
+        menuItems
+      )
       const autoMatches = matchResult.matches
       const unmatchedImages = matchResult.unmatched
       setMatches(autoMatches as Match[])
@@ -1203,7 +1206,7 @@ export default function BulkImageAssignment({
                   {pexelsResults.length === 0 && !pexelsLoading && (
                     <p className="text-sm text-text-muted">
                       Search results will appear here. Try cuisine or ingredient keywords (e.g.
-                      "thai curry dish").
+                      &quot;thai curry dish&quot;).
                     </p>
                   )}
 

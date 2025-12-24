@@ -67,12 +67,12 @@ export declare function uploadMultipleImages(files: File[]): Promise<
 >
 export declare function generatePlaceholderImage(dishName: string, color?: string): string
 export interface AutoMatchResult {
-  matches: any[]
-  unmatched: any[]
+  matches: Array<{ fileName: string; [key: string]: unknown }>
+  unmatched: Array<{ fileName: string; [key: string]: unknown }>
 }
 export declare function autoMatchImages(
   uploadedFiles: Array<{ fileName: string; [key: string]: unknown }>,
-  menuItems: any[]
+  menuItems: Array<{ id: string; name: string; [key: string]: unknown }>
 ): Promise<AutoMatchResult>
 export declare function compressImage(
   file: File,

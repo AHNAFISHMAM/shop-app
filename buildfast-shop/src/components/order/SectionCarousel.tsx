@@ -86,7 +86,35 @@ const SectionCarousel = ({
     return () => observer.disconnect()
   }, [])
 
-  // Validate required props
+  // Memoized values - must be before early returns
+  const isExpanded = useMemo(() => defaultExpanded, [defaultExpanded])
+  const hasDishes = useMemo(() => {
+    if (!Array.isArray(dishes)) return false
+    return dishes.length > 0
+  }, [dishes])
+  const showContent = useMemo(
+    () => isExpanded && isAvailable && hasDishes,
+    [isExpanded, isAvailable, hasDishes]
+  )
+  const showEmpty = useMemo(
+    () => isExpanded && (!isAvailable || !hasDishes),
+    [isExpanded, isAvailable, hasDishes]
+  )
+
+  const emptyMessage = useMemo(() => {
+    if (!sectionName || typeof sectionName !== 'string') return ''
+    return customMessage || `No ${sectionName.toLowerCase()} available right now`
+  }, [customMessage, sectionName])
+
+  const emptyStateBackgroundColor = useMemo(() => {
+    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.04)' : 'rgba(var(--text-main-rgb), 0.05)'
+  }, [isLightTheme])
+
+  const emptyStateBorderColor = useMemo(() => {
+    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.1)' : undefined
+  }, [isLightTheme])
+
+  // Validate required props - after all hooks
   if (!sectionName || typeof sectionName !== 'string') {
     return null
   }
@@ -98,30 +126,6 @@ const SectionCarousel = ({
   if (typeof onAddToCart !== 'function' || typeof getImageUrl !== 'function') {
     return null
   }
-
-  // Memoized values
-  const isExpanded = useMemo(() => defaultExpanded, [defaultExpanded])
-  const hasDishes = useMemo(() => dishes.length > 0, [dishes.length])
-  const showContent = useMemo(
-    () => isExpanded && isAvailable && hasDishes,
-    [isExpanded, isAvailable, hasDishes]
-  )
-  const showEmpty = useMemo(
-    () => isExpanded && (!isAvailable || !hasDishes),
-    [isExpanded, isAvailable, hasDishes]
-  )
-
-  const emptyMessage = useMemo(() => {
-    return customMessage || `No ${sectionName.toLowerCase()} available right now`
-  }, [customMessage, sectionName])
-
-  const emptyStateBackgroundColor = useMemo(() => {
-    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.04)' : 'rgba(var(--text-main-rgb), 0.05)'
-  }, [isLightTheme])
-
-  const emptyStateBorderColor = useMemo(() => {
-    return isLightTheme ? 'rgba(var(--bg-dark-rgb), 0.1)' : undefined
-  }, [isLightTheme])
 
   // Hide empty sections completely from Order page
   if (!hasDishes) {

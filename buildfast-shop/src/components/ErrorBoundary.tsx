@@ -145,7 +145,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               </p>
             </div>
 
-            {((import.meta as any).env?.DEV || (import.meta as any).env?.MODE === 'development') &&
+            {(import.meta.env?.DEV || import.meta.env?.MODE === 'development') &&
               this.state.error && (
                 <div className="text-left bg-[var(--bg-elevated)] rounded-lg p-4 border border-[var(--border-default)]">
                   <p className="text-sm font-semibold text-[var(--color-red)] mb-2">

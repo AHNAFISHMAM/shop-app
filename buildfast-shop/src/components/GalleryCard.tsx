@@ -39,7 +39,12 @@ const GalleryCard = memo(function GalleryCard({
   const baseEffects = useMemo(() => parseEffects(effect), [effect])
   const variantSequence = useMemo(() => {
     if (effectVariants !== undefined && effectVariants !== null) {
-      const variants = typeof effectVariants === 'string' ? effectVariants : Array.isArray(effectVariants) ? JSON.stringify(effectVariants) : null
+      const variants =
+        typeof effectVariants === 'string'
+          ? effectVariants
+          : Array.isArray(effectVariants)
+            ? JSON.stringify(effectVariants)
+            : null
       return parseEffectVariants(variants, baseEffects)
     }
     return buildEffectVariants(baseEffects)
@@ -51,7 +56,11 @@ const GalleryCard = memo(function GalleryCard({
   }, [variantSequence])
 
   const variantCount = variantSequence.length || 1
-  const activeVariant = variantSequence[hoverSequence % variantCount] || []
+  // Memoize activeVariant to prevent dependency issues
+  const activeVariant = useMemo(
+    () => variantSequence[hoverSequence % variantCount] || [],
+    [variantSequence, hoverSequence, variantCount]
+  )
 
   const effectClassNames = useMemo(
     () => (activeVariant || []).map((effectName: string) => `gallery-card-${effectName}`).join(' '),

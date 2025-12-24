@@ -43,8 +43,17 @@ export interface AuthContextType {
     email: string,
     password: string,
     fullName: string
-  ) => Promise<{ data: any; error: Error | null }>
-  signIn: (email: string, password: string) => Promise<{ data: any; error: Error | null }>
+  ) => Promise<{
+    data: { user: { id: string; email?: string } | null; session: unknown } | null
+    error: Error | null
+  }>
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{
+    data: { user: { id: string; email?: string } | null; session: unknown } | null
+    error: Error | null
+  }>
   signOut: () => Promise<void>
   refreshAdminStatus: () => Promise<void>
 }
@@ -168,7 +177,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq('id', userId)
           .maybeSingle()
 
-        const result = await Promise.race([fetchPromise, timeoutPromise]) as { data: { is_admin: boolean } | null; error: unknown } | { data: null; error: Error }
+        const result = (await Promise.race([fetchPromise, timeoutPromise])) as
+          | { data: { is_admin: boolean } | null; error: unknown }
+          | { data: null; error: Error }
         const { data, error } = result || { data: null, error: null }
 
         if (error) {
@@ -284,7 +295,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logError(error, 'AuthContext.initAuth')
         // If it's a refresh token error, clear all auth data
         const errorMessage = error instanceof Error ? error.message : String(error)
-        if (errorMessage.includes('refresh_token') || errorMessage.includes('Invalid Refresh Token')) {
+        if (
+          errorMessage.includes('refresh_token') ||
+          errorMessage.includes('Invalid Refresh Token')
+        ) {
           await clearInvalidAuthTokens()
         }
         setUser(null)
@@ -366,7 +380,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logError(error, 'AuthContext.onAuthStateChange')
         // Handle refresh token errors
         const errorMessage = error instanceof Error ? error.message : String(error)
-        if (errorMessage.includes('refresh_token') || errorMessage.includes('Invalid Refresh Token')) {
+        if (
+          errorMessage.includes('refresh_token') ||
+          errorMessage.includes('Invalid Refresh Token')
+        ) {
           await supabase.auth.signOut()
         }
         setIsAdmin(false)

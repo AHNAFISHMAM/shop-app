@@ -65,10 +65,6 @@ function RecentlyViewed() {
   const [products, setProducts] = useState<RecentlyViewedProduct[]>([])
   const [loading, setLoading] = useState<boolean>(true)
 
-  useEffect(() => {
-    loadRecentlyViewedProducts()
-  }, [])
-
   const loadRecentlyViewedProducts = useCallback(async () => {
     try {
       setLoading(true)
@@ -89,15 +85,15 @@ function RecentlyViewed() {
         [key: string]: unknown
       }
 
-      const menuEntries = entries.filter((entry: Entry): entry is Entry => entry.itemType === 'menu_item')
-      const productEntries = entries.filter((entry: Entry): entry is Entry => entry.itemType !== 'menu_item')
+      const menuEntries = entries.filter(
+        (entry: Entry): entry is Entry => entry.itemType === 'menu_item'
+      )
+      const productEntries = entries.filter(
+        (entry: Entry): entry is Entry => entry.itemType !== 'menu_item'
+      )
 
-      const menuIds = Array.from(
-        new Set(menuEntries.map((entry: Entry) => entry.productId))
-      )
-      const productIds = Array.from(
-        new Set(productEntries.map((entry: Entry) => entry.productId))
-      )
+      const menuIds = Array.from(new Set(menuEntries.map((entry: Entry) => entry.productId)))
+      const productIds = Array.from(new Set(productEntries.map((entry: Entry) => entry.productId)))
 
       const [menuResult, dishesResult, legacyProductResult] = await Promise.all([
         menuIds.length
@@ -158,6 +154,10 @@ function RecentlyViewed() {
       setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    loadRecentlyViewedProducts()
+  }, [loadRecentlyViewedProducts])
 
   // Get product image (first image or placeholder)
   const getProductImage = useCallback((product: RecentlyViewedProduct | null): string => {

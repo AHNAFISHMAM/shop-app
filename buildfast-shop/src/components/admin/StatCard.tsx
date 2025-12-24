@@ -110,7 +110,9 @@ function StatCard({
 
   // Animated count-up effect (only for numbers)
   const isNumeric = typeof value === 'number'
-  const animatedValue = isNumeric ? useCountUp(loading ? 0 : value, 1500, animationDelay) : value
+  // Always call hook, but only use result if numeric
+  const countUpValue = useCountUp(loading ? 0 : isNumeric ? value : 0, 1500, animationDelay)
+  const animatedValue = isNumeric ? countUpValue : value
 
   // Memoized skeleton background colors
   const skeletonBg = useMemo(() => {

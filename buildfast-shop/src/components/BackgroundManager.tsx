@@ -144,7 +144,10 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
   const loadCurrentSettings = useCallback(() => {
     try {
       if (settings) {
-        const loadedConfig = dbFormatToConfig(settings as unknown as Record<string, unknown>, section)
+        const loadedConfig = dbFormatToConfig(
+          settings as unknown as Record<string, unknown>,
+          section
+        )
         // Normalize config to match component's required fields
         setConfig({
           type: loadedConfig.type as 'solid' | 'gradient' | 'image' | 'none',
@@ -152,7 +155,13 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
           gradient: loadedConfig.gradient || '',
           imageUrl: loadedConfig.imageUrl || '',
         })
-        setActiveTab((loadedConfig.type === 'none' ? 'solid' : loadedConfig.type) as 'solid' | 'gradient' | 'image' | 'presets')
+        setActiveTab(
+          (loadedConfig.type === 'none' ? 'solid' : loadedConfig.type) as
+            | 'solid'
+            | 'gradient'
+            | 'image'
+            | 'presets'
+        )
       }
     } catch (error) {
       logger.error('Error loading background settings:', error)
@@ -162,7 +171,10 @@ function BackgroundManager({ section, label, onSave }: BackgroundManagerProps) {
 
   const updatePreview = useCallback(() => {
     const dbFormat = configToDbFormat(config, section) as Record<string, unknown>
-    const style = getBackgroundStyle(dbFormat as unknown as Record<string, string | null | undefined>, section)
+    const style = getBackgroundStyle(
+      dbFormat as unknown as Record<string, string | null | undefined>,
+      section
+    )
     setPreviewStyle(style)
   }, [config, section])
 

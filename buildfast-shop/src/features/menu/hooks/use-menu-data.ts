@@ -63,21 +63,24 @@ async function fetchMenuData(): Promise<MenuData> {
       if (rpcArray.length === 0) {
         return { categories: [], items: [] }
       }
-      const categories: MenuCategory[] = rpcArray.length > 0
-        ? rpcArray
-            .filter((cat: any): cat is Record<string, unknown> => cat && typeof cat === 'object')
-            .map((cat: any): MenuCategory => ({
-              id: String(cat.category_id || ''),
-              name: String(cat.category_name || ''),
-              slug: String(cat.category_name?.toLowerCase().replace(/\s+/g, '-') || ''),
-              description: cat.description || null,
-              image_url: cat.image_url || null,
-              sort_order: Number(cat.category_order || 0),
-              is_active: cat.is_active !== false,
-              created_at: String(cat.created_at || new Date().toISOString()),
-              updated_at: String(cat.updated_at || new Date().toISOString()),
-            }))
-        : []
+      const categories: MenuCategory[] =
+        rpcArray.length > 0
+          ? rpcArray
+              .filter((cat: any): cat is Record<string, unknown> => cat && typeof cat === 'object')
+              .map(
+                (cat: any): MenuCategory => ({
+                  id: String(cat.category_id || ''),
+                  name: String(cat.category_name || ''),
+                  slug: String(cat.category_name?.toLowerCase().replace(/\s+/g, '-') || ''),
+                  description: cat.description || null,
+                  image_url: cat.image_url || null,
+                  sort_order: Number(cat.category_order || 0),
+                  is_active: cat.is_active !== false,
+                  created_at: String(cat.created_at || new Date().toISOString()),
+                  updated_at: String(cat.updated_at || new Date().toISOString()),
+                })
+              )
+          : []
 
       // Flatten dishes from all categories
       const items: MenuItem[] = rpcArray.flatMap((cat: any) => {

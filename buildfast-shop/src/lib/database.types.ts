@@ -309,9 +309,7 @@ export interface Database {
         }
       }
     }
-    Views: {
-      // Add views here if any
-    }
+    Views: Record<string, never>
     Functions: {
       get_public_menu: {
         Args: Record<PropertyKey, never>
@@ -352,9 +350,7 @@ export interface Database {
         }
       }
     }
-    Enums: {
-      // Add enums here if any
-    }
+    Enums: Record<string, never>
   }
 }
 

@@ -139,7 +139,8 @@ const OrderPage = memo((): JSX.Element => {
   } = useOrderFilters(meals)
 
   // Custom hooks for favorites management
-  const { favoriteItems, togglingFavorites } = useFavoritesManagement(user)
+  // Note: Currently unused but kept for future favorites integration
+  const { favoriteItems: _favoriteItems, togglingFavorites: _togglingFavorites } = useFavoritesManagement(user)
 
   const totalCartQuantity = useMemo(() => {
     return cartItems.reduce(

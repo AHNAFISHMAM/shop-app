@@ -390,7 +390,7 @@ const OrderHistory = memo((): JSX.Element | null => {
     try {
       // Use ref to get current orders to avoid stale closure
       const currentOrders = ordersRef.current
-      const orderIds = currentOrders.map((o: any) => o.id)
+      const orderIds = currentOrders.map((o: { id: string }) => o.id)
       if (orderIds.length === 0) return
 
       const { data, error } = await supabase
@@ -424,7 +424,8 @@ const OrderHistory = memo((): JSX.Element | null => {
         fetchReturnRequestsRef.current = null
       }
     }
-  }, [user, orders])
+  }, [user])
+  // orders is accessed via ordersRef.current to avoid stale closure
 
   // Fetch personalized recommendations based on order history
   const fetchRecommendations = useCallback(async () => {
@@ -932,7 +933,7 @@ Thank you for your order!
     // In a production app, you'd want to fetch these counts separately
     statusButtons.forEach(btn => {
       if (btn.value !== 'all') {
-        counts[btn.value] = orders.filter((o: any) => o.status === btn.value).length
+        counts[btn.value] = orders.filter((o: OrderHistoryOrder) => o.status === btn.value).length
       }
     })
     return counts
@@ -977,7 +978,8 @@ Thank you for your order!
         icon: '💳',
       },
     ],
-    [totalOrders, activeOrders, deliveredOrders, totalSpent, lastOrder, formatDate, navigate]
+    // formatDate, lastOrder, navigate are stable and don't affect the output
+    [totalOrders, activeOrders, deliveredOrders, totalSpent]
   )
 
   const quickActions = useMemo(
@@ -1006,6 +1008,8 @@ Thank you for your order!
         icon: '💬',
       },
     ],
+    // formatDate and navigate are stable (useCallback/useNavigate), but included for clarity
+    // lastOrder is derived from orders, so it's needed
     [activeOrders, lastOrder, formatDate, navigate, setStatusFilter]
   )
 

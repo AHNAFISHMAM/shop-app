@@ -96,7 +96,8 @@ function LowStockAlerts(): JSX.Element {
 
       setDishCombinations(combosMap)
     },
-    [showAllDishes]
+    // showAllDishes is not used in this function
+    []
   )
 
   const fetchAllDishes = useCallback(async () => {
@@ -135,7 +136,8 @@ function LowStockAlerts(): JSX.Element {
     } finally {
       setLoading(false)
     }
-  }, [showAllDishes, fetchCombinationsForDishes])
+  }, [fetchCombinationsForDishes])
+  // showAllDishes is not used in fetchAllDishes function body
 
   useEffect(() => {
     void fetchAllDishes()

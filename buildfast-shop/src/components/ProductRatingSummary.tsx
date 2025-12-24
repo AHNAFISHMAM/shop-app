@@ -106,7 +106,10 @@ function ProductRatingSummary({
 
     if (distributionResult.success) {
       logger.log('Setting distribution:', distributionResult.distribution)
-      const dist = (distributionResult.distribution ?? distributionResult.data ?? {}) as Record<number, number>
+      const dist = (distributionResult.distribution ?? distributionResult.data ?? {}) as Record<
+        number,
+        number
+      >
       // Convert Record<number, number> to RatingDistributionItem[]
       const total = Object.values(dist).reduce((sum, count) => sum + (count ?? 0), 0)
       const distributionArray: RatingDistributionItem[] = [5, 4, 3, 2, 1].map(rating => {

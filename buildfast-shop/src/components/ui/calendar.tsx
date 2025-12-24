@@ -112,10 +112,11 @@ export function Calendar({
   )
 
   const mergedComponents = React.useMemo(
-    () => ({
-      ...defaultComponents,
-      ...(userComponents || {}),
-    }) as DayPickerProps['components'],
+    () =>
+      ({
+        ...defaultComponents,
+        ...(userComponents || {}),
+      }) as DayPickerProps['components'],
     [defaultComponents, userComponents]
   )
 

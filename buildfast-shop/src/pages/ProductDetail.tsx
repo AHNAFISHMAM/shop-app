@@ -387,8 +387,10 @@ const ProductDetail = memo((): JSX.Element => {
     getSelectedVariant,
     user,
     isMenuItem,
-    navigate,
+    currentStock,
+    hasVariants,
   ])
+  // navigate from useNavigate() is stable, doesn't need to be in deps
 
   const handleWriteReview = useCallback((): void => {
     if (!reviewsEnabled) return
@@ -432,6 +434,17 @@ const ProductDetail = memo((): JSX.Element => {
     // Fallback placeholder image
     return ['https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop']
   }, [product])
+
+  // Memoized values - must be before early returns
+  const images = useMemo(() => getProductImages(), [getProductImages])
+  const currentStock = useMemo(() => getCurrentStock(), [getCurrentStock])
+  const isOutOfStock = useMemo(() => currentStock === 0, [currentStock])
+  const currentPrice = useMemo(() => getCurrentPrice(), [getCurrentPrice])
+  const showStockCount = useMemo(
+    () => typeof currentStock === 'number' && currentStock !== null,
+    [currentStock]
+  )
+  const hasVariants = useMemo(() => Object.keys(variants).length > 0, [variants])
 
   if (loading) {
     return (
@@ -484,16 +497,6 @@ const ProductDetail = memo((): JSX.Element => {
       </div>
     )
   }
-
-  const images = useMemo(() => getProductImages(), [getProductImages])
-  const currentStock = useMemo(() => getCurrentStock(), [getCurrentStock])
-  const isOutOfStock = useMemo(() => currentStock === 0, [currentStock])
-  const currentPrice = useMemo(() => getCurrentPrice(), [getCurrentPrice])
-  const showStockCount = useMemo(
-    () => typeof currentStock === 'number' && currentStock !== null,
-    [currentStock]
-  )
-  const hasVariants = useMemo(() => Object.keys(variants).length > 0, [variants])
 
   return (
     <m.main
