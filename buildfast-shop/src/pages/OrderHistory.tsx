@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { supabase } from '../lib/supabase'
@@ -716,6 +716,25 @@ const OrderHistory = memo((): JSX.Element | null => {
       await fetchOrderItems(orderId)
     }
   }
+
+  // Helper function to render order timeline with explicit return type
+  const renderOrderTimeline = useCallback((order: OrderHistoryOrder): React.ReactNode => {
+    if (
+      enableOrderTracking &&
+      typeof order.status === 'string' &&
+      order.status
+    ) {
+      return (
+        <div className="space-y-4 sm:space-y-6">
+          <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+            Order Timeline
+          </h3>
+          <OrderTimeline status={order.status} />
+        </div>
+      )
+    }
+    return null
+  }, [enableOrderTracking])
 
   const getStatusColor = useCallback((status: string): string => {
     const colors: Record<string, string> = {
@@ -1873,11 +1892,11 @@ Thank you for your order!
                                                   {variantText}
                                                 </p>
                                               )}
-                                              {item.customizations && (
+                                              {item.customizations ? (
                                                 <p className="text-sm sm:text-xs text-muted">
                                                   Customizations: {item.customizations}
                                                 </p>
-                                              )}
+                                              ) : null}
                                             </div>
                                             <div className="flex items-center justify-between pt-2 border-t border-theme/50">
                                               <span className="text-sm sm:text-base text-muted">
@@ -1897,18 +1916,7 @@ Thank you for your order!
                                   </div>
                                 )}
                               </div>
-
-                              {/* @ts-expect-error - TypeScript incorrectly infers unknown type due to index signature */}
-                              {enableOrderTracking &&
-                              typeof (order.status as string) === 'string' &&
-                              (order.status as string) ? (
-                                <div className="space-y-4 sm:space-y-6">
-                                  <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
-                                    Order Timeline
-                                  </h3>
-                                  <OrderTimeline status={order.status as string} />
-                                </div>
-                              ) : null}
+                              {renderOrderTimeline(order) as any}
 
                               {/* Delivery Information */}
                               {order.shipping_address && (

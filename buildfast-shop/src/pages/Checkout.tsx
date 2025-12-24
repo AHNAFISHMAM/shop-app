@@ -383,6 +383,7 @@ const Checkout = memo(function Checkout() {
     setDiscountError('')
   }
 
+
   // Validate shipping address form
   const isAddressValid = useCallback(() => {
     // For saved addresses, phone is optional if not provided (legacy addresses)
@@ -1807,7 +1808,6 @@ const Checkout = memo(function Checkout() {
                     </div>
                   </div>
                 )}
-              </div>
 
               {/* Order Summary Sidebar */}
               <div className="lg:w-80">
@@ -1822,7 +1822,7 @@ const Checkout = memo(function Checkout() {
                   <h2 className="text-xl font-bold text-[var(--text-main)] mb-4">Total</h2>
 
                   {/* Only show loyalty program if enabled */}
-                  {enableLoyaltyProgram && (
+                  {!!enableLoyaltyProgram && (
                     <div className="mb-4 rounded-xl border border-[#C59D5F]/30 bg-[#C59D5F]/10 p-4 text-xs text-amber-100/80">
                       <div className="flex items-center justify-between uppercase tracking-[0.2em] text-[10px] text-amber-200/70">
                         <span>Loyalty</span>
@@ -1918,100 +1918,106 @@ const Checkout = memo(function Checkout() {
                     </div>
                   </div>
 
-                  {/* @ts-expect-error - TypeScript incorrectly infers unknown type due to index signature */}
-                  <div className="mb-4 pb-4 border-b border-theme">
-                    {/* Discount Code Section */}
-                    {appliedDiscountCode === null ? (
-                      <div>
-                        <label
-                          htmlFor="discountCode"
-                          className="block text-sm font-medium text-[var(--text-main)] mb-2"
-                        >
-                          Discount Code
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            id="discountCode"
-                            value={discountCodeInput}
-                            onChange={e => {
-                              setDiscountCodeInput(e.target.value.toUpperCase())
-                              setDiscountError('')
-                            }}
-                            onKeyPress={e => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault()
-                                handleApplyDiscountCode()
-                              }
-                            }}
-                            placeholder="Enter code"
-                            disabled={validatingDiscount || placingOrder || orderSuccess}
-                            className="flex-1 px-3 py-3 bg-theme-elevated border border-theme rounded-lg text-[var(--text-main)] placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition uppercase disabled:opacity-50 disabled:cursor-not-allowed text-sm min-h-[44px]"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleApplyDiscountCode}
-                            disabled={
-                              validatingDiscount ||
-                              placingOrder ||
-                              orderSuccess ||
-                              !discountCodeInput.trim()
-                            }
-                            className="px-4 py-3 bg-accent text-black rounded-lg hover:bg-accent/80 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium min-h-[44px]"
-                          >
-                            {validatingDiscount ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              'Apply'
-                            )}
-                          </button>
-                        </div>
-                        {discountError && (
-                          <p className="mt-2 text-xs text-red-400">{discountError}</p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="bg-green-500/20 border border-green-400/30 rounded-lg p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-semibold text-green-400">
-                              Code: {appliedDiscountCode.code}
-                            </p>
-                            <p className="text-xs text-green-300 mt-0.5">
-                              {(() => {
-                                if (appliedDiscountCode.discount_type === 'percentage') {
-                                  return `${String(appliedDiscountCode.discount_value ?? '0')}% off`
-                                }
-                                const value = appliedDiscountCode.discount_value ?? '0'
-                                return `${formatCurrency(parseFloat(String(value)))} off`
-                              })()}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleRemoveDiscountCode}
-                            disabled={placingOrder || orderSuccess}
-                            className="text-green-300 hover:text-green-100 p-1 transition disabled:opacity-50"
-                            title="Remove discount code"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                  {useMemo(() => {
+                    if (appliedDiscountCode === null) {
+                      return (
+                        <div className="mb-4 pb-4 border-b border-theme">
+                          <div key="discount-input">
+                            <label
+                              htmlFor="discountCode"
+                              className="block text-sm font-medium text-[var(--text-main)] mb-2"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
+                              Discount Code
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                id="discountCode"
+                                value={discountCodeInput}
+                                onChange={e => {
+                                  setDiscountCodeInput(e.target.value.toUpperCase())
+                                  setDiscountError('')
+                                }}
+                                onKeyPress={e => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    handleApplyDiscountCode()
+                                  }
+                                }}
+                                placeholder="Enter code"
+                                disabled={validatingDiscount || placingOrder || orderSuccess}
+                                className="flex-1 px-3 py-3 bg-theme-elevated border border-theme rounded-lg text-[var(--text-main)] placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition uppercase disabled:opacity-50 disabled:cursor-not-allowed text-sm min-h-[44px]"
                               />
-                            </svg>
-                          </button>
+                              <button
+                                type="button"
+                                onClick={handleApplyDiscountCode}
+                                disabled={
+                                  validatingDiscount ||
+                                  placingOrder ||
+                                  orderSuccess ||
+                                  !discountCodeInput.trim()
+                                }
+                                className="px-4 py-3 bg-accent text-black rounded-lg hover:bg-accent/80 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium min-h-[44px]"
+                              >
+                                {validatingDiscount ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                  'Apply'
+                                )}
+                              </button>
+                            </div>
+                            {discountError && (
+                              <p className="mt-2 text-xs text-red-400">{discountError}</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )
+                    }
+                    if (appliedDiscountCode) {
+                      return (
+                        <div className="mb-4 pb-4 border-b border-theme">
+                          <div key="discount-applied" className="bg-green-500/20 border border-green-400/30 rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-green-400">
+                                  Code: {appliedDiscountCode.code}
+                                </p>
+                                <p className="text-xs text-green-300 mt-0.5">
+                                  {appliedDiscountCode.discount_type === 'percentage'
+                                    ? `${String(appliedDiscountCode.discount_value ?? '0')}% off`
+                                    : `${formatCurrency(parseFloat(String(appliedDiscountCode.discount_value ?? '0')))} off`}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleRemoveDiscountCode}
+                                disabled={placingOrder || orderSuccess}
+                                className="text-green-300 hover:text-green-100 p-1 transition disabled:opacity-50"
+                                title="Remove discount code"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+                    return (
+                      <div className="mb-4 pb-4 border-b border-theme"></div>
+                    )
+                  }, [appliedDiscountCode, discountCodeInput, discountError, validatingDiscount, placingOrder, orderSuccess]) as any}
 
                   <div className="space-y-3 mb-5">
                     <div className="flex justify-between text-sm text-muted">
@@ -2114,6 +2120,7 @@ const Checkout = memo(function Checkout() {
                 </div>
               </div>
             </div>
+          </div>
           )}
         </MotionSection>
       </MotionMain>
