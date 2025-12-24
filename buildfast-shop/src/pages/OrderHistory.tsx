@@ -70,7 +70,7 @@ const OrderHistory = memo((): JSX.Element | null => {
 
   // Watch for reduced motion preference changes
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return undefined
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const handleChange = (e: MediaQueryListEvent | { matches: boolean }): void => {
@@ -87,6 +87,7 @@ const OrderHistory = memo((): JSX.Element | null => {
       mediaQuery.addListener(handleChange)
       return () => mediaQuery.removeListener(handleChange)
     }
+    return undefined
   }, [])
 
   const [orders, setOrders] = useState<OrderHistoryOrder[]>([])
@@ -94,7 +95,7 @@ const OrderHistory = memo((): JSX.Element | null => {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
   const [orderItems, setOrderItems] = useState<Record<string, OrderHistoryItem[]>>({}) // Map of orderId -> items
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({}) // Map of orderId -> loading state
-  const [itemsError, setItemsError] = useState<Record<string, string>>({}) // Map of orderId -> error message
+  const [itemsError, setItemsError] = useState<Record<string, string | null>>({}) // Map of orderId -> error message
   const [returnRequests, setReturnRequests] = useState<Record<string, ReturnRequest>>({}) // Map of orderId -> returnRequest
 
   // Pagination state
@@ -340,8 +341,14 @@ const OrderHistory = memo((): JSX.Element | null => {
         return []
       }
 
-      const normalized = (data || []).map(item => {
-        const { menu_item, legacy_item, ...rest } = item
+      const normalized = (data || []).map((item: Record<string, unknown>) => {
+        const menu_item = 'menu_item' in item ? item.menu_item : undefined
+        const legacy_item = 'legacy_item' in item ? item.legacy_item : undefined
+        const {
+          menu_item: _mi,
+          legacy_item: _li,
+          ...rest
+        } = item as { menu_item?: unknown; legacy_item?: unknown; [key: string]: unknown }
         const resolvedProduct = menu_item || legacy_item || null
         const resolvedProductType = menu_item ? 'menu_item' : legacy_item ? 'legacy' : null
 
@@ -357,9 +364,9 @@ const OrderHistory = memo((): JSX.Element | null => {
 
       setOrderItems(prev => ({
         ...prev,
-        [orderId]: normalized,
+        [orderId]: normalized as unknown as OrderHistoryItem[],
       }))
-      return normalized
+      return normalized as unknown as OrderHistoryItem[]
     } catch (err) {
       logger.error('Error in fetchOrderItems:', err)
       setItemsError(prev => ({
@@ -390,7 +397,7 @@ const OrderHistory = memo((): JSX.Element | null => {
     try {
       // Use ref to get current orders to avoid stale closure
       const currentOrders = ordersRef.current
-      const orderIds = currentOrders.map((o: { id: string }) => o.id)
+      const orderIds = currentOrders.map((o: unknown) => (o as { id: string }).id)
       if (orderIds.length === 0) return
 
       const { data, error } = await supabase
@@ -409,10 +416,19 @@ const OrderHistory = memo((): JSX.Element | null => {
       // Double-check cancellation before setting state
       if (cancelToken.cancelled) return
 
-      const returnMap = {}
-      data?.forEach(returnReq => {
-        returnMap[returnReq.order_id] = returnReq
-      })
+      const returnMap: Record<string, ReturnRequest> = {}
+      data?.forEach(
+        (returnReq: {
+          order_id?: string
+          id?: string
+          status?: string
+          [key: string]: unknown
+        }) => {
+          if (returnReq.order_id && returnReq.id && returnReq.status) {
+            returnMap[returnReq.order_id] = returnReq as ReturnRequest
+          }
+        }
+      )
       setReturnRequests(returnMap)
     } catch (err) {
       if (!cancelToken.cancelled) {
@@ -463,7 +479,7 @@ const OrderHistory = memo((): JSX.Element | null => {
       // Must be within 30 days
       const orderDate = new Date(order.created_at)
       const now = new Date()
-      const daysDiff = (now - orderDate) / (1000 * 60 * 60 * 24)
+      const daysDiff = (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24)
       if (daysDiff > 30) return false
 
       // Must not have existing return request
@@ -492,10 +508,11 @@ const OrderHistory = memo((): JSX.Element | null => {
 
   const handleReturnRequest = async (order: unknown): Promise<void> => {
     setReturnError(null)
-    if (!orderItems[order.id]) {
-      await fetchOrderItems(order.id)
+    const orderObj = order as OrderHistoryOrder
+    if (!orderItems[orderObj.id]) {
+      await fetchOrderItems(orderObj.id)
     }
-    setSelectedOrderForReturn(order)
+    setSelectedOrderForReturn(orderObj)
     setReturnReason('defective')
     setReturnDetails('')
     setReturnModalOpen(true)
@@ -534,7 +551,7 @@ const OrderHistory = memo((): JSX.Element | null => {
           customer_email: user?.email ?? selectedOrderForReturn.customer_email,
           reason: returnReason,
           reason_details: returnDetails || null,
-        })
+        } as never)
         .select()
         .single()
 
@@ -542,15 +559,22 @@ const OrderHistory = memo((): JSX.Element | null => {
         throw requestError
       }
 
-      const itemsForReturn = orderItems[selectedOrderForReturn.id] || []
-      if (itemsForReturn.length > 0) {
-        const { error: itemsError } = await supabase.from('return_request_items').insert(
-          itemsForReturn.map(item => ({
-            return_request_id: insertedRequest.id,
-            order_item_id: item.id,
-            quantity: item.quantity,
-          }))
-        )
+      const orderId = selectedOrderForReturn.id
+      const rawItems = orderItems[orderId]
+      if (rawItems && Array.isArray(rawItems) && rawItems.length > 0) {
+        // Explicitly type the items array
+        const itemsToInsert: Array<{
+          return_request_id: string
+          order_item_id: string
+          quantity: number
+        }> = (rawItems as OrderHistoryItem[]).map((item: OrderHistoryItem) => ({
+          return_request_id: insertedRequest?.id || '',
+          order_item_id: String(item.id),
+          quantity: Number(item.quantity),
+        }))
+        const { error: itemsError } = await supabase
+          .from('return_request_items')
+          .insert(itemsToInsert as never)
 
         if (itemsError) {
           throw itemsError
@@ -576,7 +600,9 @@ const OrderHistory = memo((): JSX.Element | null => {
                               ? error instanceof Error
                                 ? error instanceof Error
                                   ? error instanceof Error
-                                    ? error.message
+                                    ? error instanceof Error
+                                      ? error.message
+                                      : String(error)
                                     : String(error)
                                   : String(error)
                                 : String(error)
@@ -660,11 +686,12 @@ const OrderHistory = memo((): JSX.Element | null => {
 
           if (payload.eventType === 'INSERT') {
             if (payload.new) {
-              setOrders(prev => [payload.new, ...prev])
+              setOrders(prev => [payload.new as OrderHistoryOrder, ...prev])
             }
           } else if (payload.eventType === 'UPDATE') {
             if (payload.new) {
-              setOrders(prev => prev.map(o => (o.id === payload.new.id ? payload.new : o)))
+              const updatedOrder = payload.new as OrderHistoryOrder
+              setOrders(prev => prev.map(o => (o.id === updatedOrder.id ? updatedOrder : o)))
             }
           } else if (payload.eventType === 'DELETE') {
             if (payload.old) {
@@ -729,7 +756,7 @@ const OrderHistory = memo((): JSX.Element | null => {
       }
 
       if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-        return product.images[0]
+        return String(product.images[0] || '')
       }
 
       return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'
@@ -744,18 +771,18 @@ const OrderHistory = memo((): JSX.Element | null => {
         return null
       }
 
-      const variantDetails = orderItem.variant_details
+      const variantDetails = orderItem.variant_details as Record<string, unknown>
 
       // Check if it's a variant combination (multiple variants)
       if (variantDetails.variant_values && typeof variantDetails.variant_values === 'object') {
-        return Object.entries(variantDetails.variant_values)
+        return Object.entries(variantDetails.variant_values as Record<string, unknown>)
           .map(([type, value]) => `${type}: ${value}`)
           .join(', ')
       }
 
       // Single variant
       if (variantDetails.variant_type && variantDetails.variant_value) {
-        return `${variantDetails.variant_type}: ${variantDetails.variant_value}`
+        return `${String(variantDetails.variant_type)}: ${String(variantDetails.variant_value)}`
       }
 
       return null
@@ -793,20 +820,51 @@ const OrderHistory = memo((): JSX.Element | null => {
         if (menuItem) {
           if (user) {
             for (let i = 0; i < quantity; i += 1) {
-              const result = await addMenuItemToCart(menuItem, user.id)
+              const result = await addMenuItemToCart(
+                menuItem as {
+                  id: string
+                  category_id: string | null
+                  name: string
+                  description: string | null
+                  price: number
+                  image_url: string | null
+                  is_available: boolean
+                  is_featured: boolean
+                  created_at: string
+                  updated_at: string
+                },
+                user.id
+              )
               if (!result?.success && result?.error) {
                 throw result.error
               }
             }
           } else {
-            addToGuestCart(menuItem, quantity, { isMenuItem: true })
+            addToGuestCart(menuItem)
           }
           continue
         }
 
         if (user) {
           for (let i = 0; i < quantity; i += 1) {
-            const result = await addProductToCart(product, user.id)
+            if (!product) continue
+            const result = await addProductToCart(
+              product as {
+                id: string
+                name: string
+                price: number
+                isMenuItem?: boolean
+                category_id?: string | null
+                description?: string | null
+                image_url?: string | null
+                is_available?: boolean
+                is_featured?: boolean
+                created_at?: string
+                updated_at?: string
+                [key: string]: unknown
+              },
+              user.id
+            )
 
             if (result.stockExceeded) {
               toast.error(
@@ -822,7 +880,7 @@ const OrderHistory = memo((): JSX.Element | null => {
             }
           }
         } else {
-          addToGuestCart(product, quantity)
+          addToGuestCart(product)
         }
       }
 
@@ -901,9 +959,9 @@ Thank you for your order!
           case 'oldest':
             return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           case 'highest':
-            return (b.order_total || 0) - (a.order_total || 0)
+            return (Number(b.order_total) || 0) - (Number(a.order_total) || 0)
           case 'lowest':
-            return (a.order_total || 0) - (b.order_total || 0)
+            return (Number(a.order_total) || 0) - (Number(b.order_total) || 0)
           case 'newest':
           default:
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -928,7 +986,7 @@ Thank you for your order!
 
   // Memoize status counts for performance (use totalOrdersCount from server)
   const statusCounts = useMemo(() => {
-    const counts = { all: totalOrdersCount }
+    const counts: Record<string, number> = { all: totalOrdersCount }
     // For individual status counts, we can only count what we've loaded
     // In a production app, you'd want to fetch these counts separately
     statusButtons.forEach(btn => {
@@ -950,7 +1008,7 @@ Thank you for your order!
     [orders]
   )
   const totalSpent = useMemo(
-    () => orders.reduce((sum, order) => sum + (order.order_total || 0), 0),
+    () => orders.reduce((sum, order) => sum + (Number(order.order_total) || 0), 0),
     [orders]
   )
   const lastOrder = useMemo(() => orders[0] || null, [orders])
@@ -1068,7 +1126,7 @@ Thank you for your order!
         variants={prefersReducedMotion ? {} : fadeSlideUp}
         initial={prefersReducedMotion ? false : 'hidden'}
         animate={prefersReducedMotion ? false : 'visible'}
-        exit={prefersReducedMotion ? false : 'exit'}
+        exit={prefersReducedMotion ? undefined : 'exit'}
         custom={0.1}
       >
         <div className="app-container flex flex-col gap-3 sm:gap-4 md:gap-6 pt-0 pb-3 sm:pb-4 lg:flex-row lg:items-center lg:justify-between">
@@ -1120,7 +1178,7 @@ Thank you for your order!
           overflowY: 'visible',
         }}
         animate={prefersReducedMotion ? false : 'visible'}
-        exit={prefersReducedMotion ? false : 'exit'}
+        exit={prefersReducedMotion ? undefined : 'exit'}
         role="main"
         aria-label="Order history"
       >
@@ -1142,8 +1200,8 @@ Thank you for your order!
                         {loyalty.tier} · {loyalty.projectedPoints} pts
                       </h2>
                       <p className="text-sm sm:text-base text-[var(--text-main)]/70">
-                        {loyalty.pointsToNextTier > 0
-                          ? `${loyalty.pointsToNextTier} points until ${loyalty.nextTierLabel}. ${orders.length} lifetime orders logged.`
+                        {(loyalty.pointsToNextTier ?? 0) > 0
+                          ? `${loyalty.pointsToNextTier ?? 0} points until ${loyalty.nextTierLabel}. ${orders.length} lifetime orders logged.`
                           : `You've maxed out ${loyalty.tier} benefits. Keep dining to maintain VIP status.`}
                       </p>
                       <div className="flex items-center gap-4 pt-2">
@@ -1152,23 +1210,23 @@ Thank you for your order!
                             className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[var(--color-amber)] via-[var(--color-orange)] to-[var(--color-orange)] transition-all"
                             style={{
                               transitionDuration: prefersReducedMotion ? '0ms' : '700ms',
-                              width: `${Math.min(100, Math.max(loyalty.progressPercent, 4))}%`,
+                              width: `${Math.min(100, Math.max(loyalty.progressPercent ?? 0, 4))}%`,
                             }}
                             role="progressbar"
-                            aria-valuenow={loyalty.progressPercent}
+                            aria-valuenow={loyalty.progressPercent ?? 0}
                             aria-valuemin={0}
                             aria-valuemax={100}
-                            aria-label={`Loyalty progress: ${loyalty.progressPercent}%`}
+                            aria-label={`Loyalty progress: ${loyalty.progressPercent ?? 0}%`}
                             aria-hidden="true"
                           />
                         </div>
                         <span className="text-sm sm:text-xs font-semibold text-[var(--color-amber)] whitespace-nowrap">
-                          {loyalty.progressPercent}%
+                          {loyalty.progressPercent ?? 0}%
                         </span>
                       </div>
                       <p className="text-sm sm:text-xs text-[var(--text-main)]/60">
-                        {loyalty.redeemableRewards.length > 0
-                          ? `${loyalty.redeemableRewards.length} rewards ready to redeem now.`
+                        {(loyalty.redeemableRewards?.length ?? 0) > 0
+                          ? `${loyalty.redeemableRewards?.length ?? 0} rewards ready to redeem now.`
                           : 'Stack a few more visits to unlock your next chef perk.'}
                       </p>
                     </div>
@@ -1371,35 +1429,45 @@ Thank you for your order!
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 sm:grid-cols-3 lg:grid-cols-6">
-                        {recommendations.slice(0, 6).map((product, index) => (
-                          <button
-                            key={product.id}
-                            onClick={() => navigate(`/products`)}
-                            className="group rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.05)] px-4 sm:px-6 py-4 sm:py-6 text-left transition hover:border-[var(--accent)]/70 hover:bg-[rgba(255,255,255,0.08)] space-y-3"
-                            data-animate="fade-rise"
-                            data-animate-active="false"
-                            style={{ transitionDelay: `${index * 90}ms` }}
-                          >
-                            <div className="aspect-square overflow-hidden rounded-lg">
-                              <img
-                                src={
-                                  product.images?.[0] ||
-                                  'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'
-                                }
-                                alt={product.name}
-                                className="h-full w-full object-cover transition duration-300 ease-out group-hover:scale-110"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <h3 className="line-clamp-2 text-sm sm:text-xs font-semibold text-[var(--text-main)]">
-                                {product.name}
-                              </h3>
-                              <p className="text-sm sm:text-base font-semibold text-[var(--accent)]">
-                                {formatCurrency(product.price || 0)}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
+                        {(
+                          recommendations as Array<{
+                            id?: string
+                            name?: string
+                            images?: string[]
+                            price?: number | string
+                            [key: string]: unknown
+                          }>
+                        )
+                          .slice(0, 6)
+                          .map((product, index) => (
+                            <button
+                              key={product.id || `product-${index}`}
+                              onClick={() => navigate(`/products`)}
+                              className="group rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.05)] px-4 sm:px-6 py-4 sm:py-6 text-left transition hover:border-[var(--accent)]/70 hover:bg-[rgba(255,255,255,0.08)] space-y-3"
+                              data-animate="fade-rise"
+                              data-animate-active="false"
+                              style={{ transitionDelay: `${index * 90}ms` }}
+                            >
+                              <div className="aspect-square overflow-hidden rounded-lg">
+                                <img
+                                  src={
+                                    (Array.isArray(product.images) && product.images[0]) ||
+                                    'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop'
+                                  }
+                                  alt={String(product.name || 'Product')}
+                                  className="h-full w-full object-cover transition duration-300 ease-out group-hover:scale-110"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <h3 className="line-clamp-2 text-sm sm:text-xs font-semibold text-[var(--text-main)]">
+                                  {String(product.name || 'Product')}
+                                </h3>
+                                <p className="text-sm sm:text-base font-semibold text-[var(--accent)]">
+                                  {formatCurrency(Number(product.price) || 0)}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
                       </div>
                     </div>
                   )}
@@ -1507,7 +1575,7 @@ Thank you for your order!
                         { value: '90days', label: 'Last 90 Days' },
                       ]}
                       value={dateFilter}
-                      onChange={e => setDateFilter(e.target.value)}
+                      onChange={e => setDateFilter(String(e.target.value))}
                       placeholder="All Time"
                       className="min-h-[44px]"
                       maxVisibleItems={5}
@@ -1522,7 +1590,7 @@ Thank you for your order!
                         { value: 'lowest', label: 'Lowest Amount' },
                       ]}
                       value={sortBy}
-                      onChange={e => setSortBy(e.target.value)}
+                      onChange={e => setSortBy(String(e.target.value))}
                       placeholder="Newest First"
                       className="min-h-[44px]"
                       maxVisibleItems={5}
@@ -1815,7 +1883,10 @@ Thank you for your order!
                                                 Qty: {item.quantity}
                                               </span>
                                               <span className="text-sm sm:text-base font-semibold text-[var(--accent)]">
-                                                {formatCurrency(item.unit_price * item.quantity)}
+                                                {formatCurrency(
+                                                  (Number(item.unit_price) || 0) *
+                                                    (item.quantity || 0)
+                                                )}
                                               </span>
                                             </div>
                                           </div>
@@ -1827,14 +1898,16 @@ Thank you for your order!
                               </div>
 
                               {/* Order Timeline */}
-                              {enableOrderTracking && (
-                                <div className="space-y-4 sm:space-y-6">
-                                  <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
-                                    Order Timeline
-                                  </h3>
-                                  <OrderTimeline status={order.status} />
-                                </div>
-                              )}
+                              {enableOrderTracking &&
+                                order.status &&
+                                typeof order.status === 'string' && (
+                                  <div className="space-y-4 sm:space-y-6">
+                                    <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+                                      Order Timeline
+                                    </h3>
+                                    <OrderTimeline status={order.status} />
+                                  </div>
+                                )}
 
                               {/* Delivery Information */}
                               {order.shipping_address && (
@@ -1844,7 +1917,9 @@ Thank you for your order!
                                   </h3>
                                   <div className="rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
                                     <p className="text-sm sm:text-base text-[var(--text-main)] whitespace-pre-line">
-                                      {order.shipping_address}
+                                      {typeof order.shipping_address === 'string'
+                                        ? order.shipping_address
+                                        : JSON.stringify(order.shipping_address)}
                                     </p>
                                   </div>
                                 </div>
@@ -2290,7 +2365,7 @@ Thank you for your order!
                       { value: 'other', label: 'Other' },
                     ]}
                     value={returnReason}
-                    onChange={e => setReturnReason(e.target.value)}
+                    onChange={e => setReturnReason(String(e.target.value))}
                     placeholder="Select reason"
                     className="min-h-[44px]"
                     required

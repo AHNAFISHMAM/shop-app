@@ -46,9 +46,10 @@ import {
   OrderPageViewToggle,
   ActiveFiltersChips,
 } from '../features/menu/components'
-import { getMealImage } from '../features/menu/utils/image-utils'
+import { getMealImageUrl } from '../features/menu/utils/image-utils'
 import SectionContainer from '../components/order/SectionContainer'
 import ProductCard from '../components/menu/ProductCard'
+import type { CartItem, Product } from '../types/cart'
 
 /**
  * Meal/Product interface
@@ -115,11 +116,10 @@ const OrderPage = memo((): JSX.Element => {
   // Custom hooks for cart management
   const {
     cartItems,
-    cartSummary,
-    handleUpdateQuantity,
-    handleRemoveFromCart,
-    handleAddToCart: addToCartFromHook,
-  } = useCartManagement(user)
+    updateQuantity: handleUpdateQuantity,
+    removeFromCart: handleRemoveFromCart,
+    addToCart: addToCartFromHook,
+  } = useCartManagement()
 
   // Custom hooks for filters and sorting
   const {
@@ -133,20 +133,70 @@ const OrderPage = memo((): JSX.Element => {
     setMinPrice,
     setMaxPrice,
     setSortBy,
-    sortedMeals,
-    hasActiveFilters,
-    clearAllFilters,
+    filteredMeals: sortedMeals,
+    clearFilters: clearAllFilters,
   } = useOrderFilters(meals)
+
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return (
+      searchQuery !== '' ||
+      selectedCategory !== 'all' ||
+      minPrice !== '' ||
+      maxPrice !== '' ||
+      sortBy !== 'newest'
+    )
+  }, [searchQuery, selectedCategory, minPrice, maxPrice, sortBy])
 
   // Custom hooks for favorites management
   // Note: Currently unused but kept for future favorites integration
-  const { favoriteItems: _favoriteItems, togglingFavorites: _togglingFavorites } = useFavoritesManagement(user)
+  const { favoriteItems: _favoriteItems, togglingFavorites: _togglingFavorites } =
+    useFavoritesManagement(user as { id: string } | null)
 
   const totalCartQuantity = useMemo(() => {
     return cartItems.reduce(
       (sum: number, item: { quantity?: number }) => sum + (item.quantity || 0),
       0
     )
+  }, [cartItems])
+
+  // Wrapper function to adapt getMealImageUrl to GetImageUrlFunction signature
+  const getImageUrlWrapper = useCallback(
+    (item: CartItem | Product | { [key: string]: unknown }): string => {
+      // Convert item to Meal format for getMealImageUrl
+      const meal = item as
+        | { image_url?: string | null; images?: string[]; id?: string; [key: string]: unknown }
+        | null
+        | undefined
+      return getMealImageUrl(meal)
+    },
+    []
+  )
+
+  // Calculate cart summary
+  const cartSummary = useMemo(() => {
+    const subtotal = cartItems.reduce(
+      (
+        sum,
+        item: { price?: number | string; price_at_purchase?: number | string; quantity?: number }
+      ) => {
+        const price =
+          typeof item.price_at_purchase === 'number'
+            ? item.price_at_purchase
+            : typeof item.price === 'number'
+              ? item.price
+              : parseFloat(String(item.price_at_purchase || item.price || 0))
+        const quantity = item.quantity || 0
+        return sum + price * quantity
+      },
+      0
+    )
+    const deliveryFee = subtotal > 0 ? 50 : 0 // Default delivery fee
+    return {
+      subtotal,
+      deliveryFee,
+      total: subtotal + deliveryFee,
+    }
   }, [cartItems])
 
   // Core add to cart logic - no event required
@@ -185,7 +235,7 @@ const OrderPage = memo((): JSX.Element => {
         })
 
         // Use the hook's handleAddToCart which handles both guest and authenticated users
-        await addToCartFromHook(meal, isMenuItem)
+        await addToCartFromHook(meal, 1)
 
         setSuccessMessage(prev => ({ ...prev, [meal.id]: 'Added to order!' }))
 
@@ -270,7 +320,7 @@ const OrderPage = memo((): JSX.Element => {
         aria-labelledby="order-page-heading"
       >
         <OrderPageHeader
-          user={user ? ({ id: user.id, ...user } as { id: string; [key: string]: unknown }) : null}
+          user={user ? ({ ...user, id: user.id } as { id: string; [key: string]: unknown }) : null}
           onShowSignupModal={() => setShowSignupModal(true)}
         />
 
@@ -388,7 +438,7 @@ const OrderPage = memo((): JSX.Element => {
                         allDishes={meals}
                         sectionConfigs={sectionConfigs}
                         onAddToCart={handleAddToCartForViews}
-                        getImageUrl={getMealImage}
+                        getImageUrl={getImageUrlWrapper}
                       />
                     </m.div>
                   )}
@@ -570,7 +620,7 @@ const OrderPage = memo((): JSX.Element => {
                                       }
                                     }
                                     onAddToCart={handleAddToCartForViews}
-                                    getImageUrl={getMealImage}
+                                    getImageUrl={getImageUrlWrapper}
                                     enableCustomization={enableCustomization}
                                   />
                                 </m.div>
@@ -590,7 +640,7 @@ const OrderPage = memo((): JSX.Element => {
             cartSummary={cartSummary}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveFromCart}
-            getImageUrl={getMealImage}
+            getImageUrl={getImageUrlWrapper}
           />
         </m.div>
       </m.section>
@@ -624,7 +674,7 @@ const OrderPage = memo((): JSX.Element => {
         cartSummary={cartSummary}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveFromCart}
-        getImageUrl={getMealImage}
+        getImageUrl={getImageUrlWrapper}
       />
 
       <FilterDrawer

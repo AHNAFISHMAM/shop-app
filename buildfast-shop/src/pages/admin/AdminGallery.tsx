@@ -217,10 +217,19 @@ const AdminGallery = () => {
   const updateEffect = async (cardId: string, nextVariants: string[][]) => {
     const baseFallback =
       Array.isArray(nextVariants) && nextVariants.length > 0 ? nextVariants[0] : ['crossfade']
-    const normalizedVariants = parseEffectVariants(nextVariants, baseFallback)
-    const primary = (Array.isArray(normalizedVariants) && normalizedVariants.length > 0
-      ? normalizedVariants[0]
-      : ['crossfade']) as string[]
+    const normalizedVariants = parseEffectVariants(
+      Array.isArray(nextVariants) && nextVariants.length > 0
+        ? Array.isArray(nextVariants[0])
+          ? nextVariants[0]
+          : (nextVariants[0] as unknown as string | string[])
+        : ((nextVariants as unknown as string | string[] | undefined) ?? baseFallback),
+      baseFallback
+    )
+    const primary = (
+      Array.isArray(normalizedVariants) && normalizedVariants.length > 0
+        ? normalizedVariants[0]
+        : ['crossfade']
+    ) as string[]
     const payload = {
       effect: primary,
       effect_variants: normalizedVariants,
@@ -248,7 +257,7 @@ const AdminGallery = () => {
               effect: Array.isArray(payload.effect) ? payload.effect.join(',') : payload.effect,
               effect_variants:
                 Array.isArray(normalizedVariants) && normalizedVariants.length > 0
-                  ? normalizedVariants[0]?.join(',') ?? card.effect_variants
+                  ? (normalizedVariants[0]?.join(',') ?? card.effect_variants)
                   : card.effect_variants,
               updated_at: new Date().toISOString(),
             }
@@ -310,14 +319,16 @@ const AdminGallery = () => {
     if (!targetCard) return
 
     // Swap positions
-    const updateData1 = { position: newPosition } as any
-    const { error: error1 } = await (supabase.from('gallery_cards') as any)
-      .update(updateData1)
+    const updateData1: Record<string, unknown> = { position: newPosition }
+    const { error: error1 } = await supabase
+      .from('gallery_cards')
+      .update(updateData1 as never)
       .eq('id', cardId)
 
-    const updateData2 = { position: card.position } as any
-    const { error: error2 } = await (supabase.from('gallery_cards') as any)
-      .update(updateData2)
+    const updateData2: Record<string, unknown> = { position: card.position }
+    const { error: error2 } = await supabase
+      .from('gallery_cards')
+      .update(updateData2 as never)
       .eq('id', targetCard.id)
 
     if (error1 || error2) {
@@ -592,9 +603,9 @@ const AdminGallery = () => {
                   <div className="flex flex-1 flex-col gap-6 pt-6">
                     <div className="aspect-[4/3] w-full overflow-hidden rounded-xl border border-theme-strong bg-[rgba(10,12,18,0.92)] shadow-[0_14px_35px_rgba(0,0,0,0.35)]">
                       <GalleryCard
-                        defaultImage={card.default_image_url}
-                        hoverImage={card.hover_image_url}
-                        effect={baseEffects}
+                        defaultImage={card.default_image_url || ''}
+                        hoverImage={card.hover_image_url || ''}
+                        effect={baseEffects || 'crossfade'}
                         effectVariants={effectSequence}
                         alt={`Gallery card ${card.position}`}
                         caption={captionText}

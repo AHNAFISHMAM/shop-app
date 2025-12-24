@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback, memo } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback, memo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { Elements } from '@stripe/react-stripe-js'
@@ -79,49 +79,51 @@ const Checkout = memo(function Checkout() {
   // IMPORTANT: Preserve ALL product data sources (database, embedded, already-resolved)
   // This ensures checkout works even when products can't be fetched from database
   const cartItems = useMemo(() => {
-    return (rawCartItems || []).map((item: {
-      resolvedProduct?: unknown
-      menu_items?: unknown
-      dishes?: unknown
-      products?: unknown
-      product?: unknown
-      [key: string]: unknown
-    }) => {
-      // Priority order for product resolution:
-      // 1. Already resolved product from hook (getGuestCartItems sets this)
-      // 2. Database relations (menu_items, dishes, products)
-      // 3. Embedded product data (guest cart often has this)
-      const alreadyResolved = item.resolvedProduct || null
-      const resolvedFromDB = item.menu_items || item.dishes || item.products || null
-      const embeddedProduct = item.product || null
+    return (rawCartItems || []).map(
+      (item: {
+        resolvedProduct?: unknown
+        menu_items?: unknown
+        dishes?: unknown
+        products?: unknown
+        product?: unknown
+        [key: string]: unknown
+      }) => {
+        // Priority order for product resolution:
+        // 1. Already resolved product from hook (getGuestCartItems sets this)
+        // 2. Database relations (menu_items, dishes, products)
+        // 3. Embedded product data (guest cart often has this)
+        const alreadyResolved = item.resolvedProduct || null
+        const resolvedFromDB = item.menu_items || item.dishes || item.products || null
+        const embeddedProduct = item.product || null
 
-      // Use already-resolved first, then database, then embedded
-      const resolvedProduct = alreadyResolved || resolvedFromDB || embeddedProduct
+        // Use already-resolved first, then database, then embedded
+        const resolvedProduct = alreadyResolved || resolvedFromDB || embeddedProduct
 
-      // Determine product type (preserve if already set)
-      const resolvedProductType =
-        item.resolvedProductType ||
-        (item.menu_items
-          ? 'menu_item'
-          : item.dishes
-            ? 'dish'
-            : item.products
-              ? 'legacy'
-              : embeddedProduct
-                ? embeddedProduct.isMenuItem
-                  ? 'menu_item'
-                  : 'legacy'
-                : null)
+        // Determine product type (preserve if already set)
+        const resolvedProductType =
+          item.resolvedProductType ||
+          (item.menu_items
+            ? 'menu_item'
+            : item.dishes
+              ? 'dish'
+              : item.products
+                ? 'legacy'
+                : embeddedProduct
+                  ? (embeddedProduct as { isMenuItem?: boolean }).isMenuItem
+                    ? 'menu_item'
+                    : 'legacy'
+                  : null)
 
-      return {
-        ...item,
-        // Preserve all product data sources
-        resolvedProduct,
-        resolvedProductType,
-        // Also preserve embedded product for fallback in cartItemsWithProducts
-        product: embeddedProduct || item.product || null,
+        return {
+          ...item,
+          // Preserve all product data sources
+          resolvedProduct,
+          resolvedProductType,
+          // Also preserve embedded product for fallback in cartItemsWithProducts
+          product: embeddedProduct || item.product || null,
+        }
       }
-    })
+    )
     // Don't filter - let checkout handle items without products
   }, [rawCartItems])
 
@@ -132,7 +134,20 @@ const Checkout = memo(function Checkout() {
   const [scheduledSlot, setScheduledSlot] = useState('asap')
 
   // Saved addresses state (for authenticated users)
-  const [selectedSavedAddress, setSelectedSavedAddress] = useState(null)
+  type SavedAddress = {
+    id?: string
+    fullName?: string
+    addressLine1?: string
+    addressLine2?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+    phone?: string
+    isDefault?: boolean
+    [key: string]: unknown
+  }
+  const [selectedSavedAddress, setSelectedSavedAddress] = useState<SavedAddress | null>(null)
   const [useManualAddress, setUseManualAddress] = useState(false)
 
   // Shipping address form state
@@ -164,7 +179,11 @@ const Checkout = memo(function Checkout() {
 
   // Discount code state
   const [discountCodeInput, setDiscountCodeInput] = useState('')
-  const [appliedDiscountCode, setAppliedDiscountCode] = useState<any>(null)
+  const [appliedDiscountCode, setAppliedDiscountCode] = useState<{
+    code: string
+    discount: number
+    [key: string]: unknown
+  } | null>(null)
   const [discountAmount, setDiscountAmount] = useState(0)
   const [discountError, setDiscountError] = useState('')
   const [validatingDiscount, setValidatingDiscount] = useState(false)
@@ -172,16 +191,7 @@ const Checkout = memo(function Checkout() {
   // Refs for cleanup (managed by hook internally)
 
   // Handle selecting a saved address
-  const handleSelectSavedAddress = useCallback((address: {
-    fullName?: string
-    addressLine1?: string
-    city?: string
-    state?: string
-    postalCode?: string
-    country?: string
-    phone?: string
-    [key: string]: unknown
-  }) => {
+  const handleSelectSavedAddress = useCallback((address: SavedAddress) => {
     if (!address) return
 
     setSelectedSavedAddress(address)
@@ -202,7 +212,9 @@ const Checkout = memo(function Checkout() {
   // Auto-select default address when addresses are loaded
   useEffect(() => {
     if (savedAddresses && savedAddresses.length > 0 && !selectedSavedAddress) {
-      const defaultAddress = savedAddresses.find((addr: any) => addr.isDefault)
+      const defaultAddress = savedAddresses.find(
+        (addr: { isDefault?: boolean; [key: string]: unknown }) => addr.isDefault
+      )
       if (defaultAddress) {
         handleSelectSavedAddress(defaultAddress)
       }
@@ -217,32 +229,41 @@ const Checkout = memo(function Checkout() {
   const cartItemsWithProducts = useMemo(() => {
     // Return ALL cart items - don't filter out items without resolved products
     // This ensures items are displayed even if database lookup fails
-    return cartItems.map((item: any) => {
-      // If product isn't resolved, create fallback product data from cart item
-      if (!item.resolvedProduct && !item.product) {
-        // Create minimal product data from cart item itself
-        // This allows checkout to proceed even without database product data
-        return {
-          ...item,
-          // Use fallback product data
-          resolvedProduct: {
-            id: item.menu_item_id || item.product_id || item.id,
-            name: item.name || `Item ${item.menu_item_id || item.product_id || item.id}`,
-            price: item.price || item.price_at_purchase || 0,
-            image_url: item.image_url || item.image || null,
-            description: item.description || null,
-            is_available: item.is_available !== false, // Default to available
-            stock: item.stock || null,
-          },
-          resolvedProductType: item.menu_item_id
-            ? 'menu_item'
-            : item.product_id
-              ? 'dish'
-              : 'legacy',
+    return cartItems.map(
+      (item: {
+        resolvedProduct?: unknown
+        product?: unknown
+        menu_items?: unknown
+        dishes?: unknown
+        products?: unknown
+        [key: string]: unknown
+      }) => {
+        // If product isn't resolved, create fallback product data from cart item
+        if (!item.resolvedProduct && !item.product) {
+          // Create minimal product data from cart item itself
+          // This allows checkout to proceed even without database product data
+          return {
+            ...item,
+            // Use fallback product data
+            resolvedProduct: {
+              id: item.menu_item_id || item.product_id || item.id,
+              name: item.name || `Item ${item.menu_item_id || item.product_id || item.id}`,
+              price: item.price || item.price_at_purchase || 0,
+              image_url: item.image_url || item.image || null,
+              description: item.description || null,
+              is_available: item.is_available !== false, // Default to available
+              stock: item.stock || null,
+            },
+            resolvedProductType: item.menu_item_id
+              ? 'menu_item'
+              : item.product_id
+                ? 'dish'
+                : 'legacy',
+          }
         }
+        return item
       }
-      return item
-    })
+    )
   }, [cartItems])
 
   // Reset order success state when cart has items (allows new checkout after successful order)
@@ -327,8 +348,11 @@ const Checkout = memo(function Checkout() {
         orderTotalBeforeDiscount
       )
 
-      if (result.valid) {
-        setAppliedDiscountCode(result.discount || null)
+      if (result.valid && result.discountCode) {
+        setAppliedDiscountCode({
+          code: result.discountCode.code || '',
+          discount: result.discountAmount || 0,
+        })
         setDiscountAmount(result.discountAmount || 0)
         setDiscountCodeInput('') // Clear input after successful application
       } else {
@@ -494,7 +518,7 @@ const Checkout = memo(function Checkout() {
     placingOrder,
     refetchCart,
     refetchAddresses,
-    onProductUpdate: (payload: any) => {
+    onProductUpdate: (payload: unknown) => {
       logger.log('Product updated in checkout:', payload)
     },
   })
@@ -530,10 +554,10 @@ const Checkout = memo(function Checkout() {
             // If current selected address was updated, refresh it
             if (
               selectedSavedAddress &&
-              (payload.new as any)?.id === (selectedSavedAddress as any).id
+              (payload.new as SavedAddress)?.id === selectedSavedAddress?.id
             ) {
               // Update selected address data
-              handleSelectSavedAddress(payload.new as any)
+              handleSelectSavedAddress(payload.new as SavedAddress)
             }
           }
         )
@@ -563,8 +587,13 @@ const Checkout = memo(function Checkout() {
       }
     } catch (err) {
       // Table might not exist or real-time not enabled - skip silently
-      const error = err as any
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+      if (
+        (err &&
+          typeof err === 'object' &&
+          'code' in err &&
+          (err as { code?: string }).code === '42P01') ||
+        (err instanceof Error && err.message?.includes('does not exist'))
+      ) {
         logger.warn(
           'addresses table does not exist or real-time not enabled - skipping subscription'
         )
@@ -1075,7 +1104,7 @@ const Checkout = memo(function Checkout() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {(selectedSavedAddress as any)?.isDefault && (
+                        {selectedSavedAddress?.isDefault && (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-sm">
                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -1090,21 +1119,18 @@ const Checkout = memo(function Checkout() {
                     <div className="glow-surface glow-soft bg-theme-elevated border border-theme rounded-xl p-5 mb-4">
                       <div className="space-y-2">
                         <p className="font-bold text-[var(--text-main)] text-lg">
-                          {(selectedSavedAddress as any)?.fullName}
+                          {selectedSavedAddress?.fullName}
                         </p>
-                        <p className="text-muted">{(selectedSavedAddress as any)?.addressLine1}</p>
-                        {(selectedSavedAddress as any)?.addressLine2 && (
-                          <p className="text-muted">
-                            {(selectedSavedAddress as any)?.addressLine2}
-                          </p>
+                        <p className="text-muted">{selectedSavedAddress?.addressLine1}</p>
+                        {selectedSavedAddress?.addressLine2 && (
+                          <p className="text-muted">{selectedSavedAddress.addressLine2}</p>
                         )}
                         <p className="text-muted">
-                          {(selectedSavedAddress as any)?.city},{' '}
-                          {(selectedSavedAddress as any)?.state}{' '}
-                          {(selectedSavedAddress as any)?.postalCode}
+                          {selectedSavedAddress?.city}, {selectedSavedAddress?.state}{' '}
+                          {selectedSavedAddress?.postalCode}
                         </p>
-                        <p className="text-muted">{(selectedSavedAddress as any)?.country}</p>
-                        {(selectedSavedAddress as any)?.phone && (
+                        <p className="text-muted">{selectedSavedAddress?.country}</p>
+                        {selectedSavedAddress?.phone && (
                           <p className="text-muted text-sm flex items-center gap-1 mt-3">
                             <svg
                               className="w-4 h-4"
@@ -1119,7 +1145,7 @@ const Checkout = memo(function Checkout() {
                                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                               />
                             </svg>
-                            {(selectedSavedAddress as any)?.phone}
+                            {selectedSavedAddress.phone}
                           </p>
                         )}
                       </div>
@@ -1611,7 +1637,7 @@ const Checkout = memo(function Checkout() {
                               setUseManualAddress(false)
                               // Re-select default address if available
                               const defaultAddress = savedAddresses.find(
-                                (addr: any) => addr.isDefault
+                                (addr: SavedAddress) => addr.isDefault
                               )
                               if (defaultAddress) {
                                 handleSelectSavedAddress(defaultAddress)
@@ -1740,7 +1766,7 @@ const Checkout = memo(function Checkout() {
                         currencySymbol={CURRENCY_SYMBOL}
                         onSuccess={handlePaymentSuccess}
                         onError={(error: string | Error) =>
-                          handlePaymentError(error instanceof Error ? error.message : error)
+                          handlePaymentError(error instanceof Error ? error : new Error(error))
                         }
                       />
                     </Elements>
@@ -1795,7 +1821,7 @@ const Checkout = memo(function Checkout() {
                     <div className="mb-4 rounded-xl border border-[#C59D5F]/30 bg-[#C59D5F]/10 p-4 text-xs text-amber-100/80">
                       <div className="flex items-center justify-between uppercase tracking-[0.2em] text-[10px] text-amber-200/70">
                         <span>Loyalty</span>
-                        <span>{loyalty?.snapshot?.tier || 'Member'}</span>
+                        <span>{loyalty?.tier || 'Member'}</span>
                       </div>
                       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[var(--bg-main)]/30">
                         <div
@@ -1806,10 +1832,10 @@ const Checkout = memo(function Checkout() {
                         />
                       </div>
                       <div className="mt-2 flex items-center justify-between text-[11px] text-amber-100/90">
-                        <span>{loyalty?.snapshot?.currentPoints ?? 0} pts</span>
+                        <span>{loyalty?.currentPoints ?? 0} pts</span>
                         <span>
                           {Math.max(0, loyalty?.pointsToNextTier ?? 0)} pts to{' '}
-                          {loyalty?.snapshot?.nextTierLabel || 'next tier'}
+                          {loyalty?.nextTierLabel || 'next tier'}
                         </span>
                       </div>
                       <div className="mt-2 text-[11px] text-amber-100/80">
@@ -1870,26 +1896,23 @@ const Checkout = memo(function Checkout() {
                                   </li>
                                 ))}
                               </ul>
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Total Items Count */}
                   <div className="mb-4 pb-4 border-b border-theme">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted">Total Items</span>
                       <span className="text-base font-semibold text-[var(--text-main)]">
-                        {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'}
+                        {`${String(totalItemsCount || 0)} ${Number(totalItemsCount) === 1 ? 'item' : 'items'}`}
                       </span>
                     </div>
                   </div>
 
                   {/* Discount Code Section */}
                   <div className="mb-4 pb-4 border-b border-theme">
-                    {!appliedDiscountCode ? (
+                    {appliedDiscountCode === null ? (
                       <div>
                         <label
                           htmlFor="discountCode"
@@ -1947,8 +1970,8 @@ const Checkout = memo(function Checkout() {
                             </p>
                             <p className="text-xs text-green-300 mt-0.5">
                               {appliedDiscountCode.discount_type === 'percentage'
-                                ? `${appliedDiscountCode.discount_value}% off`
-                                : `${formatCurrency(parseFloat(appliedDiscountCode.discount_value || 0))} off`}
+                                ? `${String(appliedDiscountCode.discount_value || '0')}% off`
+                                : `${formatCurrency(parseFloat(String(appliedDiscountCode.discount_value || '0')))} off`}
                             </p>
                           </div>
                           <button
@@ -2051,7 +2074,9 @@ const Checkout = memo(function Checkout() {
                         </Link>
                       </div>
                       <div className="rounded-xl bg-[var(--bg-main)] p-3">
-                        <OrderTimeline status={trackingStatus || 'pending'} />
+                        <OrderTimeline
+                          status={typeof trackingStatus === 'string' ? trackingStatus : 'pending'}
+                        />
                       </div>
                     </div>
                   )}
@@ -2097,9 +2122,27 @@ const Checkout = memo(function Checkout() {
             setHookShowConversionModal(false)
             navigate('/')
           }}
-          guestEmail={(hookGuestCheckoutData as any)?.email || ''}
-          orderId={(hookGuestCheckoutData as any)?.orderId || ''}
-          guestSessionId={(hookGuestCheckoutData as any)?.guestSessionId || ''}
+          guestEmail={
+            hookGuestCheckoutData &&
+            typeof hookGuestCheckoutData === 'object' &&
+            'email' in hookGuestCheckoutData
+              ? String((hookGuestCheckoutData as { email?: unknown }).email || '')
+              : ''
+          }
+          orderId={
+            hookGuestCheckoutData &&
+            typeof hookGuestCheckoutData === 'object' &&
+            'orderId' in hookGuestCheckoutData
+              ? String((hookGuestCheckoutData as { orderId?: unknown }).orderId || '')
+              : ''
+          }
+          guestSessionId={
+            hookGuestCheckoutData &&
+            typeof hookGuestCheckoutData === 'object' &&
+            'guestSessionId' in hookGuestCheckoutData
+              ? String((hookGuestCheckoutData as { guestSessionId?: unknown }).guestSessionId || '')
+              : ''
+          }
         />
       )}
     </>

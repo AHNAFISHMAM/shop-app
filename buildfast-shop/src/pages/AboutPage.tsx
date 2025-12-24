@@ -5,7 +5,7 @@ import GalleryCard from '../components/GalleryCard'
 import { parseEffects, parseEffectVariants } from '../utils/effects'
 import { supabase } from '../lib/supabase'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
-import { getBackgroundStyle } from '../utils/backgroundUtils'
+import { getBackgroundStyle, type BackgroundSettings } from '../utils/backgroundUtils'
 import { useTheme as _useTheme } from '../shared/hooks/use-theme'
 import { pageFade } from '../components/animations/menuAnimations'
 import { logger } from '../utils/logger'
@@ -336,7 +336,11 @@ const AboutPage = memo((): JSX.Element => {
         data-animate="drift-right"
         data-animate-active="false"
         className="glow-surface glow-soft relative overflow-hidden py-10 sm:py-12 px-4 -mx-4 rounded-2xl sm:rounded-3xl border border-theme bg-gradient-to-br from-[var(--accent)]/10 via-background to-[var(--accent)]/5 shadow-inner"
-        style={settings ? getBackgroundStyle(settings as Record<string, string | null | undefined>, 'gallery_section') : {}}
+        style={
+          settings
+            ? getBackgroundStyle(settings as unknown as BackgroundSettings, 'gallery_section')
+            : {}
+        }
         aria-labelledby="gallery-heading"
       >
         <div
@@ -408,7 +412,7 @@ const AboutPage = memo((): JSX.Element => {
                 >
                   <GalleryCard
                     defaultImage={card.default_image_url}
-                    hoverImage={card.hover_image_url || undefined}
+                    hoverImage={card.hover_image_url || card.default_image_url}
                     effect={baseEffects}
                     effectVariants={variantSequence}
                     alt={`Star Café ambience ${card.position}`}

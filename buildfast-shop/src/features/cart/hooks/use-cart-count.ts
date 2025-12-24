@@ -52,9 +52,19 @@ async function fetchUserCartCount(userId: string): Promise<number> {
     }
 
     return (data || []).reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0)
-  } catch (error) {
+  } catch (error: unknown) {
     // If table doesn't exist, return 0 (user can still use guest cart)
-    if ((error as any)?.code === '42P01' || (error as Error).message?.includes('does not exist')) {
+    if (
+      (error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error as { code?: string }).code === '42P01') ||
+      (error &&
+        typeof error === 'object' &&
+        'message' in error &&
+        typeof (error as { message?: unknown }).message === 'string' &&
+        (error as { message: string }).message.includes('does not exist'))
+    ) {
       logger.warn('cart_items table does not exist - returning 0')
       return 0
     }

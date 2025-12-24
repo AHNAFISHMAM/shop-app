@@ -8,7 +8,6 @@ import { logger } from '../../utils/logger'
 import CustomDropdown from '../../components/ui/CustomDropdown'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
 import toast from 'react-hot-toast'
-import { asUpdate } from '@/lib/supabase-helpers'
 
 interface StatusOption {
   value: string
@@ -562,13 +561,13 @@ const AdminCustomers = (): JSX.Element => {
     setUpdatingCustomerId(customer.id)
 
     try {
-      const { error } = await supabase
-        .from('customers')
+      const updateData: Record<string, unknown> = {
+        is_blacklisted: makeBlacklisted,
+        blacklist_reason: makeBlacklisted ? 'Admin action' : null,
+      }
+      const { error } = await (supabase.from('customers') as any)
         .update(
-          asUpdate('customers', {
-            is_blacklisted: makeBlacklisted,
-            blacklist_reason: makeBlacklisted ? 'Admin action' : null,
-          } as Record<string, unknown>)
+          updateData as unknown as import('../../lib/database.types').Database['public']['Tables']['customers']['Update']
         )
         .eq('id', customer.id)
 
@@ -764,9 +763,9 @@ const AdminCustomers = (): JSX.Element => {
                     label: option.label,
                   }))}
                   value={status}
-                  onChange={(event: ChangeEvent<HTMLSelectElement>) => {
+                  onChange={(event: { target: { value: string | number; name?: string } }) => {
                     logger.log('Status dropdown onChange:', event.target.value)
-                    setStatus(event.target.value)
+                    setStatus(String(event.target.value))
                   }}
                   placeholder="All Status"
                   maxVisibleItems={5}
@@ -780,7 +779,9 @@ const AdminCustomers = (): JSX.Element => {
                     label: `Sort: ${option.label}`,
                   }))}
                   value={sort}
-                  onChange={(event: ChangeEvent<HTMLSelectElement>) => setSort(event.target.value)}
+                  onChange={(event: { target: { value: string | number; name?: string } }) =>
+                    setSort(String(event.target.value))
+                  }
                   placeholder="Sort"
                   maxVisibleItems={5}
                   name="sort"
@@ -1108,8 +1109,43 @@ const AdminCustomers = (): JSX.Element => {
 
       {selectedCustomer && (
         <CustomerProfileDrawer
-          customer={selectedCustomer}
-          isOpen={!!selectedCustomer}
+          customer={
+            selectedCustomer
+              ? ({
+                  id: selectedCustomer.id,
+                  email: selectedCustomer.email,
+                  name: selectedCustomer.name,
+                  joinedAt: selectedCustomer.joinedAt,
+                  isVip: selectedCustomer.isVip,
+                  isBlacklisted: selectedCustomer.isBlacklisted,
+                  blacklistReason: selectedCustomer.blacklistReason,
+                  tags: selectedCustomer.tags,
+                  notes: selectedCustomer.notes,
+                  preferences: {},
+                  lastVisitDate: undefined,
+                  totalSpent: selectedCustomer.lifetimeValue,
+                  totalVisits: selectedCustomer.totalVisits,
+                  dietaryRestrictions: selectedCustomer.dietaryRestrictions,
+                  location: selectedCustomer.location,
+                } as {
+                  id?: string
+                  email?: string
+                  name?: string
+                  joinedAt?: Date | string
+                  isVip?: boolean
+                  isBlacklisted?: boolean
+                  blacklistReason?: string
+                  tags?: string[]
+                  notes?: string
+                  preferences?: Record<string, unknown>
+                  lastVisitDate?: Date | string
+                  totalSpent?: number
+                  totalVisits?: number
+                  dietaryRestrictions?: string[]
+                  location?: string
+                })
+              : null
+          }
           onClose={() => setSelectedCustomer(null)}
         />
       )}

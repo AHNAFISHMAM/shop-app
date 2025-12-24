@@ -157,7 +157,7 @@ export async function createReservation(
       _reservation_time: normalizedTime,
       _party_size: parseInt(String(partySize), 10),
       _special_requests: specialRequests?.trim() || null,
-    } as Record<string, unknown>)
+    } as never)
 
     let error: PostgrestError | null = rpcError
     let finalReservationId: string | null = null

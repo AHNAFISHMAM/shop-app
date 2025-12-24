@@ -224,7 +224,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         // Handle timeout or other errors
         // Only log error if it's not a timeout (timeouts are expected in some cases)
-        const errorMessage = error instanceof Error ? error.message : String(error)
+        const errorMessage =
+          error instanceof Error
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : String(error)
         if (!errorMessage.includes('timeout')) {
           logError(error, 'AuthContext.fetchAdminStatus.exception')
         }
@@ -294,7 +299,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         logError(error, 'AuthContext.initAuth')
         // If it's a refresh token error, clear all auth data
-        const errorMessage = error instanceof Error ? error.message : String(error)
+        const errorMessage =
+          error instanceof Error
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : String(error)
         if (
           errorMessage.includes('refresh_token') ||
           errorMessage.includes('Invalid Refresh Token')
@@ -379,7 +389,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         logError(error, 'AuthContext.onAuthStateChange')
         // Handle refresh token errors
-        const errorMessage = error instanceof Error ? error.message : String(error)
+        const errorMessage =
+          error instanceof Error
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : String(error)
         if (
           errorMessage.includes('refresh_token') ||
           errorMessage.includes('Invalid Refresh Token')
@@ -405,7 +420,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: string,
       password: string,
       fullName: string
-    ): Promise<{ data: any; error: Error | null }> => {
+    ): Promise<{
+      data: { user: { id: string; email?: string } | null; session: unknown } | null
+      error: Error | null
+    }> => {
       try {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -436,7 +454,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * Sign in with email and password
    */
   const signIn = useCallback(
-    async (email: string, password: string): Promise<{ data: any; error: Error | null }> => {
+    async (
+      email: string,
+      password: string
+    ): Promise<{
+      data: { user: { id: string; email?: string } | null; session: unknown } | null
+      error: Error | null
+    }> => {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,

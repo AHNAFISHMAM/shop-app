@@ -125,7 +125,7 @@ function ReviewForm({
         setError('Failed to read one or more image files. Please try again.')
       }
     },
-    [images]
+    [images, MAX_FILE_SIZE]
   )
 
   const removeImage = useCallback(

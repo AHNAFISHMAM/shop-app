@@ -408,8 +408,7 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
   // Apply theme adjustments as CSS variables when settings change
   useEffect(() => {
     if (settings) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(applyThemeAdjustments as any)(settings)
+      applyThemeAdjustments(settings as unknown as Record<string, unknown>)
     }
   }, [settings])
 

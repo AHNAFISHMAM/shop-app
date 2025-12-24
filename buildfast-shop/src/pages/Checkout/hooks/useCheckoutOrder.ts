@@ -114,7 +114,10 @@ export function useCheckoutOrder({
   const navigate = useNavigate()
   const [placingOrder, setPlacingOrder] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
-  const [orderError, setOrderError] = useState('')
+  const [orderError, setOrderErrorState] = useState('')
+  const setOrderError = useCallback((message: string | null) => {
+    setOrderErrorState(message || '')
+  }, [])
   const [showPayment, setShowPayment] = useState(false)
   const [clientSecret, setClientSecret] = useState('')
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
@@ -137,7 +140,7 @@ export function useCheckoutOrder({
         const { missing, errors } = getMissingAddressFields()
         let errorMessage = 'Please fill in all required shipping address fields.'
         if (errors.length > 0) {
-          errorMessage = errors[0]
+          errorMessage = errors[0] || errorMessage
         } else if (missing.length > 0) {
           errorMessage = `Missing required fields: ${missing.join(', ')}`
         }
@@ -315,7 +318,7 @@ export function useCheckoutOrder({
         setTrackingStatus('pending')
 
         // Apply discount code usage tracking
-        if (appliedDiscountCode && discountAmount > 0 && user?.id) {
+        if (appliedDiscountCode && discountAmount > 0 && user?.id && orderResult.orderId) {
           const orderSubtotal = subtotal + shipping + tax
           const discountResult = await applyDiscountCodeToOrder(
             (appliedDiscountCode as { id: string }).id,
@@ -366,7 +369,9 @@ export function useCheckoutOrder({
                                 ? err instanceof Error
                                   ? err instanceof Error
                                     ? err instanceof Error
-                                      ? err.message
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
                                       : String(err)
                                     : String(err)
                                   : String(err)
@@ -397,7 +402,9 @@ export function useCheckoutOrder({
                                   ? err instanceof Error
                                     ? err instanceof Error
                                       ? err instanceof Error
-                                        ? err.message
+                                        ? err instanceof Error
+                                          ? err.message
+                                          : String(err)
                                         : String(err)
                                       : String(err)
                                     : String(err)
@@ -496,20 +503,19 @@ export function useCheckoutOrder({
 
       try {
         if (user) {
-          supabase
-            .from('cart_items')
-            .delete()
-            .eq('user_id', user.id)
-            .then(({ error: deleteError }) => {
-              if (deleteError) {
-                logger.error('Error clearing cart:', deleteError)
-              } else {
-                logger.log('Cart cleared successfully for authenticated user')
-              }
-            })
-            .catch((cartError: unknown) => {
-              logger.error('Error clearing cart:', cartError)
-            })
+          try {
+            const { error: deleteError } = await supabase
+              .from('cart_items')
+              .delete()
+              .eq('user_id', user.id)
+            if (deleteError) {
+              logger.error('Error clearing cart:', deleteError)
+            } else {
+              logger.log('Cart cleared successfully for authenticated user')
+            }
+          } catch (cartError) {
+            logger.error('Error clearing cart:', cartError)
+          }
         } else {
           clearGuestCart()
           logger.log('Cart cleared successfully for guest')

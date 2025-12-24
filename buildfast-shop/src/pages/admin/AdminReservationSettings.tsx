@@ -61,23 +61,41 @@ const AdminReservationSettings = () => {
       setSettings(result.data)
 
       // Parse and set form data - map ReservationSettings to formData
-      const data = result.data
+      const data = result.data as Record<string, unknown>
       setFormData({
-        opening_time: data.opening_time?.substring(0, 5) || '11:00',
-        closing_time: data.closing_time?.substring(0, 5) || '23:00',
-        time_slot_interval: data.slot_duration_minutes || 30,
-        max_capacity_per_slot: data.max_concurrent_reservations || 50,
-        max_party_size: data.max_party_size || 20,
-        min_party_size: data.min_party_size || 1,
-        operating_days: (data.available_days || [])
-          .map(d => parseInt(d))
-          .filter(d => !isNaN(d)) || [0, 1, 2, 3, 4, 5, 6],
-        allow_same_day_booking: data.min_advance_booking_hours === 0,
-        advance_booking_days: data.max_advance_booking_days || 30,
+        opening_time:
+          (typeof data.opening_time === 'string' ? data.opening_time.substring(0, 5) : null) ||
+          '11:00',
+        closing_time:
+          (typeof data.closing_time === 'string' ? data.closing_time.substring(0, 5) : null) ||
+          '23:00',
+        time_slot_interval:
+          (typeof data.slot_duration_minutes === 'number' ? data.slot_duration_minutes : null) ||
+          30,
+        max_capacity_per_slot:
+          (typeof data.max_concurrent_reservations === 'number'
+            ? data.max_concurrent_reservations
+            : null) || 50,
+        max_party_size:
+          (typeof data.max_party_size === 'number' ? data.max_party_size : null) || 20,
+        min_party_size: (typeof data.min_party_size === 'number' ? data.min_party_size : null) || 1,
+        operating_days: (Array.isArray(data.available_days)
+          ? data.available_days
+              .map((d: unknown) => parseInt(String(d)))
+              .filter((d: number) => !isNaN(d))
+          : []) || [0, 1, 2, 3, 4, 5, 6],
+        allow_same_day_booking:
+          typeof data.min_advance_booking_hours === 'number'
+            ? data.min_advance_booking_hours === 0
+            : false,
+        advance_booking_days:
+          (typeof data.max_advance_booking_days === 'number'
+            ? data.max_advance_booking_days
+            : null) || 30,
         enabled_occasions: [] as string[], // Not in ReservationSettings
         enabled_preferences: [] as string[], // Not in ReservationSettings
         blocked_dates: [] as string[], // Not in ReservationSettings
-        special_notice: data.custom_message || '',
+        special_notice: (typeof data.custom_message === 'string' ? data.custom_message : '') || '',
       })
     } else {
       toast.error(result.error || 'Failed to load settings')

@@ -48,7 +48,7 @@ interface NormalizedProduct {
   images?: string[]
   stock_quantity?: number | null
   currency?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 interface ProductData {

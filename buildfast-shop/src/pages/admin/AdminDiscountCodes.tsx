@@ -106,23 +106,31 @@ function AdminDiscountCodes(): JSX.Element {
 
           if (payload.eventType === 'INSERT') {
             if (payload.new && payload.new.id) {
-              setCodes(prev => {
+              setCodes((prev: DiscountCode[]) => {
                 const exists = prev.some(c => c.id === payload.new.id)
                 if (exists) return prev
-                return [payload.new as DiscountCode, ...prev].sort((a, b) => {
-                  const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
-                  const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+                const newCode = payload.new as unknown as DiscountCode
+                const combined: DiscountCode[] = [newCode, ...prev]
+                combined.sort((a: DiscountCode, b: DiscountCode) => {
+                  const dateA =
+                    a.created_at && typeof a.created_at === 'string'
+                      ? new Date(a.created_at).getTime()
+                      : 0
+                  const dateB =
+                    b.created_at && typeof b.created_at === 'string'
+                      ? new Date(b.created_at).getTime()
+                      : 0
                   return dateB - dateA
                 })
+                return combined
               })
             }
           } else if (payload.eventType === 'UPDATE') {
             if (payload.new && payload.new.id) {
-              setCodes(prev =>
-                prev.map(code =>
-                  code.id === payload.new.id ? (payload.new as DiscountCode) : code
-                )
-              )
+              setCodes(prev => {
+                const updatedCode = payload.new as unknown as DiscountCode
+                return prev.map(code => (code.id === updatedCode.id ? updatedCode : code))
+              })
             }
           } else if (payload.eventType === 'DELETE') {
             if (payload.old && payload.old.id) {

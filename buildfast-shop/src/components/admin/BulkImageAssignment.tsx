@@ -580,10 +580,14 @@ export default function BulkImageAssignment({
         results as Array<{ fileName: string; [key: string]: unknown }>,
         menuItems
       )
-      const autoMatches = matchResult.matches
-      const unmatchedImages = matchResult.unmatched
-      setMatches(autoMatches as Match[])
-      setUnmatched(unmatchedImages as UploadResult[])
+      const autoMatches = matchResult.matches as unknown as Array<{
+        file: UploadResult
+        menuItem: MenuItem
+        [key: string]: unknown
+      }>
+      const unmatchedImages = matchResult.unmatched as UploadResult[]
+      setMatches(autoMatches.map(m => ({ file: m.file, menuItem: m.menuItem })))
+      setUnmatched(unmatchedImages)
     } catch (error) {
       logger.error('Bulk upload error:', error)
       toast.dismiss()

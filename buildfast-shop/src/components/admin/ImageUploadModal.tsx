@@ -58,6 +58,21 @@ export default function ImageUploadModal({
     return document.documentElement.classList.contains('theme-light')
   })
 
+  // Close modal handler - defined early for use in effects
+  const handleClose = useCallback(() => {
+    setSelectedFile(null)
+    setPreview(null)
+    setDragActive(false)
+    setMetadata({
+      title: '',
+      altText: '',
+      keywords: '',
+      campaign: '',
+      usageRights: '',
+    })
+    onClose()
+  }, [onClose])
+
   // Watch for theme changes
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -239,21 +254,6 @@ export default function ImageUploadModal({
       setUploading(false)
     }
   }
-
-  // Close modal
-  const handleClose = useCallback(() => {
-    setSelectedFile(null)
-    setPreview(null)
-    setDragActive(false)
-    setMetadata({
-      title: '',
-      altText: '',
-      keywords: '',
-      campaign: '',
-      usageRights: '',
-    })
-    onClose()
-  }, [onClose])
 
   function handleMetadataChange(field: keyof Metadata, value: string) {
     setMetadata(prev => ({

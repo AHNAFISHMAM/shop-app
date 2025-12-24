@@ -231,7 +231,7 @@ export async function createOrderWithItems(orderData: OrderData): Promise<OrderR
       _discount_amount: discountAmount || 0,
       _guest_session_id: guestSessionId || null,
       _is_guest: isGuest !== null ? isGuest : !userId,
-    })
+    } as never)
 
     if (error) {
       logger.error('Error creating order:', error)
@@ -536,7 +536,7 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
 
     return {
       success: true,
-      orderId: data?.id || null,
+      orderId: (data as { id: string } | null)?.id || null,
       error: null,
     }
   } catch (err) {

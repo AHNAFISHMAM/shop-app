@@ -14,7 +14,6 @@ import { getBackgroundStyle } from '../utils/backgroundUtils'
 import ExperiencePulse from '../components/ExperiencePulse'
 import { pageFade } from '../components/animations/menuAnimations'
 import { resolveLoyaltyState, resolveReferralInfo } from '../lib/loyaltyUtils'
-import { useTheme } from '../shared/hooks/use-theme'
 import { logger } from '../utils/logger'
 
 /**
@@ -92,7 +91,8 @@ const HIGHLIGHT_FEATURES: HighlightFeature[] = [
 const HomePage = memo(() => {
   const { user, isAdmin } = useAuth()
   const { settings, loading: settingsLoading } = useStoreSettings()
-  const _isLightTheme = useTheme()
+  // Theme detection (currently unused but kept for future use)
+  // const _isLightTheme = useTheme()
 
   const reviewsEnabled = useMemo(
     () => settings?.show_public_reviews ?? false,
@@ -314,7 +314,7 @@ const HomePage = memo(() => {
                         <div
                           className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
                           style={{
-                            width: `${Math.min(100, Math.max(loyalty.progressPercent, 4))}%`,
+                            width: `${Math.min(100, Math.max(loyalty.progressPercent ?? 0, 4))}%`,
                             background: `linear-gradient(to right, var(--color-amber), var(--color-orange), var(--color-amber))`,
                           }}
                         />
@@ -325,7 +325,7 @@ const HomePage = memo(() => {
                     </div>
                     <p className="mt-2 text-sm text-[var(--text-main)]/60">
                       +{loyalty.pointsEarnedThisOrder} projected on your next checkout ·{' '}
-                      {loyalty.redeemableRewards.length} rewards ready now
+                      {loyalty.redeemableRewards?.length ?? 0} rewards ready now
                     </p>
                   </div>
                 ) : null}
@@ -476,7 +476,10 @@ const HomePage = memo(() => {
         className="relative overflow-hidden min-h-[280px] sm:min-h-[360px] md:min-h-[440px] flex items-center justify-center py-10 sm:py-12 md:py-14 lg:py-16"
         style={
           settings
-            ? getBackgroundStyle(settings, 'hero_quote')
+            ? getBackgroundStyle(
+                settings as unknown as import('../utils/backgroundUtils').BackgroundSettings,
+                'hero_quote'
+              )
             : {
                 backgroundImage: quoteBackground ? `url(${quoteBackground})` : 'none',
                 backgroundSize: 'cover',

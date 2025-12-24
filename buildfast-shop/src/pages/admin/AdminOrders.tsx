@@ -13,7 +13,11 @@ import CustomDropdown from '../../components/ui/CustomDropdown'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
 import type { Database } from '@/lib/database.types'
 
-type Order = Database['public']['Tables']['orders']['Row']
+type Order = Database['public']['Tables']['orders']['Row'] & {
+  is_guest?: boolean
+  order_items?: OrderItem[]
+  shipping_address?: string | Record<string, unknown> | null
+}
 type OrderItemRow = Database['public']['Tables']['order_items']['Row']
 
 interface OrderItem extends OrderItemRow {
@@ -138,9 +142,13 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       // Apply guest/user filter (client-side filtering)
       let filteredData = (result.data || []) as Order[]
       if (filter === 'guest') {
-        filteredData = filteredData.filter(order => (order as Order).is_guest === true)
+        filteredData = filteredData.filter(
+          order => (order as Order & { is_guest?: boolean }).is_guest === true
+        )
       } else if (filter === 'user') {
-        filteredData = filteredData.filter(order => (order as Order).is_guest === false)
+        filteredData = filteredData.filter(
+          order => (order as Order & { is_guest?: boolean }).is_guest === false
+        )
       }
 
       // Update orders
@@ -158,7 +166,10 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
       )
     } catch (err) {
       logger.error('Error fetching orders:', err)
-      setError('Failed to load orders: ' + (err instanceof Error ? err.message : String(err)))
+      setError(
+        'Failed to load orders: ' +
+          (err instanceof Error ? (err instanceof Error ? err.message : String(err)) : String(err))
+      )
     } finally {
       setLoading(false)
     }
@@ -252,7 +263,9 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                                 ? err instanceof Error
                                   ? err instanceof Error
                                     ? err instanceof Error
-                                      ? err.message
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
                                       : String(err)
                                     : String(err)
                                   : String(err)
@@ -272,7 +285,10 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
   }
 
   const getTotalItemsCount = (order: Order) => {
-    return order.order_items?.reduce((sum: number, item) => sum + (item.quantity || 0), 0) || 0
+    return (order.order_items || []).reduce(
+      (sum: number, item: OrderItem) => sum + (item.quantity || 0),
+      0
+    )
   }
 
   const openCancelConfirm = (orderId: string) => {
@@ -316,7 +332,9 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                                 ? err instanceof Error
                                   ? err instanceof Error
                                     ? err instanceof Error
-                                      ? err.message
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
                                       : String(err)
                                     : String(err)
                                   : String(err)
@@ -352,10 +370,17 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
 
     // Search shipping address name as fallback
     const shippingAddr = typeof order.shipping_address === 'object' ? order.shipping_address : null
-    const matchesShippingName = (shippingAddr?.fullName || '').toLowerCase().includes(query)
+    const shippingFullName =
+      shippingAddr && typeof shippingAddr === 'object' && 'fullName' in shippingAddr
+        ? String(shippingAddr.fullName || '')
+        : ''
+    const matchesShippingName = shippingFullName.toLowerCase().includes(query)
 
     // Search by phone number (strip formatting for better matching)
-    const phoneNumber = shippingAddr?.phoneNumber || ''
+    const phoneNumber =
+      shippingAddr && typeof shippingAddr === 'object' && 'phoneNumber' in shippingAddr
+        ? String(shippingAddr.phoneNumber || '')
+        : ''
     const normalizedPhone = phoneNumber.replace(/[\s\-().]/g, '') // Remove spaces, dashes, parentheses, dots
     const normalizedQuery = query.replace(/[\s\-().]/g, '')
     const matchesPhone =
@@ -364,7 +389,7 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
 
     // Search by product names in order items
     const matchesProduct =
-      order.order_items?.some(item => {
+      (order.order_items || []).some((item: OrderItem) => {
         const productName = (item.products?.name || '').toLowerCase()
         return productName.includes(query)
       }) || false
@@ -378,11 +403,31 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
 
     // Search by shipping address components
     // shippingAddr already declared above on line 303, reuse it
-    const matchesCity = (shippingAddr?.city || '').toLowerCase().includes(query)
-    const matchesState = (shippingAddr?.stateProvince || '').toLowerCase().includes(query)
-    const matchesPostal = (shippingAddr?.postalCode || '').toLowerCase().includes(query)
-    const matchesCountry = (shippingAddr?.country || '').toLowerCase().includes(query)
-    const matchesStreet = (shippingAddr?.streetAddress || '').toLowerCase().includes(query)
+    const shippingCity =
+      shippingAddr && typeof shippingAddr === 'object' && 'city' in shippingAddr
+        ? String(shippingAddr.city || '')
+        : ''
+    const shippingState =
+      shippingAddr && typeof shippingAddr === 'object' && 'stateProvince' in shippingAddr
+        ? String(shippingAddr.stateProvince || '')
+        : ''
+    const shippingPostal =
+      shippingAddr && typeof shippingAddr === 'object' && 'postalCode' in shippingAddr
+        ? String(shippingAddr.postalCode || '')
+        : ''
+    const shippingCountry =
+      shippingAddr && typeof shippingAddr === 'object' && 'country' in shippingAddr
+        ? String(shippingAddr.country || '')
+        : ''
+    const shippingStreet =
+      shippingAddr && typeof shippingAddr === 'object' && 'streetAddress' in shippingAddr
+        ? String(shippingAddr.streetAddress || '')
+        : ''
+    const matchesCity = shippingCity.toLowerCase().includes(query)
+    const matchesState = shippingState.toLowerCase().includes(query)
+    const matchesPostal = shippingPostal.toLowerCase().includes(query)
+    const matchesCountry = shippingCountry.toLowerCase().includes(query)
+    const matchesStreet = shippingStreet.toLowerCase().includes(query)
 
     return (
       matchesId ||
@@ -1121,29 +1166,45 @@ function AdminOrders({ fullPage = false }: AdminOrdersProps) {
                     typeof selectedOrder.shipping_address === 'object' && (
                       <div className="space-y-2 sm:space-y-3 text-[var(--text-main)]">
                         <p className="font-medium text-sm sm:text-base">
-                          {selectedOrder.shipping_address.fullName || ''}
+                          {'fullName' in selectedOrder.shipping_address
+                            ? String(selectedOrder.shipping_address.fullName || '')
+                            : ''}
                         </p>
                         <p className="text-sm sm:text-base text-muted">
-                          {selectedOrder.shipping_address.streetAddress || ''}
+                          {'streetAddress' in selectedOrder.shipping_address
+                            ? String(selectedOrder.shipping_address.streetAddress || '')
+                            : ''}
                         </p>
-                        {selectedOrder.shipping_address.apartment && (
+                        {'apartment' in selectedOrder.shipping_address &&
+                        selectedOrder.shipping_address.apartment ? (
                           <p className="text-sm sm:text-base text-muted">
-                            {selectedOrder.shipping_address.apartment}
+                            {String(selectedOrder.shipping_address.apartment)}
                           </p>
-                        )}
+                        ) : null}
                         <p className="text-sm sm:text-base text-muted">
-                          {selectedOrder.shipping_address.city || ''},{' '}
-                          {selectedOrder.shipping_address.stateProvince || ''}{' '}
-                          {selectedOrder.shipping_address.postalCode || ''}
+                          {'city' in selectedOrder.shipping_address
+                            ? String(selectedOrder.shipping_address.city || '')
+                            : ''}
+                          ,{' '}
+                          {'stateProvince' in selectedOrder.shipping_address
+                            ? String(selectedOrder.shipping_address.stateProvince || '')
+                            : ''}{' '}
+                          {'postalCode' in selectedOrder.shipping_address
+                            ? String(selectedOrder.shipping_address.postalCode || '')
+                            : ''}
                         </p>
                         <p className="text-sm sm:text-base text-muted">
-                          {selectedOrder.shipping_address.country || ''}
+                          {'country' in selectedOrder.shipping_address
+                            ? String(selectedOrder.shipping_address.country || '')
+                            : ''}
                         </p>
                         <p className="pt-2 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted">
                           Phone
                         </p>
                         <p className="text-sm sm:text-base text-[var(--text-main)]">
-                          {selectedOrder.shipping_address.phoneNumber || ''}
+                          {'phoneNumber' in selectedOrder.shipping_address
+                            ? String(selectedOrder.shipping_address.phoneNumber || '')
+                            : ''}
                         </p>
                       </div>
                     )}

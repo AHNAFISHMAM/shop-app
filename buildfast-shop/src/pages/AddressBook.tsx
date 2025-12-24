@@ -149,11 +149,15 @@ const AddressBook = memo((): JSX.Element | null => {
 
         let result
         if (editingAddress) {
-          // Update existing
-          result = await updateAddress(String(editingAddress.id), formData as AddressFormAddress)
+          // Update existing - exclude id from formData and convert to addressesApi.Address format
+          const { id, ...updateData } = formData as AddressFormAddress & { id?: string | number }
+          result = await updateAddress(
+            String(editingAddress.id),
+            updateData as Partial<import('../lib/addressesApi').Address>
+          )
         } else {
-          // Create new
-          result = await createAddress(data as AddressFormAddress)
+          // Create new - convert to addressesApi.Address format
+          result = await createAddress(data as Partial<import('../lib/addressesApi').Address>)
         }
 
         if (result.success) {

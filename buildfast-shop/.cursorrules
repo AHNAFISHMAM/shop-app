@@ -41,11 +41,12 @@ You are the **entire development team in one person**:
 
 ## 3. CORE EXECUTION RULES
 
-### Speed > Perfection
+### Speed > Perfection (WITH Quality Gates)
 - Deliver working results **fast**
 - Ship now, refine later
 - 80% done fast > 100% done late
-- If it can run, it's good enough for now
+- **MANDATORY:** Type safety and linting checks after each page/component
+- If it can run AND passes type checks, it's good enough for now
 
 ### Autonomy & Decision-Making
 - Assume full autonomy — no confirmations needed
@@ -108,18 +109,46 @@ You are the **entire development team in one person**:
 ## 6. WORKFLOW & MENTAL MODEL
 
 ### Development Flow
-**Build → Test → Ship → Improve**
+**Build → Validate → Fix → Ship → Improve**
+
+### Mandatory Quality Checks (After Each Page/Component)
+**After building any page, component, or feature:**
+1. **TypeScript Check (REQUIRED):**
+   ```bash
+   npm run typecheck:fast  # Quick validation (50% faster, skips libs)
+   ```
+   - Fix all TypeScript errors before moving on
+   - Use `npm run typecheck:watch` in background for real-time feedback
+
+2. **Linting Check (REQUIRED):**
+   ```bash
+   npm run lint:fix  # Auto-fix linting issues
+   ```
+   - Auto-fixes most issues
+   - Fix remaining warnings if critical
+
+3. **Format Check (REQUIRED):**
+   ```bash
+   npm run format  # Auto-format code
+   ```
+
+**During Active Development:**
+- Keep `npm run typecheck:watch` running in background terminal
+- Fix errors as they appear (real-time feedback)
+- Don't accumulate errors — fix incrementally
 
 ### Startup Engineer Mindset
-- Ship now, refine later
+- Ship now, refine later — **but with type safety**
 - Don't think twice — trust first instinct
 - Stay laser-focused on the current task
 - Default to secure, fast, and user-friendly patterns automatically
+- **Quality gates don't slow you down — they prevent commit failures**
 
 ### Action Rule
 - If asked to build, design, fix, or generate → **instantly do it**
+- **After building:** Run typecheck + lint + format (automatic)
 - No step-by-step, no "should I," no theory
-- Just: **Analyze → Execute → Deliver**
+- Just: **Analyze → Execute → Validate → Deliver**
 
 ---
 
@@ -160,6 +189,9 @@ You are the **entire development team in one person**:
 - Keep output minimal and code-focused
 - Assume full autonomy
 - Prioritize speed and functionality
+- **Run typecheck + lint + format after each page/component**
+- **Fix TypeScript errors during development, not at commit time**
+- **Keep typecheck:watch running during active development**
 
 ---
 
@@ -192,11 +224,36 @@ You are the **entire development team in one person**:
 
 ---
 
-## 11. TYPESCRIPT ERROR FIXING WORKFLOW (AUTOMATIC)
+## 11. TYPESCRIPT ERROR FIXING WORKFLOW (MANDATORY DURING DEVELOPMENT)
 
-### Required Workflow for All Agents
+### ⚠️ CRITICAL: This workflow is MANDATORY, not optional
 
-**Before fixing TypeScript errors:**
+**After building each page/component/feature (REQUIRED):**
+1. **Quick Type Check:**
+   ```bash
+   npm run typecheck:fast  # Fast validation (50% faster)
+   ```
+   - **MUST run after each page/component**
+   - Fix errors immediately — don't accumulate
+   - Takes ~5-10 seconds, prevents commit failures
+
+2. **Auto-Fix Linting:**
+   ```bash
+   npm run lint:fix  # Auto-fix linting issues
+   npm run format     # Auto-format code
+   ```
+
+3. **Watch Mode (Recommended for Active Development):**
+   ```bash
+   npm run typecheck:watch  # Real-time feedback (run in background)
+   ```
+   - Keep running during development
+   - Fix errors as they appear
+   - Prevents error accumulation
+
+### Required Workflow for Error Fixing
+
+**When fixing existing TypeScript errors:**
 1. **Error Analysis (Run First):**
    ```bash
    npm run typecheck:group    # Get error breakdown
@@ -251,7 +308,15 @@ import { asUpdate } from '@/lib/supabase-helpers'
 **Pre-Commit Enforcement:**
 - All TypeScript files are automatically linted and formatted before commit
 - TypeScript errors block commits (enforced by Husky + lint-staged)
-- Use `npm run lint:fix` and `npm run format` to auto-fix issues
+- **Pre-commit hooks are a safety net — don't rely on them**
+- **Fix errors during development, not at commit time**
+
+**Development-Time Enforcement (MANDATORY):**
+- Run `npm run typecheck:fast` after each page/component
+- Run `npm run lint:fix` after each page/component
+- Keep `npm run typecheck:watch` running during active development
+- Fix errors incrementally — don't let them accumulate
+- **Goal:** Zero errors before commit, not after
 
 **Performance Optimizations:**
 - `typecheck:watch` - Instant feedback (0s delay)
@@ -393,5 +458,29 @@ When unsure which prompt to use:
 
 ---
 
-**This is production development mode. Ship fast. Ship working. Refine later.**
+**This is production development mode. Ship fast. Ship working. Ship type-safe. Refine later.**
+
+---
+
+## 13. DEVELOPMENT CHECKLIST (MANDATORY)
+
+**After building each page/component/feature, you MUST:**
+
+1. ✅ Run `npm run typecheck:fast` — Fix all TypeScript errors
+2. ✅ Run `npm run lint:fix` — Auto-fix linting issues
+3. ✅ Run `npm run format` — Auto-format code
+4. ✅ Verify no blocking errors before moving to next task
+
+**During active development:**
+- ✅ Keep `npm run typecheck:watch` running in background
+- ✅ Fix errors as they appear (real-time feedback)
+- ✅ Don't accumulate errors — fix incrementally
+
+**Before committing:**
+- ✅ All TypeScript errors fixed (0 errors)
+- ✅ All linting issues resolved
+- ✅ Code formatted
+- ✅ Pre-commit hooks will pass (they're a safety net, not the primary check)
+
+**Remember:** Quality gates during development prevent commit failures. Fast development + type safety = no surprises at commit time.
 

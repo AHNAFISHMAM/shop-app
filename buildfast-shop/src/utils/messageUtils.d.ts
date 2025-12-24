@@ -6,7 +6,7 @@ export function createMessageClearer(
 
 export function setMessageWithAutoClear(
   setMessage: (message: string | null) => void,
-  setMessageType: (type: string) => void,
+  setMessageType: ((type: string) => void) | null,
   message: string,
   type?: string,
   delay?: number

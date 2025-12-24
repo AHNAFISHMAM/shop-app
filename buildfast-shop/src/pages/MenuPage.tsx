@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react'
 import { Link } from 'react-router-dom'
-import { m, AnimatePresence, type Variants } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
@@ -13,7 +13,7 @@ import { useMenuData } from '../features/menu/hooks'
 import { useCartCount } from '../features/cart/hooks'
 import { useTheme } from '../shared/hooks'
 import MenuSearchBar from '../components/menu/MenuSearchBar'
-import ProductCard from '../components/menu/ProductCard'
+import ProductCard, { type Product } from '../components/menu/ProductCard'
 import CollapsibleSidebar from '../components/menu/CollapsibleSidebar'
 import MenuReservationDrawer from '../components/MenuReservationDrawer'
 import MenuPageSkeleton from '../components/menu/MenuPageSkeleton'
@@ -21,7 +21,6 @@ import EmptyMenuState from '../components/menu/EmptyMenuState'
 import ChefsPicksSection from '../components/menu/ChefsPicksSection'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import {
-  pageFade,
   pageBackdrop,
   searchBarSequence,
   fadeSlideUp,
@@ -31,20 +30,24 @@ import {
 } from '../components/animations/menuAnimations'
 
 /**
- * Menu Item Interface
+ * Menu Item Interface - compatible with database type
  */
 interface MenuItem {
   id: string
   name: string
-  description?: string
-  image_url?: string
-  category_id: string
+  description?: string | null
+  image_url?: string | null
+  category_id: string | null
   is_featured?: boolean
   dietary_tags?: string[]
   dietaryTags?: string[]
   allergens?: string[]
   allergen_tags?: string[]
   allergen_info?: string
+  price?: number
+  is_available?: boolean
+  created_at?: string
+  updated_at?: string
   [key: string]: unknown // Allow additional properties
 }
 
@@ -204,9 +207,9 @@ const MenuPage = memo(() => {
       const resolved = parsed
         .map((entry: { id?: string }) => {
           if (!entry || typeof entry !== 'object' || !entry.id) return null
-          return menuItems.find((item: MenuItem) => item.id === entry.id)
+          return menuItems.find((item: MenuItem) => item.id === entry.id) || null
         })
-        .filter((item): item is MenuItem => Boolean(item))
+        .filter((item): item is NonNullable<typeof item> => item !== null && item !== undefined)
 
       if (resolved.length > 0) {
         setQuickReorderItems(resolved.slice(0, 3))
@@ -315,7 +318,9 @@ const MenuPage = memo(() => {
 
   // Add to cart handler
   const handleAddToCart = useCallback(
-    async (item: MenuItem): Promise<void> => {
+    async (
+      item: MenuItem | { id: string; name: string; price?: number; [key: string]: unknown }
+    ): Promise<void> => {
       try {
         if (user) {
           // Check if item already in cart
@@ -337,7 +342,7 @@ const MenuPage = memo(() => {
               typeof existingCartItem.quantity === 'number' ? existingCartItem.quantity : 0
             const { error: updateError } = await supabase
               .from('cart_items')
-              .update({ quantity: currentQuantity + 1 })
+              .update({ quantity: currentQuantity + 1 } as never)
               .eq('id', existingCartItem.id)
 
             if (updateError) throw updateError
@@ -347,18 +352,18 @@ const MenuPage = memo(() => {
               user_id: user.id,
               menu_item_id: item.id,
               quantity: 1,
-            })
+            } as never)
 
             if (insertError) throw insertError
           }
         } else {
           // Guest user - add to localStorage
-          addToGuestCart(item, 1, { isMenuItem: true })
+          addToGuestCart(item)
         }
 
         // Cart count is automatically updated by useCartCount hook
-        if (enableQuickReorder) {
-          registerQuickReorderItem(item)
+        if (enableQuickReorder && 'category_id' in item) {
+          registerQuickReorderItem(item as MenuItem)
         }
 
         // Show success toast
@@ -421,14 +426,14 @@ const MenuPage = memo(() => {
   }, [])
 
   const handleQuickReorder = useCallback(
-    (itemId: string): void => {
-      const catalogItem = menuItems.find((item: MenuItem) => item.id === itemId)
+    (itemId: string | number): void => {
+      const catalogItem = menuItems.find((item: MenuItem) => item.id === String(itemId))
       if (catalogItem) {
         handleAddToCart(catalogItem)
         return
       }
 
-      const storedItem = quickReorderItems.find(item => item.id === itemId)
+      const storedItem = quickReorderItems.find(item => item.id === String(itemId))
       if (storedItem) {
         handleAddToCart(storedItem)
       }
@@ -501,16 +506,17 @@ const MenuPage = memo(() => {
   }, [itemsToRender])
 
   // Animation variants with reduced motion support
-  const _animationVariants: Variants = useMemo(() => {
-    if (prefersReducedMotion) {
-      return {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1 },
-        exit: { opacity: 0 },
-      }
-    }
-    return pageFade
-  }, [prefersReducedMotion])
+  // Animation variants (currently unused but kept for future use)
+  // const _animationVariants: Variants = useMemo(() => {
+  //   if (prefersReducedMotion) {
+  //     return {
+  //       hidden: { opacity: 0 },
+  //       visible: { opacity: 1 },
+  //       exit: { opacity: 0 },
+  //     }
+  //   }
+  //   return pageFade
+  // }, [prefersReducedMotion])
 
   if (loading) {
     return (
@@ -692,7 +698,7 @@ const MenuPage = memo(() => {
           {/* Desktop Sidebar - outside .app-container to avoid containing block issues */}
           <CollapsibleSidebar
             categories={categories}
-            menuItems={menuItems}
+            menuItems={menuItems as any}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategoryClick}
             variant="desktop"
@@ -705,7 +711,15 @@ const MenuPage = memo(() => {
             allergenTags={allAllergens}
             activeAllergenTags={allergenFilters}
             onAllergenToggle={handleAllergenToggle}
-            quickReorderItems={enableQuickReorder ? quickReorderItems : []}
+            quickReorderItems={
+              enableQuickReorder
+                ? quickReorderItems.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    image_url: item.image_url || undefined,
+                  }))
+                : []
+            }
             onQuickReorder={enableQuickReorder ? handleQuickReorder : null}
           />
 
@@ -771,7 +785,7 @@ const MenuPage = memo(() => {
                   </div>
                   <CollapsibleSidebar
                     categories={categories}
-                    menuItems={menuItems}
+                    menuItems={menuItems as any}
                     selectedCategory={selectedCategory}
                     onCategorySelect={(cat: Category | null) => {
                       handleCategoryClick(cat)
@@ -787,7 +801,15 @@ const MenuPage = memo(() => {
                     allergenTags={allAllergens}
                     activeAllergenTags={allergenFilters}
                     onAllergenToggle={handleAllergenToggle}
-                    quickReorderItems={enableQuickReorder ? quickReorderItems : []}
+                    quickReorderItems={
+                      enableQuickReorder
+                        ? quickReorderItems.map(item => ({
+                            id: item.id,
+                            name: item.name,
+                            image_url: item.image_url || undefined,
+                          }))
+                        : []
+                    }
                     onQuickReorder={enableQuickReorder ? handleQuickReorder : null}
                   />
                 </m.div>
@@ -813,8 +835,20 @@ const MenuPage = memo(() => {
                 <ChefsPicksSection
                   chefsPicks={chefsPicks}
                   chefBatches={chefBatches}
-                  onAddToCart={handleAddToCart}
-                  getImageUrl={getImageUrl}
+                  onAddToCart={
+                    handleAddToCart as (item: {
+                      id: string
+                      name: string
+                      [key: string]: unknown
+                    }) => void
+                  }
+                  getImageUrl={
+                    getImageUrl as (item: {
+                      id: string
+                      name: string
+                      [key: string]: unknown
+                    }) => string
+                  }
                   enableCustomization={enableCustomization}
                   prefersReducedMotion={prefersReducedMotion}
                 />
@@ -884,9 +918,9 @@ const MenuPage = memo(() => {
                               exit="exit"
                             >
                               <ProductCard
-                                product={item}
-                                onAddToCart={handleAddToCart}
-                                getImageUrl={getImageUrl}
+                                product={{ ...item, price: item.price ?? 0 } as Product}
+                                onAddToCart={handleAddToCart as (product: Product) => void}
+                                getImageUrl={getImageUrl as (product: Product) => string}
                                 enableCustomization={enableCustomization}
                               />
                             </m.div>

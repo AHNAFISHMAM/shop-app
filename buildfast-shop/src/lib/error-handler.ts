@@ -291,7 +291,7 @@ export function createSafeAsync<T extends (...args: unknown[]) => Promise<unknow
 > {
   return async (...args: Parameters<T>) => {
     try {
-      const data = await asyncFn(...args)
+      const data = (await asyncFn(...args)) as Awaited<ReturnType<T>>
       return { success: true, data }
     } catch (error) {
       return handleAsyncError(error, context, 'Operation failed')

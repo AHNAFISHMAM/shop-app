@@ -85,10 +85,11 @@ const Favorites = memo(() => {
     if (typeof window === 'undefined') return
 
     const checkTheme = () => {
-      const _isLight =
-        document.documentElement.classList.contains('light') ||
-        (!document.documentElement.classList.contains('dark') &&
-          window.matchMedia('(prefers-color-scheme: light)').matches)
+      // Theme detection (currently unused but kept for future use)
+      // const _isLight =
+      //   document.documentElement.classList.contains('light') ||
+      //   (!document.documentElement.classList.contains('dark') &&
+      //     window.matchMedia('(prefers-color-scheme: light)').matches)
       // setIsLightTheme(isLight);
     }
 
@@ -110,16 +111,7 @@ const Favorites = memo(() => {
       setLoading(true)
       setError(null)
       const result = await getFavoriteItems(user.id)
-
-      if (result.success) {
-        setFavoriteItems((result.data || []) as FavoriteItem[])
-      } else if (result.error) {
-        const wasAuthError = await handleAuthError(result.error, navigate)
-        if (!wasAuthError) {
-          logger.error('Error fetching favorites:', result.error)
-          setError('Failed to load favorites. Please try again.')
-        }
-      }
+      setFavoriteItems(result)
     } catch (err: unknown) {
       logger.error('Error fetching favorites:', err)
       const wasAuthError = await handleAuthError(
@@ -214,8 +206,8 @@ const Favorites = memo(() => {
 
         return {
           id: item.id,
-          product_id: item.product_id,
-          menu_item_id: item.menu_item_id,
+          product_id: item.product_id ?? null,
+          menu_item_id: item.menu_item_id ?? null,
           product: isMenuItem ? null : product,
           menu_item: isMenuItem ? product : null,
         }
@@ -332,7 +324,14 @@ const Favorites = memo(() => {
           </m.div>
         )}
 
-        <FavoriteCommentsPanel favoriteItems={favoriteItems} userId={user?.id} />
+        <FavoriteCommentsPanel
+          favoriteItems={favoriteItems.map(item => ({
+            ...item,
+            menu_item_id: item.menu_item_id ?? undefined,
+            product_id: item.product_id ?? undefined,
+          }))}
+          userId={user?.id}
+        />
 
         {favoriteItems.length === 0 ? (
           <EmptyFavoritesState />

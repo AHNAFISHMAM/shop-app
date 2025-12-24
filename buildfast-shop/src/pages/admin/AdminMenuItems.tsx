@@ -9,7 +9,7 @@ import { useViewportAnimationTrigger } from '../../hooks/useViewportAnimationTri
 import { pageFade } from '../../components/animations/menuAnimations'
 import { logger } from '../../utils/logger'
 import ConfirmationModal from '../../components/ui/ConfirmationModal'
-import { asUpdate, asInsert } from '@/lib/supabase-helpers'
+import type { Database } from '../../lib/database.types'
 
 interface CropArea {
   x: number
@@ -173,22 +173,22 @@ export default function AdminMenuItems() {
   const [uploadingImage, setUploadingImage] = useState(false)
   const imageRef = useRef<HTMLImageElement>(null)
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
-  const categoryDropdownRef = useRef(null)
+  const categoryDropdownRef = useRef<HTMLDivElement | null>(null)
   const [showFormCategoryDropdown, setShowFormCategoryDropdown] = useState(false)
   const [showEditFormCategoryDropdown, setShowEditFormCategoryDropdown] = useState(false)
-  const formCategoryDropdownRef = useRef(null)
-  const editFormCategoryDropdownRef = useRef(null)
+  const formCategoryDropdownRef = useRef<HTMLDivElement | null>(null)
+  const editFormCategoryDropdownRef = useRef<HTMLDivElement | null>(null)
   const [showFormSpiceDropdown, setShowFormSpiceDropdown] = useState(false)
   const [showEditFormSpiceDropdown, setShowEditFormSpiceDropdown] = useState(false)
-  const formSpiceDropdownRef = useRef(null)
-  const editFormSpiceDropdownRef = useRef(null)
+  const formSpiceDropdownRef = useRef<HTMLDivElement | null>(null)
+  const editFormSpiceDropdownRef = useRef<HTMLDivElement | null>(null)
 
   const [formData, setFormData] = useState<{
     category_id: string
     name: string
     description: string
     price: string
-    image_url: string
+    image_url: string | null
     dietary_tags: string[]
     spice_level: number | null
     prep_time: string
@@ -227,13 +227,6 @@ export default function AdminMenuItems() {
   ]
 
   // Fetch data
-  useEffect(() => {
-    fetchCategories()
-    setCurrentPage(1)
-    setHasMoreItems(true)
-    fetchMenuItems(1, true)
-  }, [fetchMenuItems])
-
   async function fetchCategories() {
     try {
       const { data, error } = await supabase.from('menu_categories').select('*').order('sort_order')
@@ -246,20 +239,21 @@ export default function AdminMenuItems() {
     }
   }
 
-  const fetchMenuItems = useCallback(async (page: number = 1, reset: boolean = true) => {
-    try {
-      if (reset || page === 1) {
-        setLoading(true)
-      }
+  const fetchMenuItems = useCallback(
+    async (page: number = 1, reset: boolean = true) => {
+      try {
+        if (reset || page === 1) {
+          setLoading(true)
+        }
 
-      const offset = (page - 1) * itemsPerPage
-      const limit = itemsPerPage
+        const offset = (page - 1) * itemsPerPage
+        const limit = itemsPerPage
 
-      // Optimize: Only select needed fields instead of *
-      const { data, error, count } = await supabase
-        .from('menu_items')
-        .select(
-          `
+        // Optimize: Only select needed fields instead of *
+        const { data, error, count } = await supabase
+          .from('menu_items')
+          .select(
+            `
           id,
           name,
           description,
@@ -283,31 +277,41 @@ export default function AdminMenuItems() {
             slug
           )
         `,
-          { count: 'exact' }
-        )
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+            { count: 'exact' }
+          )
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1)
 
-      if (error) throw error
+        if (error) throw error
 
-      // Update items
-      if (reset || page === 1) {
-        setMenuItems(data || [])
-      } else {
-        // Append for pagination
-        setMenuItems(prev => [...prev, ...(data || [])])
+        // Update items
+        if (reset || page === 1) {
+          setMenuItems(data || [])
+        } else {
+          // Append for pagination
+          setMenuItems(prev => [...prev, ...(data || [])])
+        }
+
+        // Update pagination state
+        setTotalItemsCount(count || 0)
+        setHasMoreItems((data?.length || 0) === limit && (count || 0) > offset + limit)
+      } catch (error) {
+        logger.error('Error fetching menu items:', error)
+        toast.error('Failed to load menu items')
+      } finally {
+        setLoading(false)
       }
+    },
+    [itemsPerPage]
+  )
 
-      // Update pagination state
-      setTotalItemsCount(count || 0)
-      setHasMoreItems((data?.length || 0) === limit && (count || 0) > offset + limit)
-    } catch (error) {
-      logger.error('Error fetching menu items:', error)
-      toast.error('Failed to load menu items')
-    } finally {
-      setLoading(false)
-    }
-  }, [itemsPerPage])
+  // Fetch menu items on mount
+  useEffect(() => {
+    fetchCategories()
+    setCurrentPage(1)
+    setHasMoreItems(true)
+    fetchMenuItems(1, true)
+  }, [fetchMenuItems])
   // selectedCategory, searchTerm, selectedSort are used in filteredItems, not in fetchMenuItems
   // supabase is a stable reference
 
@@ -335,10 +339,13 @@ export default function AdminMenuItems() {
     const { name, value, type } = target
     const checked =
       target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : undefined
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+    setFormData(
+      prev =>
+        ({
+          ...prev,
+          [name]: type === 'checkbox' ? checked : value,
+        }) as typeof prev
+    )
   }
 
   // Handle dietary tags
@@ -357,7 +364,7 @@ export default function AdminMenuItems() {
       toast.error('Invalid dietary tags format')
       return false
     }
-    const invalidTags = (dietaryTags || []).filter(
+    const invalidTags = (Array.isArray(dietaryTags) ? dietaryTags : []).filter(
       (tag: string) => !VALID_DIETARY_TAGS.includes(tag)
     )
     if (invalidTags.length > 0) {
@@ -381,32 +388,32 @@ export default function AdminMenuItems() {
     }
 
     try {
-      const { error } = await supabase.from('menu_items').insert([
-        asInsert('menu_items', {
-          category_id: formData.category_id,
-          name: formData.name.trim(),
-          description: formData.description.trim() || null,
-          price: parseFloat(formData.price),
-          image_url: formData.image_url || null,
-          dietary_tags: formData.dietary_tags,
-          spice_level:
-            formData.spice_level === null || formData.spice_level === undefined
-              ? 0
-              : typeof formData.spice_level === 'number'
-                ? formData.spice_level
-                : parseInt(String(formData.spice_level)),
-          prep_time:
-            formData.prep_time && formData.prep_time.trim() !== ''
-              ? parseInt(formData.prep_time)
-              : null,
-          is_available: formData.is_available,
-          is_featured: formData.is_featured,
-          is_todays_menu: formData.is_todays_menu,
-          is_daily_special: formData.is_daily_special,
-          is_new_dish: formData.is_new_dish,
-          is_discount_combo: formData.is_discount_combo,
-        }),
-      ])
+      const insertData = {
+        category_id: formData.category_id,
+        name: formData.name.trim(),
+        description: formData.description.trim() || null,
+        price: parseFloat(formData.price),
+        image_url: formData.image_url || null,
+        dietary_tags: formData.dietary_tags,
+        spice_level:
+          formData.spice_level === null || formData.spice_level === undefined
+            ? 0
+            : typeof formData.spice_level === 'number'
+              ? formData.spice_level
+              : parseInt(String(formData.spice_level)),
+        prep_time:
+          formData.prep_time && formData.prep_time.trim() !== ''
+            ? parseInt(formData.prep_time)
+            : null,
+        is_available: formData.is_available,
+        is_featured: formData.is_featured,
+        is_todays_menu: formData.is_todays_menu,
+        is_daily_special: formData.is_daily_special,
+        is_new_dish: formData.is_new_dish,
+        is_discount_combo: formData.is_discount_combo,
+      }
+
+      const { error } = await (supabase.from('menu_items') as any).insert([insertData])
 
       if (error) throw error
 
@@ -418,7 +425,13 @@ export default function AdminMenuItems() {
       fetchMenuItems(1, true)
     } catch (error) {
       logger.error('Error adding item:', error)
-      toast.error(error instanceof Error ? error.message : String(error) || 'Failed to add item')
+      toast.error(
+        error instanceof Error
+          ? error instanceof Error
+            ? error.message
+            : String(error)
+          : String(error) || 'Failed to add item'
+      )
     }
   }
 
@@ -441,35 +454,33 @@ export default function AdminMenuItems() {
         return
       }
 
-      const { error } = await supabase
-        .from('menu_items')
-        .update(
-          asUpdate('menu_items', {
-            category_id: formData.category_id,
-            name: formData.name.trim(),
-            description: formData.description.trim() || null,
-            price: parseFloat(formData.price),
-            image_url: formData.image_url || null,
-            dietary_tags: formData.dietary_tags,
-            spice_level:
-              formData.spice_level === null || formData.spice_level === undefined
-                ? 0
-                : typeof formData.spice_level === 'number'
-                  ? formData.spice_level
-                  : parseInt(String(formData.spice_level)),
-            prep_time:
-              formData.prep_time && formData.prep_time.trim() !== ''
-                ? parseInt(formData.prep_time)
-                : null,
-            is_available: formData.is_available,
-            is_featured: formData.is_featured,
-            is_todays_menu: formData.is_todays_menu,
-            is_daily_special: formData.is_daily_special,
-            is_new_dish: formData.is_new_dish,
-            is_discount_combo: formData.is_discount_combo,
-            updated_at: new Date().toISOString(),
-          })
-        )
+      const updateData = {
+        category_id: formData.category_id,
+        name: formData.name.trim(),
+        description: formData.description.trim() || null,
+        price: parseFloat(formData.price),
+        image_url: formData.image_url || null,
+        dietary_tags: formData.dietary_tags,
+        spice_level:
+          formData.spice_level === null || formData.spice_level === undefined
+            ? 0
+            : typeof formData.spice_level === 'number'
+              ? formData.spice_level
+              : parseInt(String(formData.spice_level)),
+        prep_time:
+          formData.prep_time && formData.prep_time.trim() !== ''
+            ? parseInt(formData.prep_time)
+            : null,
+        is_available: formData.is_available,
+        is_featured: formData.is_featured,
+        is_todays_menu: formData.is_todays_menu,
+        is_daily_special: formData.is_daily_special,
+        is_new_dish: formData.is_new_dish,
+        is_discount_combo: formData.is_discount_combo,
+        updated_at: new Date().toISOString(),
+      }
+      const { error } = await (supabase.from('menu_items') as any)
+        .update(updateData)
         .eq('id', editingItem.id)
 
       if (error) throw error
@@ -481,13 +492,19 @@ export default function AdminMenuItems() {
       fetchMenuItems(1, true)
     } catch (error) {
       logger.error('Error updating item:', error)
-      toast.error(error instanceof Error ? error.message : String(error) || 'Failed to update item')
+      toast.error(
+        error instanceof Error
+          ? error instanceof Error
+            ? error.message
+            : String(error)
+          : String(error) || 'Failed to update item'
+      )
     }
   }
 
   // Open delete confirmation
   function openDeleteConfirm(id: string, name: string) {
-    setItemToDelete({ id, name })
+    setItemToDelete({ id, name } as MenuItem)
     setShowDeleteConfirm(true)
   }
 
@@ -515,9 +532,10 @@ export default function AdminMenuItems() {
   // Toggle availability
   async function toggleAvailability(item: MenuItem) {
     try {
-      const { error } = await supabase
-        .from('menu_items')
-        .update(asUpdate('menu_items', { is_available: !item.is_available }))
+      const { error } = await (supabase.from('menu_items') as any)
+        .update({
+          is_available: !item.is_available,
+        } as unknown as Database['public']['Tables']['menu_items']['Update'])
         .eq('id', item.id)
 
       if (error) throw error
@@ -552,17 +570,19 @@ export default function AdminMenuItems() {
       const updates = []
       if (toMakeAvailable.length > 0) {
         updates.push(
-          supabase
-            .from('menu_items')
-            .update(asUpdate('menu_items', { is_available: true }))
+          (supabase.from('menu_items') as any)
+            .update({
+              is_available: true,
+            } as unknown as Database['public']['Tables']['menu_items']['Update'])
             .in('id', toMakeAvailable)
         )
       }
       if (toMakeUnavailable.length > 0) {
         updates.push(
-          supabase
-            .from('menu_items')
-            .update(asUpdate('menu_items', { is_available: false }))
+          (supabase.from('menu_items') as any)
+            .update({
+              is_available: false,
+            } as unknown as Database['public']['Tables']['menu_items']['Update'])
             .in('id', toMakeUnavailable)
         )
       }
@@ -570,7 +590,10 @@ export default function AdminMenuItems() {
       const results = await Promise.all(updates)
       const errors = results.filter(r => r.error)
 
-      if (errors.length > 0) throw errors[0].error
+      if (errors.length > 0) {
+        const firstError = errors[0]
+        if (firstError && firstError.error) throw firstError.error
+      }
 
       toast.success(`Updated availability for ${selectedItemsForBulk.size} item(s)`)
       setSelectedItemsForBulk(new Set())
@@ -599,8 +622,8 @@ export default function AdminMenuItems() {
   }
 
   // Select all items in current view
-  function selectAllItems(items: any[]) {
-    setSelectedItemsForBulk(new Set(items.map((item: any) => item.id)))
+  function selectAllItems(items: MenuItem[]) {
+    setSelectedItemsForBulk(new Set(items.map((item: MenuItem) => item.id)))
   }
 
   // Deselect all items
@@ -609,28 +632,55 @@ export default function AdminMenuItems() {
   }
 
   // Edit item - Opens modal
-  function startEdit(item: any) {
+  function startEdit(item: MenuItem) {
     setEditingItem(item)
     setFormData({
-      category_id: item.category_id,
+      category_id: item.category_id ?? '',
       name: item.name,
       description: item.description || '',
-      price: item.price,
+      price: String(item.price ?? 0),
       image_url: item.image_url || '',
       dietary_tags: item.dietary_tags || [],
       spice_level: item.spice_level || 0,
       prep_time:
         item.prep_time !== undefined && item.prep_time !== null ? String(item.prep_time) : '',
-      is_available: item.is_available,
-      is_featured: item.is_featured,
-      is_todays_menu: item.is_todays_menu,
-      is_daily_special: item.is_daily_special,
-      is_new_dish: item.is_new_dish,
-      is_discount_combo: item.is_discount_combo,
+      is_available: item.is_available ?? false,
+      is_featured: item.is_featured ?? false,
+      is_todays_menu: item.is_todays_menu ?? false,
+      is_daily_special: item.is_daily_special ?? false,
+      is_new_dish: item.is_new_dish ?? false,
+      is_discount_combo: item.is_discount_combo ?? false,
     })
     setShowEditModal(true)
     setShowAddForm(false)
   }
+
+  // Reset form - defined early for use in closeEditModal
+  const resetForm = useCallback(() => {
+    if (!showEditModal) {
+      setEditingItem(null)
+    }
+    setShowAddForm(false)
+    setFormData({
+      category_id: '',
+      name: '',
+      description: '',
+      price: '',
+      image_url: '',
+      dietary_tags: [],
+      spice_level: 0,
+      prep_time: '',
+      is_available: true,
+      is_featured: false,
+      is_todays_menu: false,
+      is_daily_special: false,
+      is_new_dish: false,
+      is_discount_combo: false,
+    })
+    setUploadedImage(null)
+    setCroppedImageUrl(null)
+    setCropArea({ x: 0, y: 0, width: 200, height: 200 })
+  }, [showEditModal])
 
   // Close edit modal
   const closeEditModal = useCallback(() => {
@@ -689,11 +739,13 @@ export default function AdminMenuItems() {
   }
 
   // Update cropped preview
-  function updateCroppedPreview(imageSrc: string, area: any) {
+  function updateCroppedPreview(imageSrc: string, area: CropArea) {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
+
+      if (!ctx) return
 
       // Card image dimensions (matching the card display)
       const cardImageWidth = 400
@@ -757,12 +809,15 @@ export default function AdminMenuItems() {
   useEffect(() => {
     if (!uploadedImage || (!isDragging && !isResizing) || !imageRef.current) return
 
+    const currentImageRef = imageRef.current
+
     function handleMouseMove(e: MouseEvent) {
-      const rect = imageRef.current.getBoundingClientRect()
-      const naturalWidth = imageRef.current.naturalWidth
-      const naturalHeight = imageRef.current.naturalHeight
-      const displayWidth = imageRef.current.offsetWidth
-      const displayHeight = imageRef.current.offsetHeight
+      if (!currentImageRef) return
+      const rect = currentImageRef.getBoundingClientRect()
+      const naturalWidth = currentImageRef.naturalWidth
+      const naturalHeight = currentImageRef.naturalHeight
+      const displayWidth = currentImageRef.offsetWidth
+      const displayHeight = currentImageRef.offsetHeight
 
       const scaleX = displayWidth / naturalWidth
       const scaleY = displayHeight / naturalHeight
@@ -777,7 +832,9 @@ export default function AdminMenuItems() {
             x: Math.max(0, Math.min(newX, naturalWidth - prev.width)),
             y: Math.max(0, Math.min(newY, naturalHeight - prev.height)),
           }
-          updateCroppedPreview(uploadedImage, newArea)
+          if (uploadedImage) {
+            updateCroppedPreview(uploadedImage, newArea)
+          }
           return newArea
         })
       } else if (isResizing) {
@@ -805,7 +862,9 @@ export default function AdminMenuItems() {
             newArea.y = Math.max(0, prev.y + deltaY)
           }
 
-          updateCroppedPreview(uploadedImage, newArea)
+          if (uploadedImage) {
+            updateCroppedPreview(uploadedImage, newArea)
+          }
           return newArea
         })
 
@@ -853,7 +912,7 @@ export default function AdminMenuItems() {
       })
 
       if (result.success) {
-        setFormData(prev => ({ ...prev, image_url: result.url }))
+        setFormData(prev => ({ ...prev, image_url: result.url || null }))
         setUploadedImage(null)
         setCroppedImageUrl(null)
         toast.success('Image uploaded successfully')
@@ -867,30 +926,6 @@ export default function AdminMenuItems() {
       setUploadingImage(false)
     }
   }
-
-  // Reset form
-  const resetForm = useCallback(() => {
-    if (!showEditModal) {
-      setEditingItem(null)
-    }
-    setShowAddForm(false)
-    setFormData({
-      category_id: '',
-      name: '',
-      description: '',
-      price: '',
-      image_url: '',
-      dietary_tags: [],
-      spice_level: 0,
-      prep_time: '',
-      is_available: true,
-      is_featured: false,
-      is_todays_menu: false,
-      is_daily_special: false,
-      is_new_dish: false,
-      is_discount_combo: false,
-    })
-  }, [showEditModal])
 
   // Body scroll lock for modal
   useEffect(() => {
@@ -983,11 +1018,12 @@ export default function AdminMenuItems() {
     function handleClickOutside(event: MouseEvent) {
       // Don't close if clicking inside the dropdown menu (for tab-like behavior)
       const dropdownMenu = document.querySelector('[role="tab"]')?.closest('.fixed')
-      if (dropdownMenu && dropdownMenu.contains(event.target)) {
+      const target = event.target as Node | null
+      if (dropdownMenu && target && dropdownMenu.contains(target)) {
         return
       }
 
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+      if (categoryDropdownRef.current && target && !categoryDropdownRef.current.contains(target)) {
         setShowCategoryDropdown(false)
       }
     }
@@ -996,10 +1032,11 @@ export default function AdminMenuItems() {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
+    return undefined
   }, [showCategoryDropdown])
 
   // Open image modal for item
-  function openImageModal(item: any) {
+  function openImageModal(item: MenuItem) {
     setCurrentItemForImage(item)
     setShowImageModal(true)
   }
@@ -1009,9 +1046,10 @@ export default function AdminMenuItems() {
     if (!currentItemForImage) return
 
     try {
-      const { error } = await supabase
-        .from('menu_items')
-        .update(asUpdate('menu_items', { image_url: url }))
+      const { error } = await (supabase.from('menu_items') as any)
+        .update({
+          image_url: url || null,
+        } as unknown as Database['public']['Tables']['menu_items']['Update'])
         .eq('id', currentItemForImage.id)
 
       if (error) throw error
@@ -1223,7 +1261,7 @@ export default function AdminMenuItems() {
 
                       {/* Dropdown Menu - Fixed Position with Tab-like Behavior */}
                       {(() => {
-                        const buttonRect = categoryDropdownRef.current
+                        const buttonRect = (categoryDropdownRef.current as HTMLElement | null)
                           ?.querySelector('button')
                           ?.getBoundingClientRect()
                         if (!buttonRect) return null
@@ -1431,7 +1469,9 @@ export default function AdminMenuItems() {
 
                           {/* Dropdown Menu */}
                           {(() => {
-                            const buttonRect = formCategoryDropdownRef.current
+                            const buttonRect = (
+                              formCategoryDropdownRef.current as HTMLElement | null
+                            )
                               ?.querySelector('button')
                               ?.getBoundingClientRect()
                             if (!buttonRect) return null
@@ -1628,7 +1668,7 @@ export default function AdminMenuItems() {
                 <input
                   type="text"
                   name="image_url"
-                  value={formData.image_url}
+                  value={formData.image_url || ''}
                   onChange={handleInputChange}
                   className="w-full px-5 py-3.5 sm:py-4 min-h-[52px] bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(197,157,95,0.2)] hover:border-[rgba(197,157,95,0.5)] focus:border-[rgba(197,157,95,0.8)] focus:outline-none rounded-lg text-sm sm:text-base text-[var(--text-main)] placeholder-[var(--text-muted)] transition-all duration-300 backdrop-blur-sm"
                   placeholder="/images/menu/dish-name.webp"
@@ -1686,7 +1726,7 @@ export default function AdminMenuItems() {
 
                         {/* Dropdown Menu */}
                         {(() => {
-                          const buttonRect = formSpiceDropdownRef.current
+                          const buttonRect = (formSpiceDropdownRef.current as HTMLElement | null)
                             ?.querySelector('button')
                             ?.getBoundingClientRect()
                           if (!buttonRect) return null
@@ -1827,7 +1867,7 @@ export default function AdminMenuItems() {
                     <input
                       type="checkbox"
                       name={toggle.name}
-                      checked={formData[toggle.name]}
+                      checked={Boolean(formData[toggle.name])}
                       onChange={handleInputChange}
                       className="w-5 h-5 text-[#C59D5F] focus:ring-2 focus:ring-[#C59D5F] rounded border-2 border-[rgba(197,157,95,0.3)] bg-[rgba(255,255,255,0.05)] transition-all duration-300"
                     />
@@ -1878,13 +1918,15 @@ export default function AdminMenuItems() {
                   loading="lazy"
                   onLoad={e => {
                     logger.log(`Image loaded successfully for ${item.name}`)
-                    e.target.style.opacity = '1'
+                    const target = e.target as HTMLImageElement
+                    target.style.opacity = '1'
                   }}
                   onError={e => {
                     logger.error(`FAILED to load image for ${item.name}:`)
-                    logger.error(`   URL: ${e.target.src}`)
+                    const target = e.target as HTMLImageElement
+                    logger.error(`   URL: ${target.src}`)
                     logger.error(`   Falling back to placeholder`)
-                    e.target.src = generatePlaceholderImage(item.name)
+                    target.src = generatePlaceholderImage(item.name)
                   }}
                   style={{ opacity: 1, transition: 'opacity 0.3s' }}
                 />
@@ -1929,7 +1971,7 @@ export default function AdminMenuItems() {
                     ৳
                     {typeof item.price === 'number'
                       ? item.price.toFixed(0)
-                      : parseFloat(item.price || 0).toFixed(0)}
+                      : parseFloat(String(item.price || 0)).toFixed(0)}
                   </span>
                   {item.prep_time && (
                     <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[rgba(255,255,255,0.05)]">
@@ -1942,11 +1984,11 @@ export default function AdminMenuItems() {
                 </div>
 
                 {/* Tags - Compact */}
-                {(item.spice_level > 0 || item.dietary_tags?.length > 0) && (
+                {((item.spice_level ?? 0) > 0 || (item.dietary_tags?.length ?? 0) > 0) && (
                   <div className="flex flex-wrap gap-1.5 mb-2">
-                    {item.spice_level > 0 && (
+                    {(item.spice_level ?? 0) > 0 && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[rgba(239,68,68,0.15)] border border-[rgba(239,68,68,0.25)] text-red-400 text-[10px] font-medium">
-                        {'🌶️'.repeat(item.spice_level)}
+                        {'🌶️'.repeat(item.spice_level ?? 0)}
                       </span>
                     )}
                     {item.dietary_tags?.slice(0, 2).map(tag => (
@@ -2191,7 +2233,9 @@ export default function AdminMenuItems() {
 
                                   {/* Dropdown Menu */}
                                   {(() => {
-                                    const buttonRect = editFormCategoryDropdownRef.current
+                                    const buttonRect = (
+                                      editFormCategoryDropdownRef.current as HTMLElement | null
+                                    )
                                       ?.querySelector('button')
                                       ?.getBoundingClientRect()
                                     if (!buttonRect) return null
@@ -2406,7 +2450,7 @@ export default function AdminMenuItems() {
                                 <input
                                   type="text"
                                   name="image_url"
-                                  value={formData.image_url}
+                                  value={formData.image_url || ''}
                                   onChange={handleInputChange}
                                   className="w-full px-4 py-2.5 min-h-[44px] bg-[rgba(255,255,255,0.05)] border border-[rgba(197,157,95,0.2)] rounded-lg text-sm text-[var(--text-main)] placeholder-[var(--text-muted)]"
                                   placeholder="/images/menu/dish-name.webp"
@@ -2699,7 +2743,7 @@ export default function AdminMenuItems() {
                             <input
                               type="checkbox"
                               name={toggle.name}
-                              checked={formData[toggle.name]}
+                              checked={Boolean(formData[toggle.name])}
                               onChange={handleInputChange}
                               className="w-5 h-5 text-[#C59D5F] focus:ring-2 focus:ring-[#C59D5F] rounded border-2 border-[rgba(197,157,95,0.3)] bg-[rgba(255,255,255,0.05)] transition-all duration-300"
                             />

@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
-import { addProductToCart } from '../lib/cartUtils'
+import { addProductToCart, type Product } from '../lib/cartUtils'
 import { toggleFavorites, isInFavorites } from '../lib/favoritesUtils'
 import { getCurrencySymbol, formatPrice } from '../lib/priceUtils'
 import { calculateVariantPrice } from '../lib/variantUtils'
@@ -41,7 +41,10 @@ const ProductDetail = memo((): JSX.Element => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0)
   const [success, setSuccess] = useState<boolean>(false)
   const [successMessage, setSuccessMessage] = useState<string>('')
-  const [errorMessage, setErrorMessage] = useState<string>('')
+  const [errorMessage, setErrorMessageState] = useState<string>('')
+  const setErrorMessage = useCallback((message: string | null) => {
+    setErrorMessageState(message || '')
+  }, [])
   const errorClearRef = useRef<(() => void) | null>(null)
   const [addingToCart, setAddingToCart] = useState<boolean>(false)
   const [isProductInFavorites, setIsProductInFavorites] = useState<boolean>(false)
@@ -174,6 +177,10 @@ const ProductDetail = memo((): JSX.Element => {
     return product?.stock_quantity || 0
   }, [product, variants, selectedCombination, getSelectedVariant])
 
+  // Memoized values - must be before handleAddToCart which uses them
+  const currentStock = useMemo(() => getCurrentStock(), [getCurrentStock])
+  const hasVariants = useMemo(() => Object.keys(variants).length > 0, [variants])
+
   const handleToggleFavorites = useCallback(async (): Promise<void> => {
     if (!user) {
       navigate('/login', { state: { from: { pathname: `/products/${id}` } } })
@@ -182,15 +189,16 @@ const ProductDetail = memo((): JSX.Element => {
 
     try {
       setTogglingFavorites(true)
-      const result = await toggleFavorites(id, user.id, { isMenuItem })
+      if (!id) return
+      const result = await toggleFavorites(id, user.id || '', { isMenuItem })
 
       if (result.success) {
-        setIsProductInFavorites(result.action === 'added')
+        // Toggle the favorite state
+        const newState = !isProductInFavorites
+        setIsProductInFavorites(newState)
 
         // Show success message
-        setSuccessMessage(
-          result.action === 'added' ? 'Added to favorites!' : 'Removed from favorites!'
-        )
+        setSuccessMessage(newState ? 'Added to favorites!' : 'Removed from favorites!')
         setSuccess(true)
         setTimeout(() => {
           setSuccess(false)
@@ -301,17 +309,13 @@ const ProductDetail = memo((): JSX.Element => {
       // GUEST USER: Add to localStorage cart
       if (!user) {
         // For guests, we only support single variant (not combinations)
-        const variantId = variantParam?.id || null
-        const variantDisplay = variantParam
-          ? `${variantParam.variant_type || variantParam.type}: ${variantParam.variant_value || variantParam.value}`
-          : null
+        // const variantId = variantParam?.id || null
+        // const variantDisplay = variantParam
+        //   ? `${variantParam.variant_type || variantParam.type}: ${variantParam.variant_value || variantParam.value}`
+        //   : null
 
         // Add to guest cart (localStorage)
-        addToGuestCart(product, 1, {
-          isMenuItem,
-          variantId,
-          variantDisplay,
-        })
+        addToGuestCart(product)
 
         setSuccess(true)
         setSuccessMessage('Added to cart!')
@@ -325,7 +329,12 @@ const ProductDetail = memo((): JSX.Element => {
       }
 
       // AUTHENTICATED USER: Use database cart with variant/combination support
-      const result = await addProductToCart(product, user.id, variantParam, combinationParam)
+      const result = await addProductToCart(
+        product as Product,
+        user.id || '',
+        variantParam,
+        combinationParam
+      )
 
       if (result.stockExceeded) {
         if (errorClearRef.current) errorClearRef.current()
@@ -437,14 +446,12 @@ const ProductDetail = memo((): JSX.Element => {
 
   // Memoized values - must be before early returns
   const images = useMemo(() => getProductImages(), [getProductImages])
-  const currentStock = useMemo(() => getCurrentStock(), [getCurrentStock])
   const isOutOfStock = useMemo(() => currentStock === 0, [currentStock])
   const currentPrice = useMemo(() => getCurrentPrice(), [getCurrentPrice])
   const showStockCount = useMemo(
     () => typeof currentStock === 'number' && currentStock !== null,
     [currentStock]
   )
-  const hasVariants = useMemo(() => Object.keys(variants).length > 0, [variants])
 
   if (loading) {
     return (
@@ -484,7 +491,11 @@ const ProductDetail = memo((): JSX.Element => {
           </div>
           <h2 className="mb-2 text-xl font-semibold text-[var(--text-main)]">Product Not Found</h2>
           <p className="mb-6 text-sm text-[var(--color-red)]">
-            {error || 'The product you are looking for does not exist.'}
+            {error instanceof Error
+              ? error.message
+              : typeof error === 'string'
+                ? error
+                : 'The product you are looking for does not exist.'}
           </p>
           <Link
             to="/products"
@@ -686,7 +697,7 @@ const ProductDetail = memo((): JSX.Element => {
               {/* Price and Stock Info */}
               <div className="mb-4 sm:mb-6">
                 <p className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[var(--accent)]">
-                  {getCurrencySymbol(product?.currency)}
+                  {getCurrencySymbol(product?.currency || 'BDT')}
                   {formatPrice(currentPrice, 0)}
                 </p>
                 {hasVariants && selectedCombination && (
@@ -864,7 +875,7 @@ const ProductDetail = memo((): JSX.Element => {
               {/* Rating Summary - Left Column */}
               <div className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-6 lg:col-span-1">
                 <ProductRatingSummary
-                  productId={id}
+                  productId={id || ''}
                   itemType={itemType}
                   showWriteButton={canReview && !showReviewForm}
                   onWriteReview={handleWriteReview}
@@ -878,7 +889,7 @@ const ProductDetail = memo((): JSX.Element => {
                 {showReviewForm && canReview && orderId && orderItemId && (
                   <div className="mb-8">
                     <ReviewForm
-                      productId={id}
+                      productId={id || ''}
                       itemType={itemType}
                       orderId={orderId}
                       orderItemId={orderItemId}
@@ -890,7 +901,7 @@ const ProductDetail = memo((): JSX.Element => {
 
                 {/* Reviews List */}
                 <ReviewsList
-                  productId={id}
+                  productId={id || ''}
                   itemType={itemType}
                   refreshTrigger={reviewRefreshTrigger}
                 />
@@ -940,7 +951,7 @@ const ProductDetail = memo((): JSX.Element => {
       )}
 
       {/* Recommended Products / Similar Items */}
-      {settings?.show_related_products && (
+      {(settings as { show_related_products?: boolean })?.show_related_products && (
         <div className="app-container py-8 sm:py-10 md:py-12">
           <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
             <div className="glow-surface glow-soft rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.02)] p-4 sm:p-6">

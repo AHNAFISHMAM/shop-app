@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import AuthShell from '../components/auth-shell/auth-shell'
-import { useTheme } from '../shared/hooks/use-theme'
 import { pageFade, fadeSlideUp } from '../components/animations/menuAnimations'
 
 /**
@@ -22,7 +21,8 @@ const Login = memo((): JSX.Element => {
   const [loading, setLoading] = useState<boolean>(false)
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(false)
-  const _isLightTheme = useTheme()
+  // Theme detection (currently unused but kept for future use)
+  // const _isLightTheme = useTheme()
   const { signIn, user, loading: authLoading, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

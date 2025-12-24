@@ -161,7 +161,9 @@ export function useCheckoutRealtime({
                                   ? err instanceof Error
                                     ? err instanceof Error
                                       ? err instanceof Error
-                                        ? err.message
+                                        ? err instanceof Error
+                                          ? err.message
+                                          : String(err)
                                         : String(err)
                                       : String(err)
                                     : String(err)
@@ -191,7 +193,9 @@ export function useCheckoutRealtime({
                                         ? err instanceof Error
                                           ? err instanceof Error
                                             ? err instanceof Error
-                                              ? err.message
+                                              ? err instanceof Error
+                                                ? err.message
+                                                : String(err)
                                               : String(err)
                                             : String(err)
                                           : String(err)
@@ -302,7 +306,9 @@ export function useCheckoutRealtime({
                                   ? err instanceof Error
                                     ? err instanceof Error
                                       ? err instanceof Error
-                                        ? err.message
+                                        ? err instanceof Error
+                                          ? err.message
+                                          : String(err)
                                         : String(err)
                                       : String(err)
                                     : String(err)
@@ -332,7 +338,9 @@ export function useCheckoutRealtime({
                                         ? err instanceof Error
                                           ? err instanceof Error
                                             ? err instanceof Error
-                                              ? err.message
+                                              ? err instanceof Error
+                                                ? err.message
+                                                : String(err)
                                               : String(err)
                                             : String(err)
                                           : String(err)
@@ -417,7 +425,9 @@ export function useCheckoutRealtime({
                                   ? err instanceof Error
                                     ? err instanceof Error
                                       ? err instanceof Error
-                                        ? err.message
+                                        ? err instanceof Error
+                                          ? err.message
+                                          : String(err)
                                         : String(err)
                                       : String(err)
                                     : String(err)
@@ -447,7 +457,9 @@ export function useCheckoutRealtime({
                                         ? err instanceof Error
                                           ? err instanceof Error
                                             ? err instanceof Error
-                                              ? err.message
+                                              ? err instanceof Error
+                                                ? err.message
+                                                : String(err)
                                               : String(err)
                                             : String(err)
                                           : String(err)
@@ -556,7 +568,9 @@ export function useCheckoutRealtime({
                                 ? err instanceof Error
                                   ? err instanceof Error
                                     ? err instanceof Error
-                                      ? err.message
+                                      ? err instanceof Error
+                                        ? err.message
+                                        : String(err)
                                       : String(err)
                                     : String(err)
                                   : String(err)
@@ -586,7 +600,9 @@ export function useCheckoutRealtime({
                                       ? err instanceof Error
                                         ? err instanceof Error
                                           ? err instanceof Error
-                                            ? err.message
+                                            ? err instanceof Error
+                                              ? err.message
+                                              : String(err)
                                             : String(err)
                                           : String(err)
                                         : String(err)

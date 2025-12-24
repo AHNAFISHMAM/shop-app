@@ -167,18 +167,46 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
       subscriptionConfig.filter = filter
     }
 
+    const channelConfig: {
+      event: 'INSERT' | 'UPDATE' | 'DELETE' | '*'
+      schema: string
+      table: string
+      filter?: string
+    } = {
+      event: subscriptionConfig.event,
+      schema: subscriptionConfig.schema,
+      table: subscriptionConfig.table,
+    }
+    if (subscriptionConfig.filter) {
+      channelConfig.filter = subscriptionConfig.filter
+    }
+
+    const postgresConfig: {
+      event: 'INSERT' | 'UPDATE' | 'DELETE' | '*'
+      schema: string
+      table: string
+      filter?: string
+    } = {
+      event: channelConfig.event,
+      schema: channelConfig.schema,
+      table: channelConfig.table,
+    }
+    if (channelConfig.filter) {
+      postgresConfig.filter = channelConfig.filter
+    }
+
     const channel = supabase
       .channel(finalChannelName)
       .on(
         'postgres_changes',
-        subscriptionConfig as any,
+        postgresConfig as any,
         (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
           if (!isMountedRef.current) return
 
           // Call custom payload handler if provided
           if (onPayload) {
             try {
-              onPayload(payload as RealtimePostgresChangesPayload<any>)
+              onPayload(payload as unknown as RealtimePostgresChangesPayload<any>)
             } catch (error) {
               logError(error, 'useRealtimeChannel.onPayload')
             }
@@ -233,7 +261,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
               }
             }
           }, HEALTH_CHECK_INTERVAL)
-          // eslint-disable-next-line react-hooks/exhaustive-deps
+
           // HEALTH_CHECK_INTERVAL is a constant, doesn't need to be in deps
 
           if (import.meta.env.DEV) {
@@ -351,11 +379,12 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
       // Reset reconnect attempts on cleanup
       reconnectAttemptsRef.current = 0
     }
+    // HEALTH_CHECK_INTERVAL is a constant, doesn't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     enabled,
     table,
     event,
-    // HEALTH_CHECK_INTERVAL is a constant, doesn't need to be in deps
     filter,
     schema,
     channelName,

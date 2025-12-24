@@ -66,36 +66,45 @@ async function fetchMenuData(): Promise<MenuData> {
       const categories: MenuCategory[] =
         rpcArray.length > 0
           ? rpcArray
-              .filter((cat: any): cat is Record<string, unknown> => cat && typeof cat === 'object')
-              .map(
-                (cat: any): MenuCategory => ({
+              .filter(
+                (cat: unknown): cat is Record<string, unknown> =>
+                  cat !== null && typeof cat === 'object' && !Array.isArray(cat)
+              )
+              .map((cat: Record<string, unknown>): MenuCategory => {
+                const categoryName = typeof cat.category_name === 'string' ? cat.category_name : ''
+                return {
                   id: String(cat.category_id || ''),
-                  name: String(cat.category_name || ''),
-                  slug: String(cat.category_name?.toLowerCase().replace(/\s+/g, '-') || ''),
-                  description: cat.description || null,
-                  image_url: cat.image_url || null,
+                  name: String(categoryName || ''),
+                  slug: String(categoryName.toLowerCase().replace(/\s+/g, '-') || ''),
+                  description: typeof cat.description === 'string' ? cat.description : null,
+                  image_url: typeof cat.image_url === 'string' ? cat.image_url : null,
                   sort_order: Number(cat.category_order || 0),
                   is_active: cat.is_active !== false,
                   created_at: String(cat.created_at || new Date().toISOString()),
                   updated_at: String(cat.updated_at || new Date().toISOString()),
-                })
-              )
+                }
+              })
           : []
 
       // Flatten dishes from all categories
-      const items: MenuItem[] = rpcArray.flatMap((cat: any) => {
-        if (!cat || typeof cat !== 'object') return []
-        const dishesArray = Array.isArray(cat.dishes) ? cat.dishes : []
+      const items: MenuItem[] = rpcArray.flatMap((cat: unknown) => {
+        if (!cat || typeof cat !== 'object' || Array.isArray(cat)) return []
+        const catRecord = cat as Record<string, unknown>
+        const dishesArray = Array.isArray(catRecord.dishes) ? catRecord.dishes : []
         if (dishesArray.length === 0) return []
-        const dishes = dishesArray.map((dish: any) => ({
+        const dishes = dishesArray.map((dish: unknown) => ({
           ...(dish as Record<string, unknown>),
-          category_id: cat.category_id,
+          category_id: catRecord.category_id,
           menu_categories: {
-            id: cat.category_id,
-            name: cat.category_name,
-            slug: cat.category_name?.toLowerCase().replace(/\s+/g, '-'),
+            id: String(catRecord.category_id || ''),
+            name: String(catRecord.category_name || ''),
+            slug: String(
+              (typeof catRecord.category_name === 'string' ? catRecord.category_name : '')
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+            ),
           },
-        }))
+        })) as MenuItem[]
         return dishes
       })
 

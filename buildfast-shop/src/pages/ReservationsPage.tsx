@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { m, type Variants } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+// import { useAuth } from '../contexts/AuthContext'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { useTheme } from '../contexts/ThemeContext'
 import toast from 'react-hot-toast'
-import { createReservation } from '../lib/reservationService'
+// import { createReservation } from '../lib/reservationService'
 import ConciergeBookingModal from '../components/ConciergeBookingModal'
 import { getReservationSettings } from '../lib/reservationSettingsService'
-import { getBackgroundStyle } from '../utils/backgroundUtils'
+import { getBackgroundStyle, type BackgroundSettings } from '../utils/backgroundUtils'
 import { pageFade } from '../components/animations/menuAnimations'
 import { logger } from '../utils/logger'
 
@@ -32,19 +32,19 @@ interface ReservationSettings {
 }
 
 /**
- * Reservation Form Data Interface
+ * Reservation Form Data Interface (currently unused but kept for future use)
  */
-interface ReservationFormData {
-  name: string
-  email?: string
-  phone: string
-  date: string
-  time: string
-  guests: string
-  requests?: string
-  occasion?: string
-  preference?: string
-}
+// interface ReservationFormData {
+//   name: string
+//   email?: string
+//   phone: string
+//   date: string
+//   time: string
+//   guests: string
+//   requests?: string
+//   occasion?: string
+//   preference?: string
+// }
 
 /**
  * Default reservation settings fallback
@@ -79,14 +79,14 @@ const DEFAULT_SETTINGS: ReservationSettings = {
  * - Uses design system CSS variables
  */
 const ReservationsPage = memo(() => {
-  const { user } = useAuth()
+  // const { user } = useAuth()
   const { settings, loading: settingsLoading } = useStoreSettings()
   const { theme } = useTheme()
   const navigate = useNavigate()
   const [reservationSettings, setReservationSettings] = useState<ReservationSettings | null>(null)
   const [loadingSettings, setLoadingSettings] = useState(true)
   const [showInfoModal, setShowInfoModal] = useState(false)
-  const [_submitting, setSubmitting] = useState(false)
+  // const [_submitting, setSubmitting] = useState(false)
 
   // Feature flags - default to false during loading
   const enableReservations = useMemo(
@@ -159,17 +159,13 @@ const ReservationsPage = memo(() => {
   }, [])
 
   // Load settings
-  useEffect(() => {
-    loadSettings()
-  }, [loadSettings])
-
   const loadSettings = useCallback(async () => {
     try {
       setLoadingSettings(true)
       const result = await getReservationSettings()
 
       if (result.success && result.data) {
-        setReservationSettings(result.data)
+        setReservationSettings(result.data as unknown as ReservationSettings)
       } else {
         logger.warn('Reservation settings not found, using defaults')
         setReservationSettings(DEFAULT_SETTINGS)
@@ -182,6 +178,11 @@ const ReservationsPage = memo(() => {
       setLoadingSettings(false)
     }
   }, [])
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   useEffect(() => {
     if (settings && !enableReservations) {
@@ -224,48 +225,49 @@ const ReservationsPage = memo(() => {
   }, [reservationSettings])
 
   // Handle reservation submission
-  const _handleReservationSubmit = useCallback(
-    async (data: unknown) => {
-      setSubmitting(true)
+  // Handle reservation submission (currently unused but kept for future use)
+  // const _handleReservationSubmit = useCallback(
+  //   async (data: unknown) => {
+  //     setSubmitting(true)
 
-      try {
-        const formData = data as ReservationFormData
-        const result = await createReservation({
-          userId: user?.id || null,
-          customerName: formData.name,
-          customerEmail: formData.email || user?.email || '',
-          customerPhone: formData.phone,
-          reservationDate: formData.date,
-          reservationTime: formData.time,
-          partySize: parseInt(formData.guests, 10),
-          specialRequests: formData.requests || null,
-          occasion: formData.occasion || null,
-          tablePreference: formData.preference || null,
-        })
+  //     try {
+  //       const formData = data as ReservationFormData
+  //       const result = await createReservation({
+  //         userId: user?.id || null,
+  //         customerName: formData.name,
+  //         customerEmail: formData.email || user?.email || '',
+  //         customerPhone: formData.phone,
+  //         reservationDate: formData.date,
+  //         reservationTime: formData.time,
+  //         partySize: parseInt(formData.guests, 10),
+  //         specialRequests: formData.requests || null,
+  //         occasion: formData.occasion || null,
+  //         tablePreference: formData.preference || null,
+  //       })
 
-        if (!result.success) {
-          toast.error(result.error)
-          return
-        }
+  //       if (!result.success) {
+  //         toast.error(result.error)
+  //         return
+  //       }
 
-        toast.success(
-          `🎉 Table reserved for ${formData.guests} on ${formData.date} at ${formatTime(formData.time || '')}.`,
-          { duration: 5000 }
-        )
+  //       toast.success(
+  //         `🎉 Table reserved for ${formData.guests} on ${formData.date} at ${formatTime(formData.time || '')}.`,
+  //         { duration: 5000 }
+  //       )
 
-        logger.log('Reservation created:', result.reservationId)
+  //       logger.log('Reservation created:', result.reservationId)
 
-        setShowInfoModal(false)
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      } catch (err) {
-        logger.error('Unexpected error:', err)
-        toast.error('An unexpected error occurred. Please try again.')
-      } finally {
-        setSubmitting(false)
-      }
-    },
-    [user, formatTime]
-  )
+  //       setShowInfoModal(false)
+  //       window.scrollTo({ top: 0, behavior: 'smooth' })
+  //     } catch (err) {
+  //       logger.error('Unexpected error:', err)
+  //       toast.error('An unexpected error occurred. Please try again.')
+  //     } finally {
+  //       setSubmitting(false)
+  //     }
+  //   },
+  //   [user, formatTime]
+  // )
 
   // Animation variants with reduced motion support
   const animationVariants: Variants = useMemo(() => {
@@ -282,7 +284,7 @@ const ReservationsPage = memo(() => {
   // Get theme-aware background style (must be before early returns)
   const section = `reservation_${theme}`
   const backgroundStyle = useMemo(
-    () => (settings ? getBackgroundStyle(settings, section) : {}),
+    () => (settings ? getBackgroundStyle(settings as unknown as BackgroundSettings, section) : {}),
     [settings, section]
   )
 

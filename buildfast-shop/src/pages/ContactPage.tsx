@@ -3,7 +3,6 @@ import { m } from 'framer-motion'
 import ConciergeBookingModal from '../components/ConciergeBookingModal'
 import SectionTitle from '../components/SectionTitle'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
-import { useTheme } from '../shared/hooks/use-theme'
 import { pageFade } from '../components/animations/menuAnimations'
 
 /**
@@ -62,7 +61,8 @@ const ACTION_ITEMS: ActionItem[] = [
  */
 const ContactPage = memo((): JSX.Element => {
   const { settings, loading: settingsLoading } = useStoreSettings()
-  const _isLightTheme = useTheme()
+  // Theme detection (currently unused but kept for future use)
+  // const _isLightTheme = useTheme()
   const enableReservations = useMemo(() => {
     return settingsLoading ? false : (settings?.enable_reservations ?? true)
   }, [settingsLoading, settings?.enable_reservations])

@@ -15,18 +15,20 @@ import ConfirmationModal from '../../components/ui/ConfirmationModal'
  * - Store Settings (store name, logo, tax, shipping, etc.)
  * - Reservation Settings (reservation system configuration)
  */
-interface ToggleStatus {
-  saving: boolean
-  message: string
-  type: 'idle' | 'success' | 'error'
-}
+// Unused interface - kept for future use
+// interface ToggleStatus {
+//   saving: boolean
+//   message: string
+//   type: 'idle' | 'success' | 'error'
+// }
 
-const _createToggleStatus = (): Record<string, ToggleStatus> => ({
-  show_home_ambience_uploader: { saving: false, message: '', type: 'idle' },
-  show_theme_toggle: { saving: false, message: '', type: 'idle' },
-  show_public_reviews: { saving: false, message: '', type: 'idle' },
-  show_home_testimonials: { saving: false, message: '', type: 'idle' },
-})
+// Unused function - kept for future use
+// const _createToggleStatus = (): Record<string, ToggleStatus> => ({
+//   show_home_ambience_uploader: { saving: false, message: '', type: 'idle' },
+//   show_theme_toggle: { saving: false, message: '', type: 'idle' },
+//   show_public_reviews: { saving: false, message: '', type: 'idle' },
+//   show_home_testimonials: { saving: false, message: '', type: 'idle' },
+// })
 
 function AdminSettings() {
   const containerRef = useViewportAnimationTrigger()
@@ -455,7 +457,9 @@ function AdminSettings() {
                                   ? err instanceof Error
                                     ? err instanceof Error
                                       ? err instanceof Error
-                                        ? err.message
+                                        ? err instanceof Error
+                                          ? err.message
+                                          : String(err)
                                         : String(err)
                                       : String(err)
                                     : String(err)
@@ -503,6 +507,7 @@ function AdminSettings() {
         show_theme_toggle: settings.show_theme_toggle ?? true,
         show_public_reviews: settings.show_public_reviews ?? false,
         show_home_testimonials: settings.show_home_testimonials ?? true,
+        reviews_visibility_updated_at: settings.reviews_visibility_updated_at ?? null,
         scroll_thumb_brightness: settings.scroll_thumb_brightness ?? 0.6,
         // Feature flags
         enable_loyalty_program: settings.enable_loyalty_program ?? true,

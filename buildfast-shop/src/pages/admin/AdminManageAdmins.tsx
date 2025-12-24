@@ -126,9 +126,9 @@ function AdminManageAdmins() {
     setSuccess('')
 
     try {
-      const { data, error: rpcError } = await (supabase.rpc as any)('add_admin_by_email', {
+      const { data, error: rpcError } = await supabase.rpc('add_admin_by_email', {
         target_email: email.trim().toLowerCase(),
-      })
+      } as unknown as Parameters<typeof supabase.rpc<'add_admin_by_email'>>[1])
 
       if (rpcError) {
         logger.error('Failed to add admin:', rpcError)
@@ -147,7 +147,8 @@ function AdminManageAdmins() {
       }
     } catch (err) {
       logger.error('Error adding admin:', err)
-      const errorMsg = err instanceof Error ? err.message : String(err)
+      const errorMsg =
+        err instanceof Error ? (err instanceof Error ? err.message : String(err)) : String(err)
       setError('Error adding admin: ' + errorMsg)
     } finally {
       setLoading(false)
@@ -170,9 +171,9 @@ function AdminManageAdmins() {
     setSuccess('')
 
     try {
-      const { data, error: rpcError } = await (supabase.rpc as any)('remove_admin_by_email', {
+      const { data, error: rpcError } = await supabase.rpc('remove_admin_by_email', {
         target_email: selectedAdmin.email,
-      })
+      } as unknown as Parameters<typeof supabase.rpc<'remove_admin_by_email'>>[1])
 
       if (rpcError) {
         logger.error('Failed to remove admin:', rpcError)
@@ -191,7 +192,8 @@ function AdminManageAdmins() {
       }
     } catch (err) {
       logger.error('Error removing admin:', err)
-      const errorMsg = err instanceof Error ? err.message : String(err)
+      const errorMsg =
+        err instanceof Error ? (err instanceof Error ? err.message : String(err)) : String(err)
       setError('Error removing admin: ' + errorMsg)
     } finally {
       setLoading(false)
