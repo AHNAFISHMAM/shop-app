@@ -5,8 +5,8 @@
  * Provides a user-friendly error page.
  */
 
+import React, { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { ReactNode } from 'react'
 import ErrorBoundary from './ErrorBoundary'
 import { m } from 'framer-motion'
 import { fadeSlideUp } from '../../components/animations/menuAnimations'
@@ -21,10 +21,7 @@ interface PageErrorBoundaryProps {
  *
  * Wraps pages with error boundary and provides page-specific error UI.
  */
-export function PageErrorBoundary({
-  children,
-  pageName = 'page',
-}: PageErrorBoundaryProps): JSX.Element {
+export function PageErrorBoundary({ children, pageName = 'page' }: PageErrorBoundaryProps) {
   const fallback = (error: Error, errorInfo: React.ErrorInfo, resetError: () => void) => (
     <m.div
       className="min-h-screen flex items-center justify-center bg-[var(--bg-main)] px-4"

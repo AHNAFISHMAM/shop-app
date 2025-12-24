@@ -20,7 +20,7 @@ const formatPrice = (value: number | string): string => {
     const numeric = typeof value === 'number' ? value : Number(value)
     if (!Number.isFinite(numeric)) return '--'
     return numeric.toFixed(0)
-  } catch (e) {
+  } catch {
     return '--'
   }
 }
@@ -172,7 +172,7 @@ const AdminSpecialSections = () => {
             if (rect.top < viewportBottom && rect.bottom > viewportTop) {
               lastVisibleIndex = index
             }
-          } catch (e) {
+          } catch {
             // Skip if element is not in DOM
           }
         })
@@ -196,7 +196,7 @@ const AdminSpecialSections = () => {
             if (inViewport || nearViewport || isNextRow) {
               el.dataset.animateActive = 'true'
             }
-          } catch (e) {
+          } catch {
             // Skip if element is not in DOM
           }
         })
