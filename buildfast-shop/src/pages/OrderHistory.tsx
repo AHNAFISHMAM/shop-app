@@ -718,23 +718,22 @@ const OrderHistory = memo((): JSX.Element | null => {
   }
 
   // Helper function to render order timeline with explicit return type
-  const renderOrderTimeline = useCallback((order: OrderHistoryOrder): React.ReactNode => {
-    if (
-      enableOrderTracking &&
-      typeof order.status === 'string' &&
-      order.status
-    ) {
-      return (
-        <div className="space-y-4 sm:space-y-6">
-          <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
-            Order Timeline
-          </h3>
-          <OrderTimeline status={order.status} />
-        </div>
-      )
-    }
-    return null
-  }, [enableOrderTracking])
+  const renderOrderTimeline = useCallback(
+    (order: OrderHistoryOrder): React.ReactNode => {
+      if (enableOrderTracking && typeof order.status === 'string' && order.status) {
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold text-[var(--text-main)]">
+              Order Timeline
+            </h3>
+            <OrderTimeline status={order.status} />
+          </div>
+        )
+      }
+      return null
+    },
+    [enableOrderTracking]
+  )
 
   const getStatusColor = useCallback((status: string): string => {
     const colors: Record<string, string> = {
@@ -1916,7 +1915,8 @@ Thank you for your order!
                                   </div>
                                 )}
                               </div>
-                              {renderOrderTimeline(order) as any}
+                              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                              {renderOrderTimeline(order) as unknown as any}
 
                               {/* Delivery Information */}
                               {order.shipping_address && (

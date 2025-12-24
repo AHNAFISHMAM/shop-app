@@ -383,7 +383,6 @@ const Checkout = memo(function Checkout() {
     setDiscountError('')
   }
 
-
   // Validate shipping address form
   const isAddressValid = useCallback(() => {
     // For saved addresses, phone is optional if not provided (legacy addresses)
@@ -620,6 +619,109 @@ const Checkout = memo(function Checkout() {
 
   // Order placement and payment handlers are now provided by useCheckoutOrder hook
   // Removed duplicate handlers - using hook's versions
+
+  // Memoize discount code section to avoid conditional hook call
+  const discountCodeSection = useMemo(() => {
+    if (appliedDiscountCode === null) {
+      return (
+        <div className="mb-4 pb-4 border-b border-theme">
+          <div key="discount-input">
+            <label
+              htmlFor="discountCode"
+              className="block text-sm font-medium text-[var(--text-main)] mb-2"
+            >
+              Discount Code
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                id="discountCode"
+                value={discountCodeInput}
+                onChange={e => {
+                  setDiscountCodeInput(e.target.value.toUpperCase())
+                  setDiscountError('')
+                }}
+                onKeyPress={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleApplyDiscountCode()
+                  }
+                }}
+                placeholder="Enter code"
+                disabled={validatingDiscount || placingOrder || orderSuccess}
+                className="flex-1 px-3 py-3 bg-theme-elevated border border-theme rounded-lg text-[var(--text-main)] placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition uppercase disabled:opacity-50 disabled:cursor-not-allowed text-sm min-h-[44px]"
+              />
+              <button
+                type="button"
+                onClick={handleApplyDiscountCode}
+                disabled={
+                  validatingDiscount || placingOrder || orderSuccess || !discountCodeInput.trim()
+                }
+                className="px-4 py-3 bg-accent text-black rounded-lg hover:bg-accent/80 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium min-h-[44px]"
+              >
+                {validatingDiscount ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  'Apply'
+                )}
+              </button>
+            </div>
+            {discountError && <p className="mt-2 text-xs text-red-400">{discountError}</p>}
+          </div>
+        </div>
+      )
+    }
+    if (appliedDiscountCode) {
+      return (
+        <div className="mb-4 pb-4 border-b border-theme">
+          <div
+            key="discount-applied"
+            className="bg-green-500/20 border border-green-400/30 rounded-lg p-3"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-green-400">
+                  Code: {appliedDiscountCode.code}
+                </p>
+                <p className="text-xs text-green-300 mt-0.5">
+                  {appliedDiscountCode.discount_type === 'percentage'
+                    ? `${String(appliedDiscountCode.discount_value ?? '0')}% off`
+                    : `${formatCurrency(parseFloat(String(appliedDiscountCode.discount_value ?? '0')))} off`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRemoveDiscountCode}
+                disabled={placingOrder || orderSuccess}
+                className="text-green-300 hover:text-green-100 p-1 transition disabled:opacity-50"
+                title="Remove discount code"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    return <div className="mb-4 pb-4 border-b border-theme"></div>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps
+  }, [
+    appliedDiscountCode,
+    discountCodeInput,
+    discountError,
+    validatingDiscount,
+    placingOrder,
+    orderSuccess,
+    handleApplyDiscountCode,
+    handleRemoveDiscountCode,
+  ]) as any
 
   if (loading) {
     return (
@@ -1809,318 +1911,219 @@ const Checkout = memo(function Checkout() {
                   </div>
                 )}
 
-              {/* Order Summary Sidebar */}
-              <div className="lg:w-80">
-                <div
-                  className="glow-surface glow-strong border border-theme rounded-xl p-6 sticky top-4"
-                  style={{
-                    backgroundColor: isLightTheme
-                      ? 'var(--bg-elevated)'
-                      : 'rgba(255, 255, 255, 0.05)',
-                  }}
-                >
-                  <h2 className="text-xl font-bold text-[var(--text-main)] mb-4">Total</h2>
+                {/* Order Summary Sidebar */}
+                <div className="lg:w-80">
+                  <div
+                    className="glow-surface glow-strong border border-theme rounded-xl p-6 sticky top-4"
+                    style={{
+                      backgroundColor: isLightTheme
+                        ? 'var(--bg-elevated)'
+                        : 'rgba(255, 255, 255, 0.05)',
+                    }}
+                  >
+                    <h2 className="text-xl font-bold text-[var(--text-main)] mb-4">Total</h2>
 
-                  {/* Only show loyalty program if enabled */}
-                  {!!enableLoyaltyProgram && (
-                    <div className="mb-4 rounded-xl border border-[#C59D5F]/30 bg-[#C59D5F]/10 p-4 text-xs text-amber-100/80">
-                      <div className="flex items-center justify-between uppercase tracking-[0.2em] text-[10px] text-amber-200/70">
-                        <span>Loyalty</span>
-                        <span>{loyalty?.tier || 'Member'}</span>
-                      </div>
-                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[var(--bg-main)]/30">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#FDE68A] via-[#FBBF24] to-[#D97706] transition-all duration-500"
-                          style={{
-                            width: `${Math.min(100, Math.max(loyalty?.progressPercent ?? 0, 4))}%`,
-                          }}
-                        />
-                      </div>
-                      <div className="mt-2 flex items-center justify-between text-[11px] text-amber-100/90">
-                        <span>{loyalty?.currentPoints ?? 0} pts</span>
-                        <span>
-                          {Math.max(0, loyalty?.pointsToNextTier ?? 0)} pts to{' '}
-                          {loyalty?.nextTierLabel || 'next tier'}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-[11px] text-amber-100/80">
-                        +{loyalty?.pointsEarnedThisOrder ?? 0} pts projected this order
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowRewardsPanel(prev => !prev)}
-                        className="mt-3 w-full rounded-lg border border-theme bg-[var(--bg-main)]/30 px-3 py-3 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition hover:border-[#C59D5F]/50 hover:text-[#C59D5F] min-h-[44px]"
-                      >
-                        {showRewardsPanel ? 'Hide Rewards' : 'Apply Rewards'}
-                      </button>
-                      {showRewardsPanel && (
-                        <div className="mt-3 space-y-2 rounded-lg border border-theme bg-[var(--bg-main)]/40 p-3">
-                          {loyalty?.redeemableRewards?.length ? (
-                            <div>
-                              <p className="mb-1 text-[11px] font-semibold text-[var(--text-main)]">
-                                Available now
-                              </p>
-                              <ul className="space-y-1 text-[11px] text-amber-50/90">
-                                {loyalty.redeemableRewards.map(reward => (
-                                  <li
-                                    key={reward.id}
-                                    className="flex items-center justify-between rounded-md px-2 py-1"
-                                    style={{
-                                      backgroundColor: isLightTheme
-                                        ? 'rgba(0, 0, 0, 0.04)'
-                                        : 'rgba(255, 255, 255, 0.05)',
-                                    }}
-                                  >
-                                    <span className="truncate pr-2">{reward.label}</span>
-                                    <span className="text-amber-200 font-semibold">
-                                      {reward.cost} pts
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ) : (
-                            <p className="text-[11px] text-amber-100/70">
-                              Earn {Math.max(0, loyalty?.pointsToNextTier ?? 0)} more pts to unlock
-                              your next perk.
-                            </p>
-                          )}
-                          {loyalty?.newlyUnlockedRewards?.length ? (
-                            <div>
-                              <p className="mb-1 text-[11px] font-semibold text-[var(--text-main)]">
-                                Unlocking soon
-                              </p>
-                              <ul className="space-y-1 text-[11px] text-amber-50/80">
-                                {loyalty.newlyUnlockedRewards.map(reward => (
-                                  <li
-                                    key={reward.id}
-                                    className="flex items-center justify-between px-2 py-1"
-                                  >
-                                    <span className="truncate pr-2">{reward.label}</span>
-                                    <span className="text-amber-200">{reward.cost} pts</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
+                    {/* Only show loyalty program if enabled */}
+                    {!!enableLoyaltyProgram && (
+                      <div className="mb-4 rounded-xl border border-[#C59D5F]/30 bg-[#C59D5F]/10 p-4 text-xs text-amber-100/80">
+                        <div className="flex items-center justify-between uppercase tracking-[0.2em] text-[10px] text-amber-200/70">
+                          <span>Loyalty</span>
+                          <span>{loyalty?.tier || 'Member'}</span>
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Total Items Count */}
-                  <div className="mb-4 pb-4 border-b border-theme">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted">Total Items</span>
-                      <span className="text-base font-semibold text-[var(--text-main)]">
-                        {`${String(totalItemsCount || 0)} ${Number(totalItemsCount) === 1 ? 'item' : 'items'}`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {useMemo(() => {
-                    if (appliedDiscountCode === null) {
-                      return (
-                        <div className="mb-4 pb-4 border-b border-theme">
-                          <div key="discount-input">
-                            <label
-                              htmlFor="discountCode"
-                              className="block text-sm font-medium text-[var(--text-main)] mb-2"
-                            >
-                              Discount Code
-                            </label>
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                id="discountCode"
-                                value={discountCodeInput}
-                                onChange={e => {
-                                  setDiscountCodeInput(e.target.value.toUpperCase())
-                                  setDiscountError('')
-                                }}
-                                onKeyPress={e => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    handleApplyDiscountCode()
-                                  }
-                                }}
-                                placeholder="Enter code"
-                                disabled={validatingDiscount || placingOrder || orderSuccess}
-                                className="flex-1 px-3 py-3 bg-theme-elevated border border-theme rounded-lg text-[var(--text-main)] placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition uppercase disabled:opacity-50 disabled:cursor-not-allowed text-sm min-h-[44px]"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleApplyDiscountCode}
-                                disabled={
-                                  validatingDiscount ||
-                                  placingOrder ||
-                                  orderSuccess ||
-                                  !discountCodeInput.trim()
-                                }
-                                className="px-4 py-3 bg-accent text-black rounded-lg hover:bg-accent/80 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium min-h-[44px]"
-                              >
-                                {validatingDiscount ? (
-                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                  'Apply'
-                                )}
-                              </button>
-                            </div>
-                            {discountError && (
-                              <p className="mt-2 text-xs text-red-400">{discountError}</p>
-                            )}
-                          </div>
+                        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[var(--bg-main)]/30">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#FDE68A] via-[#FBBF24] to-[#D97706] transition-all duration-500"
+                            style={{
+                              width: `${Math.min(100, Math.max(loyalty?.progressPercent ?? 0, 4))}%`,
+                            }}
+                          />
                         </div>
-                      )
-                    }
-                    if (appliedDiscountCode) {
-                      return (
-                        <div className="mb-4 pb-4 border-b border-theme">
-                          <div key="discount-applied" className="bg-green-500/20 border border-green-400/30 rounded-lg p-3">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm font-semibold text-green-400">
-                                  Code: {appliedDiscountCode.code}
-                                </p>
-                                <p className="text-xs text-green-300 mt-0.5">
-                                  {appliedDiscountCode.discount_type === 'percentage'
-                                    ? `${String(appliedDiscountCode.discount_value ?? '0')}% off`
-                                    : `${formatCurrency(parseFloat(String(appliedDiscountCode.discount_value ?? '0')))} off`}
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleRemoveDiscountCode}
-                                disabled={placingOrder || orderSuccess}
-                                className="text-green-300 hover:text-green-100 p-1 transition disabled:opacity-50"
-                                title="Remove discount code"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-                    return (
-                      <div className="mb-4 pb-4 border-b border-theme"></div>
-                    )
-                  }, [appliedDiscountCode, discountCodeInput, discountError, validatingDiscount, placingOrder, orderSuccess]) as any}
-
-                  <div className="space-y-3 mb-5">
-                    <div className="flex justify-between text-sm text-muted">
-                      <span>Subtotal</span>
-                      <span className="font-semibold text-[var(--text-main)]">
-                        {formatCurrency(subtotal)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm text-muted">
-                      <span>Shipping</span>
-                      <span className="font-semibold">
-                        {shipping === 0 ? (
-                          <span className="text-green-400">FREE</span>
-                        ) : (
-                          <span className="text-[var(--text-main)]">
-                            {formatCurrency(shipping)}
+                        <div className="mt-2 flex items-center justify-between text-[11px] text-amber-100/90">
+                          <span>{loyalty?.currentPoints ?? 0} pts</span>
+                          <span>
+                            {Math.max(0, loyalty?.pointsToNextTier ?? 0)} pts to{' '}
+                            {loyalty?.nextTierLabel || 'next tier'}
                           </span>
+                        </div>
+                        <div className="mt-2 text-[11px] text-amber-100/80">
+                          +{loyalty?.pointsEarnedThisOrder ?? 0} pts projected this order
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowRewardsPanel(prev => !prev)}
+                          className="mt-3 w-full rounded-lg border border-theme bg-[var(--bg-main)]/30 px-3 py-3 text-xs sm:text-sm font-semibold text-[var(--text-main)] transition hover:border-[#C59D5F]/50 hover:text-[#C59D5F] min-h-[44px]"
+                        >
+                          {showRewardsPanel ? 'Hide Rewards' : 'Apply Rewards'}
+                        </button>
+                        {showRewardsPanel && (
+                          <div className="mt-3 space-y-2 rounded-lg border border-theme bg-[var(--bg-main)]/40 p-3">
+                            {loyalty?.redeemableRewards?.length ? (
+                              <div>
+                                <p className="mb-1 text-[11px] font-semibold text-[var(--text-main)]">
+                                  Available now
+                                </p>
+                                <ul className="space-y-1 text-[11px] text-amber-50/90">
+                                  {loyalty.redeemableRewards.map(reward => (
+                                    <li
+                                      key={reward.id}
+                                      className="flex items-center justify-between rounded-md px-2 py-1"
+                                      style={{
+                                        backgroundColor: isLightTheme
+                                          ? 'rgba(0, 0, 0, 0.04)'
+                                          : 'rgba(255, 255, 255, 0.05)',
+                                      }}
+                                    >
+                                      <span className="truncate pr-2">{reward.label}</span>
+                                      <span className="text-amber-200 font-semibold">
+                                        {reward.cost} pts
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-amber-100/70">
+                                Earn {Math.max(0, loyalty?.pointsToNextTier ?? 0)} more pts to
+                                unlock your next perk.
+                              </p>
+                            )}
+                            {loyalty?.newlyUnlockedRewards?.length ? (
+                              <div>
+                                <p className="mb-1 text-[11px] font-semibold text-[var(--text-main)]">
+                                  Unlocking soon
+                                </p>
+                                <ul className="space-y-1 text-[11px] text-amber-50/80">
+                                  {loyalty.newlyUnlockedRewards.map(reward => (
+                                    <li
+                                      key={reward.id}
+                                      className="flex items-center justify-between px-2 py-1"
+                                    >
+                                      <span className="truncate pr-2">{reward.label}</span>
+                                      <span className="text-amber-200">{reward.cost} pts</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : null}
+                          </div>
                         )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm text-muted">
-                      <span>Tax ({Math.round(taxRatePercent)}%)</span>
-                      <span className="font-semibold text-[var(--text-main)]">
-                        {formatCurrency(tax)}
-                      </span>
-                    </div>
-                    {discountAmount > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-green-400 font-medium">Discount</span>
-                        <span className="font-semibold text-green-400">
-                          -{formatCurrency(discountAmount)}
-                        </span>
                       </div>
                     )}
-                    <div className="border-t border-theme pt-3 mt-4">
+
+                    {/* Total Items Count */}
+                    <div className="mb-4 pb-4 border-b border-theme">
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-bold text-[var(--text-main)]">Total</span>
-                        <span className="text-2xl font-bold text-accent">
-                          {formatCurrency(grandTotal)}
+                        <span className="text-sm text-muted">Total Items</span>
+                        <span className="text-base font-semibold text-[var(--text-main)]">
+                          {`${String(totalItemsCount || 0)} ${Number(totalItemsCount) === 1 ? 'item' : 'items'}`}
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                  {createdOrderId && trackingStatus && enableOrderTracking && (
-                    <div
-                      ref={trackingRef as React.RefObject<HTMLDivElement>}
-                      className="mt-6 space-y-3 rounded-2xl border border-theme p-4"
-                      style={{
-                        backgroundColor: isLightTheme
-                          ? 'rgba(0, 0, 0, 0.04)'
-                          : 'rgba(255, 255, 255, 0.05)',
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs uppercase tracking-[0.3em] text-muted">
-                          Order tracker
+                    {discountCodeSection}
+
+                    <div className="space-y-3 mb-5">
+                      <div className="flex justify-between text-sm text-muted">
+                        <span>Subtotal</span>
+                        <span className="font-semibold text-[var(--text-main)]">
+                          {formatCurrency(subtotal)}
                         </span>
-                        <Link
-                          to="/order-history"
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80"
-                        >
-                          Order history
-                          <svg
-                            className="h-3.5 w-3.5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={1.8}
+                      </div>
+                      <div className="flex justify-between text-sm text-muted">
+                        <span>Shipping</span>
+                        <span className="font-semibold">
+                          {shipping === 0 ? (
+                            <span className="text-green-400">FREE</span>
+                          ) : (
+                            <span className="text-[var(--text-main)]">
+                              {formatCurrency(shipping)}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-muted">
+                        <span>Tax ({Math.round(taxRatePercent)}%)</span>
+                        <span className="font-semibold text-[var(--text-main)]">
+                          {formatCurrency(tax)}
+                        </span>
+                      </div>
+                      {discountAmount > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-400 font-medium">Discount</span>
+                          <span className="font-semibold text-green-400">
+                            -{formatCurrency(discountAmount)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="border-t border-theme pt-3 mt-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-bold text-[var(--text-main)]">Total</span>
+                          <span className="text-2xl font-bold text-accent">
+                            {formatCurrency(grandTotal)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {createdOrderId && trackingStatus && enableOrderTracking && (
+                      <div
+                        ref={trackingRef as React.RefObject<HTMLDivElement>}
+                        className="mt-6 space-y-3 rounded-2xl border border-theme p-4"
+                        style={{
+                          backgroundColor: isLightTheme
+                            ? 'rgba(0, 0, 0, 0.04)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs uppercase tracking-[0.3em] text-muted">
+                            Order tracker
+                          </span>
+                          <Link
+                            to="/order-history"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </Link>
+                            Order history
+                            <svg
+                              className="h-3.5 w-3.5"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.8}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </Link>
+                        </div>
+                        <div className="rounded-xl bg-[var(--bg-main)] p-3">
+                          <OrderTimeline
+                            status={typeof trackingStatus === 'string' ? trackingStatus : 'pending'}
+                          />
+                        </div>
                       </div>
-                      <div className="rounded-xl bg-[var(--bg-main)] p-3">
-                        <OrderTimeline
-                          status={typeof trackingStatus === 'string' ? trackingStatus : 'pending'}
-                        />
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Security Badge */}
-                  <div className="flex items-center justify-center text-sm text-muted mt-4 pt-4 border-t border-theme">
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                    Secure Checkout
+                    {/* Security Badge */}
+                    <div className="flex items-center justify-center text-sm text-muted mt-4 pt-4 border-t border-theme">
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                      Secure Checkout
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           )}
         </MotionSection>
       </MotionMain>
