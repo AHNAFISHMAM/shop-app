@@ -190,7 +190,15 @@ const OrderHistory = memo((): JSX.Element | null => {
 
       setFeedbackSubmitting(prev => ({ ...prev, [orderId]: true }))
       try {
-        await new Promise(resolve => setTimeout(resolve, 600))
+        // Use requestIdleCallback instead of setTimeout to avoid blocking
+        await new Promise<void>(resolve => {
+          if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            requestIdleCallback(() => resolve(), { timeout: 100 })
+          } else {
+            // Fallback: use requestAnimationFrame for better performance
+            requestAnimationFrame(() => resolve())
+          }
+        })
         setFeedbackSubmitted(prev => ({
           ...prev,
           [orderId]: { rating, note: feedbackNotes[orderId] || '' },
@@ -639,7 +647,14 @@ const OrderHistory = memo((): JSX.Element | null => {
     setReturnSuccess(true)
     // Refetch return requests after successful submission
     fetchReturnRequests()
-    setTimeout(() => setReturnSuccess(false), 5000)
+    // Use requestIdleCallback for non-critical timeout operations
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        setTimeout(() => setReturnSuccess(false), 5000)
+      })
+    } else {
+      setTimeout(() => setReturnSuccess(false), 5000)
+    }
   }
 
   const closeReturnModal = (): void => {

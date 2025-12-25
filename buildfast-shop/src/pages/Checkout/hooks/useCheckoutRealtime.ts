@@ -112,14 +112,26 @@ export function useCheckoutRealtime({
                 })
               }
 
-              if (refetchCart) {
-                setTimeout(() => {
-                  refetchCart()
-                }, 500)
-              }
-
-              if (onProductUpdate) {
-                onProductUpdate(payload)
+              // Defer to avoid blocking message handler - use requestIdleCallback
+              if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                  if (refetchCart) {
+                    refetchCart()
+                  }
+                  if (onProductUpdate) {
+                    onProductUpdate(payload)
+                  }
+                })
+              } else {
+                // Fallback: use requestAnimationFrame for better performance
+                requestAnimationFrame(() => {
+                  if (refetchCart) {
+                    refetchCart()
+                  }
+                  if (onProductUpdate) {
+                    onProductUpdate(payload)
+                  }
+                })
               }
             }
           )
@@ -257,14 +269,26 @@ export function useCheckoutRealtime({
                 })
               }
 
-              if (refetchCart) {
-                setTimeout(() => {
-                  refetchCart()
-                }, 500)
-              }
-
-              if (onProductUpdate) {
-                onProductUpdate(payload)
+              // Defer to avoid blocking message handler - use requestIdleCallback
+              if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                  if (refetchCart) {
+                    refetchCart()
+                  }
+                  if (onProductUpdate) {
+                    onProductUpdate(payload)
+                  }
+                })
+              } else {
+                // Fallback: use requestAnimationFrame for better performance
+                requestAnimationFrame(() => {
+                  if (refetchCart) {
+                    refetchCart()
+                  }
+                  if (onProductUpdate) {
+                    onProductUpdate(payload)
+                  }
+                })
               }
             }
           )
@@ -385,14 +409,26 @@ export function useCheckoutRealtime({
 
               logger.log('Product updated in checkout:', payload)
 
-              if (refetchCart) {
-                setTimeout(() => {
-                  refetchCart()
-                }, 500)
-              }
-
-              if (onProductUpdate) {
-                onProductUpdate(payload)
+              // Defer to avoid blocking message handler - use requestIdleCallback
+              if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                  if (refetchCart) {
+                    refetchCart()
+                  }
+                  if (onProductUpdate) {
+                    onProductUpdate(payload)
+                  }
+                })
+              } else {
+                // Fallback: use requestAnimationFrame for better performance
+                requestAnimationFrame(() => {
+                  if (refetchCart) {
+                    refetchCart()
+                  }
+                  if (onProductUpdate) {
+                    onProductUpdate(payload)
+                  }
+                })
               }
             }
           )
@@ -534,10 +570,19 @@ export function useCheckoutRealtime({
           async payload => {
             logger.log('Address updated in real-time:', payload)
 
-            if (refetchAddresses) {
-              setTimeout(() => {
-                refetchAddresses()
-              }, 500)
+            // Defer to avoid blocking message handler
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+              requestIdleCallback(() => {
+                if (refetchAddresses) {
+                  refetchAddresses()
+                }
+              })
+            } else {
+              requestAnimationFrame(() => {
+                if (refetchAddresses) {
+                  refetchAddresses()
+                }
+              })
             }
           }
         )

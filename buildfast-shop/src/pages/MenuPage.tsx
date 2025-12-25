@@ -166,16 +166,31 @@ const MenuPage = memo(() => {
   const scrollMenuToTop = useCallback(() => {
     if (typeof window === 'undefined') return
 
-    window.requestAnimationFrame(() => {
-      if (searchBarRef.current?.scrollIntoView) {
-        searchBarRef.current.scrollIntoView({
-          behavior: prefersReducedMotion ? 'auto' : 'smooth',
-          block: 'start',
-        })
-      } else {
-        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
-      }
-    })
+    // Use requestIdleCallback for non-critical scroll operations
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        if (searchBarRef.current?.scrollIntoView) {
+          searchBarRef.current.scrollIntoView({
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            block: 'start',
+          })
+        } else {
+          window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
+        }
+      })
+    } else {
+      // Fallback: use requestAnimationFrame for better performance than immediate execution
+      requestAnimationFrame(() => {
+        if (searchBarRef.current?.scrollIntoView) {
+          searchBarRef.current.scrollIntoView({
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            block: 'start',
+          })
+        } else {
+          window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
+        }
+      })
+    }
   }, [prefersReducedMotion])
 
   const registerQuickReorderItem = useCallback((item: MenuItem): void => {

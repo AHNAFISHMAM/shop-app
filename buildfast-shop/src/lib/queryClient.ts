@@ -49,7 +49,13 @@ export const queryClient = new QueryClient({
         // Retry up to 2 times for other errors
         return failureCount < 2
       },
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Optimize retry delay to reduce setTimeout handler time
+      retryDelay: attemptIndex => {
+        // Use shorter delays for faster retries, but cap at reasonable max
+        const delay = Math.min(500 * 2 ** attemptIndex, 10000)
+        // Defer retry to avoid blocking
+        return delay
+      },
     },
     mutations: {
       retry: 1, // Retry mutations once

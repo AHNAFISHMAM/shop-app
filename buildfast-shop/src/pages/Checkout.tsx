@@ -175,7 +175,12 @@ const Checkout = memo(function Checkout() {
   const trackingRef = useRef<HTMLElement | null>(null)
   const scrollToTracking = () => {
     if (trackingRef.current) {
-      trackingRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // Use requestAnimationFrame to batch scroll operations and prevent forced reflow
+      requestAnimationFrame(() => {
+        if (trackingRef.current) {
+          trackingRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
     }
   }
   const [emailUpdatesOptIn, setEmailUpdatesOptIn] = useState(true)

@@ -222,8 +222,11 @@ function AppContent(): JSX.Element {
 
       const updateThumb = () => {
         scheduled = false
+        // Batch all DOM reads together to prevent forced reflows
         const { scrollHeight, viewport, scrollTop, rect } = calculateMetrics()
         const scrollable = scrollHeight - viewport
+        const innerHeight = window.innerHeight
+        const innerWidth = window.innerWidth
 
         if (!rect.visible || viewport <= 0 || scrollable <= 1) {
           hideThumb()
@@ -237,9 +240,12 @@ function AppContent(): JSX.Element {
         const top = rect.top + offset
         const left = rect.right - 6
 
-        thumb.style.height = `${computedHeight}px`
-        thumb.style.top = `${Math.min(window.innerHeight - computedHeight, Math.max(0, top))}px`
-        thumb.style.left = `${Math.min(window.innerWidth - 3, Math.max(0, left))}px`
+        // Batch all DOM writes together to prevent forced reflows
+        requestAnimationFrame(() => {
+          thumb.style.height = `${computedHeight}px`
+          thumb.style.top = `${Math.min(innerHeight - computedHeight, Math.max(0, top))}px`
+          thumb.style.left = `${Math.min(innerWidth - 3, Math.max(0, left))}px`
+        })
       }
 
       const requestUpdate = () => {
@@ -251,15 +257,19 @@ function AppContent(): JSX.Element {
 
       const revealThumb = () => {
         requestUpdate()
-        thumb.style.visibility = 'visible'
+        // Batch DOM reads to prevent forced reflow
+        const scrollY = isDocumentTarget ? window.scrollY : 0
         const activeColor = Number(thumb.dataset.activeColorAlpha || activeColorAlpha)
         const baseColor = Number(thumb.dataset.baseAlpha || baseColorAlpha)
-        thumb.style.background = `rgba(197, 157, 95, ${isDocumentTarget && window.scrollY === 0 ? baseColor : activeColor})`
-
         const active = Number(thumb.dataset.activeOpacity || activeOpacity)
         const idle = Number(thumb.dataset.idleOpacity || idleOpacity)
-        thumb.style.opacity =
-          isDocumentTarget && window.scrollY === 0 ? String(idle) : String(active)
+        
+        // Batch DOM writes using requestAnimationFrame
+        requestAnimationFrame(() => {
+          thumb.style.visibility = 'visible'
+          thumb.style.background = `rgba(197, 157, 95, ${isDocumentTarget && scrollY === 0 ? baseColor : activeColor})`
+          thumb.style.opacity = isDocumentTarget && scrollY === 0 ? String(idle) : String(active)
+        })
 
         if (hideTimer) {
           window.clearTimeout(hideTimer)

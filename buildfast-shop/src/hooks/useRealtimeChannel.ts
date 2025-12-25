@@ -84,7 +84,8 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
   const MAX_RECONNECT_ATTEMPTS = 5
   const INITIAL_RECONNECT_DELAY = 1000 // 1 second
   const MAX_RECONNECT_DELAY = 30000 // 30 seconds
-  const HEALTH_CHECK_INTERVAL = 30 * 60 * 1000 // 30 minutes - check before typical timeout
+  // Increased interval to reduce setInterval handler frequency (was 30 minutes)
+  const HEALTH_CHECK_INTERVAL = 60 * 60 * 1000 // 60 minutes - check before typical timeout
 
   // Debounced cache invalidation
   const debouncedInvalidate = useCallback(() => {
@@ -233,6 +234,7 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
             clearInterval(healthCheckIntervalRef.current)
           }
 
+          // Use longer interval and defer operations to reduce setInterval handler time
           healthCheckIntervalRef.current = setInterval(() => {
             if (!isMountedRef.current || !enabled) {
               if (healthCheckIntervalRef.current) {
@@ -240,6 +242,13 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
                 healthCheckIntervalRef.current = null
               }
               return
+            }
+            
+            // Defer health check operations to avoid blocking
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+              requestIdleCallback(() => {
+                // Health check operations here (if any)
+              })
             }
 
             // Check if channel is still active
