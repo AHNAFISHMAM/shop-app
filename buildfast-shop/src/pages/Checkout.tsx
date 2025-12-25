@@ -648,6 +648,7 @@ const Checkout = memo(function Checkout() {
               <input
                 type="text"
                 id="discountCode"
+                name="discountCode"
                 value={discountCodeInput}
                 onChange={e => {
                   setDiscountCodeInput(e.target.value.toUpperCase())

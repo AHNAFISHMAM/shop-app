@@ -1677,11 +1677,14 @@ Thank you for your order!
                       </svg>
                     </div>
                     <input
-                      type="text"
+                      id="order-history-search"
+                      name="search"
+                      type="search"
                       placeholder="Search by order number or product name..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       className="block w-full rounded-xl sm:rounded-2xl border border-theme bg-[rgba(255,255,255,0.03)] pl-10 pr-3 py-3 text-sm sm:text-base text-[var(--text-main)] placeholder:text-muted focus:border-[var(--accent)]/60 focus:bg-[rgba(255,255,255,0.08)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60 min-h-[44px]"
+                      autoComplete="off"
                       aria-label="Search orders"
                       aria-describedby="search-helper"
                     />

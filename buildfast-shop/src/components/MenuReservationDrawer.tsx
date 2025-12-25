@@ -239,11 +239,14 @@ const MenuReservationDrawer = ({
                   Full Name *
                 </span>
                 <input
+                  id="menu-reservation-name"
+                  name="name"
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                   placeholder="Enter your full name"
+                  autoComplete="name"
                   required
                 />
               </m.label>
@@ -253,11 +256,14 @@ const MenuReservationDrawer = ({
                   Email *
                 </span>
                 <input
+                  id="menu-reservation-email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                   placeholder="your.email@example.com"
+                  autoComplete="email"
                   required
                 />
               </m.label>
@@ -267,11 +273,14 @@ const MenuReservationDrawer = ({
                   Phone *
                 </span>
                 <input
+                  id="menu-reservation-phone"
+                  name="phone"
                   type="tel"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
                   placeholder="+880 1234-567890"
+                  autoComplete="tel"
                   required
                 />
               </m.label>
@@ -282,6 +291,8 @@ const MenuReservationDrawer = ({
                     Party Size
                   </span>
                   <input
+                    id="menu-reservation-party-size"
+                    name="partySize"
                     type="number"
                     min={1}
                     max={12}
@@ -290,6 +301,7 @@ const MenuReservationDrawer = ({
                       setPartySize(Math.max(1, Math.min(12, Number(event.target.value))))
                     }
                     className="w-full rounded-xl border border-theme bg-theme-elevated px-3 py-2 text-[var(--text-main)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 transition-all"
+                    autoComplete="off"
                     required
                   />
                 </m.label>

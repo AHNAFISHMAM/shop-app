@@ -727,6 +727,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
           </label>
           <input
             id="reservation-phone"
+            name="phone"
             type="tel"
             value={formData.phone}
             onChange={e => {
