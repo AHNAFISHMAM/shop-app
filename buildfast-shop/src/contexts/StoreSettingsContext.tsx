@@ -272,18 +272,37 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
 
       if (error) {
         logger.error('Error fetching store settings:', error)
+        logger.error('Error code:', error.code)
+        logger.error('Error message:', error.message)
+        logger.error('Error details:', error.details)
+        
+        // Log specific error types for debugging
+        if (error.code === 'PGRST116' || error.code === '42P01') {
+          logger.error('⚠️ store_settings table not found. Please run migrations.')
+        } else if (error.code === '42501') {
+          logger.error('⚠️ Permission denied. Check RLS policies on store_settings table.')
+        } else if (error.message?.includes('timeout')) {
+          logger.error('⚠️ Request timed out. Check Supabase connection.')
+        }
+        
         // Use default settings if fetch fails
         setSettings(getDefaultSettings())
       } else {
+        logger.log('✅ Store settings loaded successfully')
         setSettings(normalizeSettings(data as Partial<StoreSettings>))
       }
     } catch (err) {
       logger.error('Error in fetchSettings:', err)
+      if (err instanceof Error) {
+        logger.error('Error type:', err.constructor.name)
+        logger.error('Error message:', err.message)
+      }
       // Always set default settings on any error to prevent white screen
       setSettings(getDefaultSettings())
     } finally {
       // Always set loading to false, even on timeout/error
       setLoading(false)
+      logger.log('StoreSettingsContext: Loading complete')
     }
   }
 
@@ -384,6 +403,11 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
 
   // Load settings on mount
   useEffect(() => {
+    // Log initialization for debugging
+    if (typeof window !== 'undefined') {
+      console.log('🔧 StoreSettingsContext: Initializing...')
+      console.log('🔧 Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing')
+    }
     fetchSettings()
 
     // Set up real-time subscription for settings changes

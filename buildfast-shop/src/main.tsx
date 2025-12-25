@@ -14,7 +14,21 @@ import './utils/verifyThemeContrast'
 import { initWebVitals } from './utils/web-vitals'
 initWebVitals()
 
-createRoot(document.getElementById('root')!).render(
+// Debug: Log app initialization
+if (typeof window !== 'undefined') {
+  console.log('🚀 App: Starting initialization...')
+  console.log('🚀 Environment:', import.meta.env.MODE)
+  console.log('🚀 Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? '✅ Set' : '❌ Missing')
+  console.log('🚀 Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing')
+}
+
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  console.error('❌ CRITICAL: Root element not found! Check index.html')
+  throw new Error('Root element not found')
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
