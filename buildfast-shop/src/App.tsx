@@ -89,7 +89,7 @@ const PageLoading = (): JSX.Element => {
 
 function AppContent(): JSX.Element {
   const location = useLocation()
-  const { settings, loading: settingsLoading } = useStoreSettings()
+  const { settings } = useStoreSettings()
   const brightnessSetting = settings?.scroll_thumb_brightness ?? 0.6
 
   // IMPORTANT: All hooks must be called before any conditional returns

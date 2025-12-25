@@ -288,16 +288,25 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
 
       if (error) {
         logger.error('Error fetching store settings:', error)
-        logger.error('Error code:', error.code)
-        logger.error('Error message:', error.message)
-        logger.error('Error details:', error.details)
+        
+        // Type guard for Supabase error
+        const supabaseError = error as { code?: string; message?: string; details?: string }
+        if (supabaseError.code) {
+          logger.error('Error code:', supabaseError.code)
+        }
+        if (supabaseError.message) {
+          logger.error('Error message:', supabaseError.message)
+        }
+        if (supabaseError.details) {
+          logger.error('Error details:', supabaseError.details)
+        }
         
         // Log specific error types for debugging
-        if (error.code === 'PGRST116' || error.code === '42P01') {
+        if (supabaseError.code === 'PGRST116' || supabaseError.code === '42P01') {
           logger.error('⚠️ store_settings table not found. Please run migrations.')
-        } else if (error.code === '42501') {
+        } else if (supabaseError.code === '42501') {
           logger.error('⚠️ Permission denied. Check RLS policies on store_settings table.')
-        } else if (error.message?.includes('timeout') || error.message?.includes('aborted')) {
+        } else if (supabaseError.message?.includes('timeout') || supabaseError.message?.includes('aborted')) {
           logger.error('⚠️ Request timed out. Check Supabase connection.')
         }
         

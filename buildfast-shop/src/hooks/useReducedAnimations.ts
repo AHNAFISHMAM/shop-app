@@ -8,13 +8,13 @@ import { useStoreSettings } from '../contexts/StoreSettingsContext'
  * @returns true if animations should be reduced/disabled
  */
 export function useReducedAnimations(): boolean {
-  const { loading, settings } = useStoreSettings()
+  const { loading } = useStoreSettings()
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [supabaseFailed, setSupabaseFailed] = useState(false)
 
   // Check user preference for reduced motion
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return undefined
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     setPrefersReducedMotion(mediaQuery.matches)
@@ -31,6 +31,8 @@ export function useReducedAnimations(): boolean {
       mediaQuery.addListener(handleChange)
       return () => mediaQuery.removeListener(handleChange)
     }
+    
+    return undefined
   }, [])
 
   // Check if Supabase failed (still loading after timeout suggests failure)
@@ -45,6 +47,7 @@ export function useReducedAnimations(): boolean {
     } else {
       // Reset when loading completes
       setSupabaseFailed(false)
+      return undefined
     }
   }, [loading])
 
