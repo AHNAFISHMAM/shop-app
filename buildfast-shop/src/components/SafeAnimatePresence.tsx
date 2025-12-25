@@ -1,6 +1,11 @@
-import { Component, type ReactNode, type ErrorInfo } from 'react'
+import React, { Component, type ReactNode, type ErrorInfo } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { logger } from '../utils/logger'
+
+// Ensure React is available globally before framer-motion tries to use it
+if (typeof window !== 'undefined' && !(window as any).React) {
+  ;(window as any).React = React
+}
 
 interface SafeAnimatePresenceProps {
   children: ReactNode
