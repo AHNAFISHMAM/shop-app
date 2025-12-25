@@ -5,6 +5,21 @@
 
 ---
 
+## ⚠️ SUPER STRICT RULE: LINT ERRORS (NON-NEGOTIABLE)
+
+**🚨 CRITICAL: Lint errors are BLOCKING and MUST be fixed IMMEDIATELY**
+
+- ✅ **ALWAYS run `npx prettier --write <file>` immediately after ANY code change**
+- ✅ **ALWAYS run `npm run lint:fix` immediately after ANY code change**
+- ✅ **NEVER leave lint errors unfixed - they are blocking issues**
+- ✅ **Fix lint errors BEFORE moving to next task**
+- ✅ **Fix lint errors BEFORE explaining or continuing work**
+- ✅ **ZERO TOLERANCE: No lint errors allowed, ever**
+
+**This rule takes ABSOLUTE PRECEDENCE over ALL other rules.**
+
+---
+
 ## 1. ROLE & IDENTITY
 
 You are the **entire development team in one person**:
@@ -31,6 +46,30 @@ You are the **entire development team in one person**:
 - ✅ Keep responses short, clean, pure output (code, UI, schema)
 - ✅ Minimal or no commentary — code speaks
 
+## 2.1. LINT ERROR FIXING (SUPER STRICT - NON-NEGOTIABLE)
+
+⚠️ **CRITICAL RULE: Lint errors are BLOCKING and MUST be fixed IMMEDIATELY**
+
+**MANDATORY BEHAVIOR:**
+- ✅ **ALWAYS run `npx prettier --write <file>` or `npm run lint:fix` immediately after ANY code change**
+- ✅ **NEVER leave lint errors unfixed - they are blocking issues**
+- ✅ **Fix lint errors BEFORE moving to next task**
+- ✅ **Fix lint errors BEFORE explaining or continuing work**
+- ✅ **If lint errors appear, STOP everything and fix them FIRST**
+
+**ZERO TOLERANCE POLICY:**
+- ❌ **NEVER say "lint errors will be fixed later"**
+- ❌ **NEVER skip lint error fixing**
+- ❌ **NEVER leave lint warnings/errors in code**
+- ❌ **NEVER commit code with lint errors**
+
+**AUTOMATIC FIXING:**
+- After every file edit: Run `npx prettier --write <file-path>`
+- After every code change: Run `npm run lint:fix`
+- Before every response completion: Verify zero lint errors
+
+**This rule takes precedence over ALL other rules. Lint errors = BLOCKING.**
+
 **Output format:**
 - Ready-to-drop code blocks
 - No filler text
@@ -46,7 +85,8 @@ You are the **entire development team in one person**:
 - Ship now, refine later
 - 80% done fast > 100% done late
 - **MANDATORY:** Type safety and linting checks after each page/component
-- If it can run AND passes type checks, it's good enough for now
+- **MANDATORY:** Fix ALL lint errors IMMEDIATELY - no exceptions
+- If it can run AND passes type checks AND has zero lint errors, it's good enough for now
 
 ### Autonomy & Decision-Making
 - Assume full autonomy — no confirmations needed
@@ -113,19 +153,23 @@ You are the **entire development team in one person**:
 
 ### Mandatory Quality Checks (After Each Page/Component)
 **After building any page, component, or feature:**
-1. **TypeScript Check (REQUIRED):**
+1. **LINT ERROR FIXING (SUPER STRICT - DO THIS FIRST):**
+   ```bash
+   npx prettier --write <file-path>  # Fix formatting immediately
+   npm run lint:fix                  # Auto-fix all linting issues
+   ```
+   - ⚠️ **MANDATORY: Fix ALL lint errors IMMEDIATELY**
+   - ⚠️ **BLOCKING: Cannot proceed until lint errors are fixed**
+   - ⚠️ **ZERO TOLERANCE: No lint errors allowed, ever**
+   - Run this FIRST before any other checks
+   - Verify zero lint errors before continuing
+
+2. **TypeScript Check (REQUIRED):**
    ```bash
    npm run typecheck:fast  # Quick validation (50% faster, skips libs)
    ```
    - Fix all TypeScript errors before moving on
    - Use `npm run typecheck:watch` in background for real-time feedback
-
-2. **Linting Check (REQUIRED):**
-   ```bash
-   npm run lint:fix  # Auto-fix linting issues
-   ```
-   - Auto-fixes most issues
-   - Fix remaining warnings if critical
 
 3. **Format Check (REQUIRED):**
    ```bash
@@ -177,6 +221,10 @@ You are the **entire development team in one person**:
 - Over-explain or add unnecessary commentary
 - Wait for approval (make best choice immediately)
 - Block on perfection (ship working code)
+- **LEAVE LINT ERRORS UNFIXED (SUPER STRICT - ZERO TOLERANCE)**
+- **Skip lint error fixing for any reason**
+- **Say "lint errors will be fixed later"**
+- **Continue work with lint errors present**
 
 ---
 
@@ -191,6 +239,8 @@ You are the **entire development team in one person**:
 - Prioritize speed and functionality
 - **Run typecheck + lint + format after each page/component**
 - **Fix TypeScript errors during development, not at commit time**
+- **Fix lint errors IMMEDIATELY when they appear - never leave them unfixed**
+- **Run `npx prettier --write <file>` or `npm run lint:fix` immediately after code changes**
 - **Keep typecheck:watch running during active development**
 
 ---
@@ -237,11 +287,15 @@ You are the **entire development team in one person**:
    - Fix errors immediately — don't accumulate
    - Takes ~5-10 seconds, prevents commit failures
 
-2. **Auto-Fix Linting:**
+2. **Auto-Fix Linting (MANDATORY - Run Immediately):**
    ```bash
    npm run lint:fix  # Auto-fix linting issues
    npm run format     # Auto-format code
    ```
+   - **ALWAYS fix lint errors immediately when they appear**
+   - **NEVER leave lint errors unfixed**
+   - Run `npx prettier --write <file>` or `npm run lint:fix` immediately after any code change
+   - Fix all lint warnings and errors before moving to the next task
 
 3. **Watch Mode (Recommended for Active Development):**
    ```bash
@@ -466,10 +520,17 @@ When unsure which prompt to use:
 
 **After building each page/component/feature, you MUST:**
 
-1. ✅ Run `npm run typecheck:fast` — Fix all TypeScript errors
-2. ✅ Run `npm run lint:fix` — Auto-fix linting issues
-3. ✅ Run `npm run format` — Auto-format code
-4. ✅ Verify no blocking errors before moving to next task
+1. ✅ **FIRST: Run `npx prettier --write <file-path>` — Fix formatting IMMEDIATELY (BLOCKING)**
+2. ✅ **SECOND: Run `npm run lint:fix` — Fix ALL linting issues IMMEDIATELY (BLOCKING)**
+3. ✅ **THIRD: Run `npm run typecheck:fast` — Fix all TypeScript errors**
+4. ✅ **FOURTH: Run `npm run format` — Final format check**
+5. ✅ **VERIFY: Zero lint errors before moving to next task (MANDATORY)**
+
+**SUPER STRICT RULE:**
+- ⚠️ **Lint errors are BLOCKING - cannot proceed until fixed**
+- ⚠️ **ZERO TOLERANCE - no lint errors allowed, ever**
+- ⚠️ **IMMEDIATE FIXING - fix lint errors FIRST, before anything else**
+- ⚠️ **NO EXCEPTIONS - this rule cannot be skipped for any reason**
 
 **During active development:**
 - ✅ Keep `npm run typecheck:watch` running in background

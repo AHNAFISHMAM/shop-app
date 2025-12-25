@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { applyThemeAdjustments } from '../utils/themeColorUtils'
 import { logger } from '../utils/logger'
@@ -245,9 +245,10 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
   // Initialize with defaults immediately so app can render while fetching
   const [settings, setSettings] = useState<StoreSettings | null>(getDefaultSettings())
   const [loading, setLoading] = useState<boolean>(true)
+  const [tableExists, setTableExists] = useState<boolean>(false)
 
   // Fetch store settings with timeout protection
-  const fetchSettings = async (): Promise<void> => {
+  const fetchSettings = useCallback(async (): Promise<void> => {
     try {
       // Check if Supabase is properly configured
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -260,25 +261,22 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
 
       // Fetch settings with timeout - if it hangs, we'll use defaults
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Settings fetch timeout after 5s')), 5000)
+        setTimeout(() => reject(new Error('Settings fetch timeout after 10s')), 10000)
       )
 
+      // Use a simpler query - just get the first row (singleton pattern ensures only one)
       const fetchPromise = supabase
         .from('store_settings')
         .select('*')
-        .eq('singleton_guard', true)
-        .single()
+        .limit(1)
+        .maybeSingle()
 
       let result: { data: unknown; error: unknown }
       try {
         result = await Promise.race([fetchPromise, timeoutPromise])
       } catch (timeoutErr) {
-        // Timeout occurred - query is hanging (likely table doesn't exist or RLS blocking)
-        logger.warn('⚠️ Settings query timed out - this usually means:')
-        logger.warn('   1. store_settings table does not exist (run migration 022_create_store_settings_table.sql)')
-        logger.warn('   2. RLS policies are blocking access (check public read policy)')
-        logger.warn('   3. Supabase project is paused or has connection issues')
-        logger.warn('   → App will continue with default settings')
+        // Timeout occurred - query is hanging
+        logger.warn('⚠️ Settings query timed out - using default settings')
         setSettings(getDefaultSettings())
         setLoading(false)
         return
@@ -312,18 +310,23 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         
         // Use default settings if fetch fails
         setSettings(getDefaultSettings())
+        setTableExists(false) // Table doesn't exist or access denied
+      } else if (!data) {
+        // maybeSingle() returns null if no rows found
+        setSettings(getDefaultSettings())
+        setTableExists(false)
       } else {
-        logger.log('✅ Store settings loaded successfully')
         setSettings(normalizeSettings(data as Partial<StoreSettings>))
+        setTableExists(true) // Mark table as existing for real-time subscription
       }
     } catch (err) {
       // Check if it was a timeout error
       if (err instanceof Error && err.message.includes('timeout')) {
-        logger.error('⚠️ Settings fetch timed out after 5s. Check:')
-        logger.error('  1. Is store_settings table created?')
-        logger.error('  2. Are RLS policies allowing public read?')
-        logger.error('  3. Is Supabase URL correct?')
-        logger.error('  4. Check Network tab for failed requests')
+        logger.warn('⚠️ Settings fetch timed out after 5s. Check:')
+        logger.warn('  1. Is store_settings table created?')
+        logger.warn('  2. Are RLS policies allowing public read?')
+        logger.warn('  3. Is Supabase URL correct?')
+        logger.warn('  4. Check Network tab for failed requests')
       }
       
       logger.error('Error in fetchSettings:', err)
@@ -333,15 +336,15 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
       }
       // Always set default settings on any error to prevent white screen
       setSettings(getDefaultSettings())
+      setTableExists(false) // Assume table doesn't exist on error
     } finally {
       // Always set loading to false, even on timeout/error
       setLoading(false)
-      logger.log('StoreSettingsContext: Loading complete')
     }
-  }
+  }, [])
 
   // Update store settings (admin only)
-  const updateSettings = async (
+  const updateSettings = useCallback(async (
     updates: Partial<StoreSettings>
   ): Promise<UpdateSettingsResponse> => {
     try {
@@ -353,7 +356,7 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
       if (preparedUpdates.scroll_thumb_brightness !== undefined) {
         preparedUpdates.scroll_thumb_brightness = clampBrightness(
           preparedUpdates.scroll_thumb_brightness,
-          settings?.scroll_thumb_brightness ?? getDefaultSettings().scroll_thumb_brightness
+          settings.scroll_thumb_brightness ?? getDefaultSettings().scroll_thumb_brightness
         )
       }
 
@@ -388,10 +391,10 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
       logger.error('Error updating store settings:', err)
       return { success: false, error: error.message }
     }
-  }
+  }, [settings]) // Depends on settings - this is fine, context value will update when settings change
 
   // Calculate shipping cost based on cart total
-  const calculateShipping = (cartTotal: number): number => {
+  const calculateShipping = useCallback((cartTotal: number): number => {
     if (!settings) return 0
 
     switch (settings.shipping_type) {
@@ -406,16 +409,16 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
       default:
         return settings.shipping_cost || 0
     }
-  }
+  }, [settings])
 
   // Calculate tax based on subtotal
-  const calculateTax = (subtotal: number): number => {
+  const calculateTax = useCallback((subtotal: number): number => {
     if (!settings || !settings.tax_rate) return 0
     return (subtotal * settings.tax_rate) / 100
-  }
+  }, [settings])
 
   // Get currency symbol
-  const getCurrencySymbol = (): string => {
+  const getCurrencySymbol = useCallback((): string => {
     if (!settings) return '$'
 
     const symbols: Record<Currency, string> = {
@@ -427,22 +430,25 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
     }
 
     return symbols[settings.currency] || '$'
-  }
+  }, [settings])
 
   // Format price with currency
-  const formatPrice = (amount: number): string => {
+  const formatPrice = useCallback((amount: number): string => {
     const symbol = getCurrencySymbol()
     return `${symbol}${Number(amount).toFixed(2)}`
-  }
+  }, [getCurrencySymbol])
 
   // Load settings on mount
   useEffect(() => {
-    // Log initialization for debugging
-    if (typeof window !== 'undefined') {
-      console.log('🔧 StoreSettingsContext: Initializing...')
-      console.log('🔧 Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing')
-    }
     fetchSettings()
+  }, [fetchSettings])
+
+  // Set up real-time subscription only after successful fetch
+  useEffect(() => {
+    // Only set up real-time subscription if table exists and settings loaded successfully
+    if (!tableExists || !settings) {
+      return
+    }
 
     // Set up real-time subscription for settings changes
     const channel = supabase
@@ -470,25 +476,31 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         }
       )
       .subscribe((status: string) => {
+        // Suppress errors in development - they're expected if table doesn't exist
         if (status === 'CHANNEL_ERROR') {
-          logger.error('Real-time subscription error - check RLS policies and replication')
+          if (import.meta.env.DEV) {
+            // Only log in dev, don't show as error
+            logger.log('Real-time subscription not available (table may not exist or RLS blocking)')
+          }
         } else if (status === 'TIMED_OUT') {
-          logger.warn('Real-time subscription timed out - retrying...')
-          // Optionally retry subscription
-          // Defer retry to avoid blocking
-          if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-            requestIdleCallback(() => {
+          // Don't retry if table doesn't exist - it will just fail again
+          if (tableExists) {
+            logger.warn('Real-time subscription timed out - retrying...')
+            // Defer retry to avoid blocking
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+              requestIdleCallback(() => {
+                setTimeout(() => {
+                  channel.subscribe()
+                }, 2000)
+              })
+            } else {
               setTimeout(() => {
                 channel.subscribe()
               }, 2000)
-            })
-          } else {
-            setTimeout(() => {
-              channel.subscribe()
-            }, 2000)
+            }
           }
         } else if (status === 'CLOSED') {
-          logger.log('Real-time subscription closed')
+          // Subscription closed - normal cleanup
         }
       })
 
@@ -501,6 +513,9 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
             supabase.removeChannel(channel)
           } catch (error) {
             // Silently handle cleanup errors - don't block
+            if (import.meta.env.DEV) {
+              logger.log('Cleanup error (non-critical):', error)
+            }
           }
         })
       } else {
@@ -510,11 +525,14 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
             supabase.removeChannel(channel)
           } catch (error) {
             // Silently handle cleanup errors - don't block
+            if (import.meta.env.DEV) {
+              logger.log('Cleanup error (non-critical):', error)
+            }
           }
         }, 0)
       }
     }
-  }, [])
+  }, [tableExists])
 
   // Apply theme adjustments as CSS variables when settings change
   useEffect(() => {
@@ -523,16 +541,21 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
     }
   }, [settings])
 
-  const value: StoreSettingsContextValue = {
-    settings,
-    loading,
-    updateSettings,
-    refreshSettings: fetchSettings,
-    calculateShipping,
-    calculateTax,
-    getCurrencySymbol,
-    formatPrice,
-  }
+  // Memoize context value - functions are already memoized with useCallback
+  // We include them in deps to satisfy React, but they only change when their own deps change
+  const value: StoreSettingsContextValue = useMemo(
+    () => ({
+      settings: settings ?? getDefaultSettings(), // Ensure never null for page refresh reliability
+      loading,
+      updateSettings,
+      refreshSettings: fetchSettings,
+      calculateShipping,
+      calculateTax,
+      getCurrencySymbol,
+      formatPrice,
+    }),
+    [settings, loading, updateSettings, fetchSettings, calculateShipping, calculateTax, getCurrencySymbol, formatPrice]
+  )
 
   return <StoreSettingsContext.Provider value={value}>{children}</StoreSettingsContext.Provider>
 }

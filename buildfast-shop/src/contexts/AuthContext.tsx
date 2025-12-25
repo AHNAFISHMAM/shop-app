@@ -281,20 +281,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           adminStatusCache.current = { userId: null, isAdmin: false, fetched: false }
         }
       } catch (error) {
+        // Industry standard: Timeout when no session exists is EXPECTED, not an error
+        const isTimeout = error instanceof Error && error.message?.includes('timeout')
+        
+        if (isTimeout) {
+          // Silent handling - no session exists, continue as unauthenticated
+          // This is normal behavior, not an error
+          setUser(null)
+          setSession(null)
+          setIsAdmin(false)
+          setLoading(false)
+          // Only log in dev for debugging
+          if (import.meta.env.DEV) {
+            logger.log('Auth initialization: No session found (timeout) - continuing as guest')
+          }
+          return
+        }
+
+        // Only log actual errors (not timeouts)
         logError(error, 'AuthContext.initAuth')
-        // If it's a refresh token error, clear all auth data
-        const errorMessage =
-          error instanceof Error
-            ? error instanceof Error
-              ? error.message
-              : String(error)
-            : String(error)
+        
+        // Handle refresh token errors
+        const errorMessage = error instanceof Error ? error.message : String(error)
         if (
           errorMessage.includes('refresh_token') ||
           errorMessage.includes('Invalid Refresh Token')
         ) {
           await clearInvalidAuthTokens()
         }
+        
         setUser(null)
         setSession(null)
         setIsAdmin(false)

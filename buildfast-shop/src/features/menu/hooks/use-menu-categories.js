@@ -25,6 +25,7 @@ async function fetchMenuCategories() {
     const { data, error } = await supabase
       .from('menu_categories')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('name', { ascending: true })
 
     if (error) {

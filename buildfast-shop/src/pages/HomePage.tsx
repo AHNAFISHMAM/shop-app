@@ -4,13 +4,9 @@ import { m, type Variants } from 'framer-motion'
 import toast from 'react-hot-toast'
 import Hero from '../components/Hero'
 import Testimonials from '../components/Testimonials'
-import AmbienceUploader from '../components/AmbienceUploader'
 import SectionTitle from '../components/SectionTitle'
-import { supabase } from '../lib/supabase'
-import { getQuoteBackgroundUrl } from '../lib/quoteBackgroundHelper'
 import { useAuth } from '../hooks/useAuth'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
-import { getBackgroundStyle } from '../utils/backgroundUtils'
 import ExperiencePulse from '../components/ExperiencePulse'
 import { pageFade } from '../components/animations/menuAnimations'
 import { resolveLoyaltyState, resolveReferralInfo } from '../lib/loyaltyUtils'
@@ -89,7 +85,7 @@ const HIGHLIGHT_FEATURES: HighlightFeature[] = [
  * - All touch targets meet 44px minimum
  */
 const HomePage = memo(() => {
-  const { user, isAdmin } = useAuth()
+  const { user } = useAuth()
   const { settings, loading: settingsLoading } = useStoreSettings()
   // Theme detection (currently unused but kept for future use)
   // const _isLightTheme = useTheme()
@@ -110,9 +106,6 @@ const HomePage = memo(() => {
     () => (settingsLoading ? false : (settings?.enable_loyalty_program ?? true)),
     [settingsLoading, settings?.enable_loyalty_program]
   )
-
-  // State for quote background
-  const [quoteBackground, setQuoteBackground] = useState<string>('')
 
   // Reduced motion preference
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
@@ -150,49 +143,6 @@ const HomePage = memo(() => {
     mediaQuery.addEventListener('change', handleChange)
 
     return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
-
-  // Fetch store settings for quote background
-  useEffect(() => {
-    let isMounted = true
-
-    const fetchStoreSettings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('store_settings')
-          .select('hero_quote_bg_url')
-          .eq('singleton_guard', true)
-          .single()
-
-        if (error) {
-          logger.error('Error fetching store settings:', error)
-          if (isMounted) {
-            setQuoteBackground(getQuoteBackgroundUrl(null))
-          }
-          return
-        }
-
-        if (isMounted) {
-          setQuoteBackground(getQuoteBackgroundUrl(data))
-        }
-      } catch (error) {
-        logger.error('Error in fetchStoreSettings:', error)
-        if (isMounted) {
-          setQuoteBackground(getQuoteBackgroundUrl(null))
-        }
-      }
-    }
-
-    fetchStoreSettings()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  // Handle upload success - refresh background
-  const handleUploadSuccess = useCallback((newUrl: string) => {
-    setQuoteBackground(newUrl)
   }, [])
 
   const loyalty = useMemo(() => resolveLoyaltyState(), [])
@@ -469,66 +419,6 @@ const HomePage = memo(() => {
       </section>
 
       <ExperiencePulse id="showcase" />
-
-      {/* Ambience Quote with Dynamic Background */}
-      <section
-        id="quote"
-        className="relative overflow-hidden min-h-[280px] sm:min-h-[360px] md:min-h-[440px] flex items-center justify-center py-10 sm:py-12 md:py-14 lg:py-16"
-        style={
-          settings
-            ? getBackgroundStyle(
-                settings as unknown as import('../utils/backgroundUtils').BackgroundSettings,
-                'hero_quote'
-              )
-            : {
-                backgroundImage: quoteBackground ? `url(${quoteBackground})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                backgroundAttachment: 'scroll',
-              }
-        }
-        aria-labelledby="quote-heading"
-      >
-        {/* Gradient Overlay for AA Contrast */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to bottom, rgba(var(--bg-main-rgb), 0.5), rgba(var(--bg-main-rgb), 0.65))`,
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-3 sm:space-y-4 px-4">
-          <div className="text-[var(--accent)] text-5xl sm:text-6xl md:text-7xl" aria-hidden="true">
-            &quot;
-          </div>
-          <p
-            id="quote-heading"
-            className="text-xl sm:text-2xl md:text-4xl font-semibold italic leading-relaxed"
-            style={{ color: 'var(--text-main)' }}
-          >
-            Cozy modern ambience in the heart of Jessore.
-          </p>
-          <p className="text-sm sm:text-base md:text-lg text-[var(--text-secondary)]">
-            A place where good food meets great company
-          </p>
-        </div>
-      </section>
-
-      {/* Ambience Uploader (Admin Controlled via Settings) */}
-      {isAdmin && settings?.show_home_ambience_uploader && (
-        <section
-          id="ambience-uploader"
-          className="py-8"
-          aria-labelledby="ambience-uploader-heading"
-        >
-          <h2 id="ambience-uploader-heading" className="sr-only">
-            Ambience Uploader
-          </h2>
-          <AmbienceUploader onUploadSuccess={handleUploadSuccess} />
-        </section>
-      )}
 
       {/* Testimonials */}
       {showTestimonialsSection && (
