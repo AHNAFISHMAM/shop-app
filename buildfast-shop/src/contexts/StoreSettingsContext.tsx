@@ -242,7 +242,8 @@ export interface StoreSettingsProviderProps {
  * @param {StoreSettingsProviderProps} props - Component props
  */
 export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) {
-  const [settings, setSettings] = useState<StoreSettings | null>(null)
+  // Initialize with defaults immediately so app can render while fetching
+  const [settings, setSettings] = useState<StoreSettings | null>(getDefaultSettings())
   const [loading, setLoading] = useState<boolean>(true)
 
   // Fetch store settings with timeout protection
@@ -257,9 +258,9 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         return
       }
 
-      // Add timeout to prevent infinite loading (10 seconds)
+      // Add timeout to prevent infinite loading (5 seconds - reduced for faster fallback)
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Settings fetch timeout after 10s')), 10000)
+        setTimeout(() => reject(new Error('Settings fetch timeout after 5s')), 5000)
       )
 
       const fetchPromise = supabase
@@ -294,7 +295,7 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
     } catch (err) {
       // Check if it was a timeout error
       if (err instanceof Error && err.message.includes('timeout')) {
-        logger.error('⚠️ Settings fetch timed out after 10s. Check:')
+        logger.error('⚠️ Settings fetch timed out after 5s. Check:')
         logger.error('  1. Is store_settings table created?')
         logger.error('  2. Are RLS policies allowing public read?')
         logger.error('  3. Is Supabase URL correct?')

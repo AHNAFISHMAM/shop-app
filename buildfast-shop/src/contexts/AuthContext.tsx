@@ -232,9 +232,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check active sessions and sets the user
     const initAuth = async (): Promise<void> => {
       try {
-        // Add timeout to prevent infinite loading
+        // Add timeout to prevent infinite loading (5 seconds - reduced for faster fallback)
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Auth initialization timeout after 10s')), 10000)
+          setTimeout(() => reject(new Error('Auth initialization timeout after 5s')), 5000)
         )
 
         const sessionPromise = supabase.auth.getSession()

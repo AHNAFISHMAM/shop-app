@@ -434,10 +434,8 @@ function AppContent(): JSX.Element {
     }
   }, [])
 
-  // Show loading screen while settings are being fetched (after all hooks are called)
-  if (settingsLoading) {
-    return <PageLoading />
-  }
+  // Don't block rendering - we have defaults immediately, so app can render while fetching
+  // Only show loading if absolutely necessary (settings will always be available due to defaults)
 
   return (
     <ErrorBoundary>
