@@ -110,21 +110,38 @@ const Favorites = memo(() => {
     try {
       setLoading(true)
       setError(null)
-      const result = await getFavoriteItems(user.id)
+      
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Favorites fetch timeout after 10s')), 10000)
+      )
+      
+      const fetchPromise = getFavoriteItems(user.id)
+      const result = await Promise.race([fetchPromise, timeoutPromise])
+      
       setFavoriteItems(result)
     } catch (err: unknown) {
       logger.error('Error fetching favorites:', err)
-      const wasAuthError = await handleAuthError(
-        err as Error | { code?: string; message?: string } | null,
-        navigate
-      )
-      if (!wasAuthError) {
-        setError('An unexpected error occurred. Please try again.')
+      if (err instanceof Error && err.message.includes('timeout')) {
+        logger.warn('Favorites fetch timed out - showing empty state')
+        setFavoriteItems([])
+      } else {
+        const wasAuthError = await handleAuthError(
+          err as Error | { code?: string; message?: string } | null,
+          navigate
+        )
+        if (!wasAuthError) {
+          setError('An unexpected error occurred. Please try again.')
+        }
       }
     } finally {
-      setLoading(false)
+      setLoading(false) // Always resolve loading state
     }
   }, [user, navigate])
+
+  // Use ref to avoid dependency loop
+  const fetchFavoritesRef = useRef(fetchFavorites)
+  fetchFavoritesRef.current = fetchFavorites
 
   useEffect(() => {
     if (!user) {
@@ -132,7 +149,7 @@ const Favorites = memo(() => {
       return
     }
 
-    fetchFavorites()
+    fetchFavoritesRef.current()
 
     // Set up realtime subscription
     const channel = supabase
@@ -146,7 +163,7 @@ const Favorites = memo(() => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          fetchFavorites()
+          fetchFavoritesRef.current() // Use ref to avoid stale closure
         }
       )
       .subscribe((status, err) => {
@@ -166,7 +183,7 @@ const Favorites = memo(() => {
         channelRef.current = null
       }
     }
-  }, [user, navigate, fetchFavorites])
+  }, [user, navigate]) // Removed fetchFavorites from deps to prevent infinite loops
 
   const handleRemove = useCallback(
     async (favoriteId: string): Promise<void> => {

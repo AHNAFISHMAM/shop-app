@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { m, type Variants } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 // import { useAuth } from '../contexts/AuthContext'
@@ -162,7 +162,14 @@ const ReservationsPage = memo(() => {
   const loadSettings = useCallback(async () => {
     try {
       setLoadingSettings(true)
-      const result = await getReservationSettings()
+      
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Settings load timeout after 10s')), 10000)
+      )
+      
+      const settingsPromise = getReservationSettings()
+      const result = await Promise.race([settingsPromise, timeoutPromise])
 
       if (result.success && result.data) {
         setReservationSettings(result.data as unknown as ReservationSettings)
@@ -172,17 +179,23 @@ const ReservationsPage = memo(() => {
       }
     } catch (err) {
       logger.error('Error loading reservation settings:', err)
+      if (err instanceof Error && err.message.includes('timeout')) {
+        logger.warn('Reservation settings load timed out - using defaults')
+      }
       setReservationSettings(DEFAULT_SETTINGS)
       toast.error('Failed to load reservation settings. Using defaults.')
     } finally {
-      setLoadingSettings(false)
+      setLoadingSettings(false) // Always resolve loading state
     }
   }, [])
 
-  // Load settings on mount
+  // Load settings on mount - use ref to avoid dependency issues
+  const loadSettingsRef = useRef(loadSettings)
+  loadSettingsRef.current = loadSettings
+
   useEffect(() => {
-    loadSettings()
-  }, [loadSettings])
+    loadSettingsRef.current()
+  }, []) // Empty deps - only run once on mount
 
   useEffect(() => {
     if (settings && !enableReservations) {

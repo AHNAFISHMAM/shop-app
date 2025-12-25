@@ -632,6 +632,10 @@ const OrderHistory = memo((): JSX.Element | null => {
     await fetchOrders(nextPage, false)
   }, [hasMoreOrders, loading, currentPage, fetchOrders])
 
+  // Use ref to avoid dependency loop with fetchOrders
+  const fetchOrdersRef = useRef(fetchOrders)
+  fetchOrdersRef.current = fetchOrders
+
   // NOW add useEffect hooks AFTER function declarations
   useEffect(() => {
     if (!user) {
@@ -641,8 +645,8 @@ const OrderHistory = memo((): JSX.Element | null => {
     // Reset pagination when filters change
     setCurrentPage(1)
     setHasMoreOrders(true)
-    fetchOrders(1, true)
-  }, [user, navigate, fetchOrders, statusFilter, dateFilter, sortBy])
+    fetchOrdersRef.current(1, true)
+  }, [user, navigate, statusFilter, dateFilter, sortBy]) // Removed fetchOrders from deps to prevent infinite loops
 
   // Fetch return requests when orders are loaded (with race condition prevention)
   // Use orders.length instead of orders array to avoid dependency issues

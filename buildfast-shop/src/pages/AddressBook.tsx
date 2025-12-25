@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, memo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useStoreSettings } from '../contexts/StoreSettingsContext'
 import { useNavigate } from 'react-router-dom'
@@ -100,7 +100,14 @@ const AddressBook = memo((): JSX.Element | null => {
     try {
       setLoading(true)
       setError('')
-      const result = await fetchUserAddresses(user.id)
+      
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Addresses fetch timeout after 10s')), 10000)
+      )
+      
+      const fetchPromise = fetchUserAddresses(user.id)
+      const result = await Promise.race([fetchPromise, timeoutPromise])
 
       if (result.success && result.data) {
         setAddresses(result.data as unknown as Address[])
@@ -110,19 +117,28 @@ const AddressBook = memo((): JSX.Element | null => {
       }
     } catch (err) {
       logger.error('Error in loadAddresses:', err)
-      setError('An unexpected error occurred. Please refresh the page.')
+      if (err instanceof Error && err.message.includes('timeout')) {
+        logger.warn('Addresses fetch timed out - showing empty state')
+        setAddresses([])
+      } else {
+        setError('An unexpected error occurred. Please refresh the page.')
+      }
     } finally {
-      setLoading(false)
+      setLoading(false) // Always resolve loading state
     }
   }, [user])
+
+  // Use ref to avoid dependency loop
+  const loadAddressesRef = useRef(loadAddresses)
+  loadAddressesRef.current = loadAddresses
 
   useEffect(() => {
     if (!user) {
       navigate('/login')
       return
     }
-    loadAddresses()
-  }, [user, navigate, loadAddresses])
+    loadAddressesRef.current()
+  }, [user, navigate]) // Removed loadAddresses from deps to prevent infinite loops
 
   const handleAddNew = useCallback((): void => {
     setEditingAddress(null)

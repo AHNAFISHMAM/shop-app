@@ -22,6 +22,7 @@ import { useCartItems } from '../features/cart/hooks'
 import { useAddresses } from '../features/addresses/hooks'
 import { supabase } from '../lib/supabase'
 import CustomDropdown from '../components/ui/CustomDropdown'
+import { useLoadingTimeout } from '../hooks/useLoadingTimeout'
 
 // Extracted constants, types, hooks, and components
 import { CURRENCY_SYMBOL, SCHEDULED_SLOTS } from './Checkout/constants'
@@ -309,8 +310,10 @@ const Checkout = memo(function Checkout() {
 
   // Cleanup timeouts are now managed by the hook - removed duplicate cleanup logic
 
-  // Loading state
-  const loading = loadingCart || loadingAddresses
+  // Loading state with timeout protection to prevent infinite loading
+  const loadingCartWithTimeout = useLoadingTimeout(loadingCart, 10000)
+  const loadingAddressesWithTimeout = useLoadingTimeout(loadingAddresses, 10000)
+  const loading = loadingCartWithTimeout || loadingAddressesWithTimeout
 
   // Use extracted calculations hook (using cartItemsWithProducts for accurate totals)
   const { totalItemsCount, subtotal, shipping, tax, taxRatePercent, grandTotal, loyalty } =
