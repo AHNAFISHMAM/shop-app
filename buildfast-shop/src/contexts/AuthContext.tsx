@@ -309,9 +309,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Handle token refresh errors
+      // Handle token refresh errors silently (expected when no session exists)
       if (event === 'TOKEN_REFRESHED' && !session) {
-        logger.warn('Token refresh failed, clearing all auth data')
+        // Silently clear invalid tokens - this is expected when no session exists
+        await clearInvalidAuthTokens()
+        setUser(null)
+        setSession(null)
+        setIsAdmin(false)
+        return
+      }
+
+      // Handle SIGNED_IN errors that might include refresh token errors
+      if (event === 'SIGNED_IN' && !session) {
+        // This can happen if refresh token is invalid
         await clearInvalidAuthTokens()
         setUser(null)
         setSession(null)
@@ -371,20 +381,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           adminStatusCache.current = { userId: null, isAdmin: false, fetched: false }
         }
       } catch (error) {
-        logError(error, 'AuthContext.onAuthStateChange')
-        // Handle refresh token errors
+        // Handle refresh token errors silently (expected when no session exists)
         const errorMessage =
           error instanceof Error
             ? error instanceof Error
               ? error.message
               : String(error)
             : String(error)
+        
         if (
           errorMessage.includes('refresh_token') ||
-          errorMessage.includes('Invalid Refresh Token')
+          errorMessage.includes('Invalid Refresh Token') ||
+          errorMessage.includes('Refresh Token Not Found')
         ) {
-          await supabase.auth.signOut()
+          // Silently clear invalid tokens - this is expected behavior
+          await clearInvalidAuthTokens()
+          setUser(null)
+          setSession(null)
+          setIsAdmin(false)
+          adminStatusCache.current = { userId: null, isAdmin: false, fetched: false }
+          setLoading(false)
+          return // Don't log as error - it's expected
         }
+        
+        // Log other errors normally
+        logError(error, 'AuthContext.onAuthStateChange')
         setIsAdmin(false)
         adminStatusCache.current = { userId: null, isAdmin: false, fetched: false }
       } finally {
