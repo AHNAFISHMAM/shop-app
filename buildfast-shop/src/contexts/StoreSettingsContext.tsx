@@ -257,7 +257,7 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         return
       }
 
-      // Add timeout to prevent infinite loading
+      // Add timeout to prevent infinite loading (10 seconds)
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Settings fetch timeout after 10s')), 10000)
       )
@@ -281,7 +281,7 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
           logger.error('⚠️ store_settings table not found. Please run migrations.')
         } else if (error.code === '42501') {
           logger.error('⚠️ Permission denied. Check RLS policies on store_settings table.')
-        } else if (error.message?.includes('timeout')) {
+        } else if (error.message?.includes('timeout') || error.message?.includes('aborted')) {
           logger.error('⚠️ Request timed out. Check Supabase connection.')
         }
         
@@ -292,6 +292,15 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         setSettings(normalizeSettings(data as Partial<StoreSettings>))
       }
     } catch (err) {
+      // Check if it was a timeout error
+      if (err instanceof Error && err.message.includes('timeout')) {
+        logger.error('⚠️ Settings fetch timed out after 10s. Check:')
+        logger.error('  1. Is store_settings table created?')
+        logger.error('  2. Are RLS policies allowing public read?')
+        logger.error('  3. Is Supabase URL correct?')
+        logger.error('  4. Check Network tab for failed requests')
+      }
+      
       logger.error('Error in fetchSettings:', err)
       if (err instanceof Error) {
         logger.error('Error type:', err.constructor.name)

@@ -91,10 +91,8 @@ function AppContent(): JSX.Element {
   const { settings, loading: settingsLoading } = useStoreSettings()
   const brightnessSetting = settings?.scroll_thumb_brightness ?? 0.6
 
-  // Show loading screen while settings are being fetched (prevents white screen)
-  if (settingsLoading) {
-    return <PageLoading />
-  }
+  // IMPORTANT: All hooks must be called before any conditional returns
+  // This ensures hooks are called in the same order every render
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -435,6 +433,11 @@ function AppContent(): JSX.Element {
       reduceMotionQuery.removeEventListener('change', handlePreferenceChange)
     }
   }, [])
+
+  // Show loading screen while settings are being fetched (after all hooks are called)
+  if (settingsLoading) {
+    return <PageLoading />
+  }
 
   return (
     <ErrorBoundary>
