@@ -88,8 +88,13 @@ const PageLoading = (): JSX.Element => {
 
 function AppContent(): JSX.Element {
   const location = useLocation()
-  const { settings } = useStoreSettings()
+  const { settings, loading: settingsLoading } = useStoreSettings()
   const brightnessSetting = settings?.scroll_thumb_brightness ?? 0.6
+
+  // Show loading screen while settings are being fetched (prevents white screen)
+  if (settingsLoading) {
+    return <PageLoading />
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') {

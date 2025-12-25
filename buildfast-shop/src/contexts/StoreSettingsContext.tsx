@@ -245,14 +245,30 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
   const [settings, setSettings] = useState<StoreSettings | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
 
-  // Fetch store settings
+  // Fetch store settings with timeout protection
   const fetchSettings = async (): Promise<void> => {
     try {
-      const { data, error } = await supabase
+      // Check if Supabase is properly configured
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+        logger.warn('Supabase not configured, using default settings')
+        setSettings(getDefaultSettings())
+        setLoading(false)
+        return
+      }
+
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Settings fetch timeout after 10s')), 10000)
+      )
+
+      const fetchPromise = supabase
         .from('store_settings')
         .select('*')
         .eq('singleton_guard', true)
         .single()
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise])
 
       if (error) {
         logger.error('Error fetching store settings:', error)
@@ -263,8 +279,10 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
       }
     } catch (err) {
       logger.error('Error in fetchSettings:', err)
+      // Always set default settings on any error to prevent white screen
       setSettings(getDefaultSettings())
     } finally {
+      // Always set loading to false, even on timeout/error
       setLoading(false)
     }
   }
