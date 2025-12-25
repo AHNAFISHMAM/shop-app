@@ -296,6 +296,123 @@ const OrderHistory = memo((): JSX.Element | null => {
     [user, statusFilter, dateFilter, sortBy, ordersPerPage]
   )
 
+  // Batch fetch order items for multiple orders at once (performance optimization)
+  const batchFetchOrderItems = useCallback(
+    async (orderIds: string[]): Promise<void> => {
+      if (orderIds.length === 0) return
+
+      // Filter out already loaded orders
+      const ordersToFetch = orderIds.filter(id => !orderItems[id])
+      if (ordersToFetch.length === 0) return
+
+      try {
+        // Set loading state for all orders
+        setLoadingItems(prev => {
+          const next = { ...prev }
+          ordersToFetch.forEach(id => {
+            next[id] = true
+          })
+          return next
+        })
+
+        // Batch fetch all order items in one query
+        const { data, error } = await supabase
+          .from('order_items')
+          .select(
+            `
+            *,
+            menu_item:menu_item_id (
+              id,
+              name,
+              description,
+              price,
+              image_url,
+              dietary_tags,
+              spice_level
+            ),
+            legacy_item:order_items_product_id_legacy_fkey (
+              id,
+              name,
+              description,
+              price,
+              images
+            )
+          `
+          )
+          .in('order_id', ordersToFetch)
+
+        if (error) {
+          logger.error('Error batch fetching order items:', error)
+          ordersToFetch.forEach(orderId => {
+            setItemsError(prev => ({
+              ...prev,
+              [orderId]: 'Failed to load order items. Please try again.',
+            }))
+          })
+          return
+        }
+
+        // Group items by order_id
+        const itemsByOrder = new Map<string, OrderHistoryItem[]>()
+        ;(data || []).forEach((item: Record<string, unknown>) => {
+          const orderId = String(item.order_id || '')
+          if (!orderId) return
+
+          const menu_item = 'menu_item' in item ? item.menu_item : undefined
+          const legacy_item = 'legacy_item' in item ? item.legacy_item : undefined
+          const {
+            menu_item: _mi,
+            legacy_item: _li,
+            ...rest
+          } = item as { menu_item?: unknown; legacy_item?: unknown; [key: string]: unknown }
+          const resolvedProduct = menu_item || legacy_item || null
+          const resolvedProductType = menu_item ? 'menu_item' : legacy_item ? 'legacy' : null
+
+          const normalized = {
+            ...rest,
+            menu_items: menu_item || null,
+            legacy_item: legacy_item || null,
+            products: resolvedProduct,
+            resolvedProduct,
+            resolvedProductType,
+          } as unknown as OrderHistoryItem
+
+          if (!itemsByOrder.has(orderId)) {
+            itemsByOrder.set(orderId, [])
+          }
+          itemsByOrder.get(orderId)!.push(normalized)
+        })
+
+        // Update state with all fetched items
+        setOrderItems(prev => {
+          const next = { ...prev }
+          itemsByOrder.forEach((items, orderId) => {
+            next[orderId] = items
+          })
+          return next
+        })
+      } catch (err) {
+        logger.error('Error in batchFetchOrderItems:', err)
+        ordersToFetch.forEach(orderId => {
+          setItemsError(prev => ({
+            ...prev,
+            [orderId]: 'An error occurred while loading items.',
+          }))
+        })
+      } finally {
+        // Clear loading state for all orders
+        setLoadingItems(prev => {
+          const next = { ...prev }
+          ordersToFetch.forEach(id => {
+            next[id] = false
+          })
+          return next
+        })
+      }
+    },
+    [orderItems]
+  )
+
   const fetchOrderItems = async (orderId: string): Promise<OrderHistoryItem[]> => {
     // Don't fetch if already loaded
     if (orderItems[orderId]) {
@@ -656,6 +773,12 @@ const OrderHistory = memo((): JSX.Element | null => {
   useEffect(() => {
     if (orders.length === 0) return
 
+    // Batch fetch order items for all orders at once (performance optimization)
+    const orderIds = orders.map((order: OrderHistoryOrder) => order.id).filter(Boolean) as string[]
+    if (orderIds.length > 0) {
+      batchFetchOrderItems(orderIds)
+    }
+
     // Fetch return requests and recommendations
     // fetchReturnRequests handles cancellation internally via ref
     fetchReturnRequests()
@@ -668,7 +791,7 @@ const OrderHistory = memo((): JSX.Element | null => {
         fetchReturnRequestsRef.current = null
       }
     }
-  }, [orders.length, fetchReturnRequests, fetchRecommendations])
+  }, [orders.length, fetchReturnRequests, fetchRecommendations, batchFetchOrderItems])
 
   // Set up real-time subscription (separate effect)
   useEffect(() => {

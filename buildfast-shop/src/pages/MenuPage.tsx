@@ -12,6 +12,7 @@ import { logger } from '../utils/logger'
 import { useMenuData } from '../features/menu/hooks'
 import { useCartCount } from '../features/cart/hooks'
 import { useTheme } from '../shared/hooks'
+import { debounce } from '../utils/debounce'
 import MenuSearchBar from '../components/menu/MenuSearchBar'
 import ProductCard, { type Product } from '../components/menu/ProductCard'
 import CollapsibleSidebar from '../components/menu/CollapsibleSidebar'
@@ -97,6 +98,7 @@ const MenuPage = memo(() => {
   // State management
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
   const [reservationDrawerOpen, setReservationDrawerOpen] = useState<boolean>(false)
   const [visibleCount, setVisibleCount] = useState<number>(ITEMS_PER_BATCH)
@@ -266,7 +268,7 @@ const MenuPage = memo(() => {
   }, [menuItems])
 
   const filteredItems = useMemo(() => {
-    const query = searchQuery ? searchQuery.toLowerCase() : ''
+    const query = debouncedSearchQuery ? debouncedSearchQuery.toLowerCase() : ''
 
     return menuItems.filter((item: MenuItem) => {
       const nameMatch = item.name?.toLowerCase().includes(query)
@@ -301,7 +303,7 @@ const MenuPage = memo(() => {
 
       return matchesSearch && matchesCategory && matchesDietary && matchesAllergens
     })
-  }, [menuItems, searchQuery, selectedCategory, dietaryFilters, allergenFilters])
+  }, [menuItems, debouncedSearchQuery, selectedCategory, dietaryFilters, allergenFilters])
 
   const totalFilteredCount = filteredItems.length
 
@@ -393,10 +395,31 @@ const MenuPage = memo(() => {
     [selectedCategory, scrollMenuToTop]
   )
 
-  // Handle search change - memoized
-  const handleSearchChange = useCallback((value: string): void => {
-    setSearchQuery(value)
-  }, [])
+  // Debounced search for better performance - reduces filtering operations
+  const debouncedSetSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setDebouncedSearchQuery(value)
+      }, 300),
+    []
+  )
+
+  // Handle search change - updates immediate UI state and debounced filter state
+  const handleSearchChange = useCallback(
+    (value: string): void => {
+      setSearchQuery(value) // Immediate update for UI responsiveness
+      debouncedSetSearch(value) // Debounced update for filtering
+    },
+    [debouncedSetSearch]
+  )
+
+  // Sync debounced search on mount and when searchQuery changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   // Get image URL with fallback - memoized to prevent recreating function
   const getImageUrl = useCallback((item: MenuItem): string => {
@@ -460,7 +483,7 @@ const MenuPage = memo(() => {
       }
       return prev
     })
-  }, [menuItems, searchQuery, selectedCategory, totalFilteredCount])
+  }, [menuItems, debouncedSearchQuery, selectedCategory, totalFilteredCount])
 
   useEffect(() => {
     if (!hasMoreItems) return
