@@ -366,15 +366,29 @@ export function useRealtimeChannel(options: UseRealtimeChannelOptions): void {
         healthCheckIntervalRef.current = null
       }
 
-      // Remove channel
+      // Remove channel - defer to avoid blocking close handler
       if (channelRef.current) {
-        try {
-          supabase.removeChannel(channelRef.current)
-        } catch (error) {
-          // Silently handle cleanup errors
-          logError(error, 'useRealtimeChannel.unmount')
-        }
+        const channelToRemove = channelRef.current
         channelRef.current = null
+        
+        // Use requestIdleCallback or setTimeout to defer cleanup
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          requestIdleCallback(() => {
+            try {
+              supabase.removeChannel(channelToRemove)
+            } catch (error) {
+              // Silently handle cleanup errors - don't block
+            }
+          })
+        } else {
+          setTimeout(() => {
+            try {
+              supabase.removeChannel(channelToRemove)
+            } catch (error) {
+              // Silently handle cleanup errors - don't block
+            }
+          }, 0)
+        }
       }
 
       // Reset reconnect attempts on cleanup

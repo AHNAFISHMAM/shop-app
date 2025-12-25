@@ -179,8 +179,28 @@ const Favorites = memo(() => {
 
     return () => {
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
+        // Defer cleanup to avoid blocking close handler
+        const channelToRemove = channelRef.current
         channelRef.current = null
+        
+        // Use requestIdleCallback or setTimeout to avoid blocking
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          requestIdleCallback(() => {
+            try {
+              supabase.removeChannel(channelToRemove)
+            } catch (error) {
+              // Silently handle cleanup errors
+            }
+          })
+        } else {
+          setTimeout(() => {
+            try {
+              supabase.removeChannel(channelToRemove)
+            } catch (error) {
+              // Silently handle cleanup errors
+            }
+          }, 0)
+        }
       }
     }
   }, [user, navigate]) // Removed fetchFavorites from deps to prevent infinite loops

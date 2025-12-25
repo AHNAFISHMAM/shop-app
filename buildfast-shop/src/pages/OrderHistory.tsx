@@ -831,7 +831,24 @@ const OrderHistory = memo((): JSX.Element | null => {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(ordersChannel)
+      // Defer cleanup to avoid blocking close handler
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          try {
+            supabase.removeChannel(ordersChannel)
+          } catch (error) {
+            // Silently handle cleanup errors
+          }
+        })
+      } else {
+        setTimeout(() => {
+          try {
+            supabase.removeChannel(ordersChannel)
+          } catch (error) {
+            // Silently handle cleanup errors
+          }
+        }, 0)
+      }
     }
   }, [user])
 

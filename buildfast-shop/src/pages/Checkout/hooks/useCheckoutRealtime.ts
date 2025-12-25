@@ -488,13 +488,30 @@ export function useCheckoutRealtime({
     channelsRef.current = channels
 
     return () => {
-      channels.forEach(channel => {
-        try {
-          supabase.removeChannel(channel)
-        } catch (err) {
-          logger.warn('Error removing real-time channel:', err)
-        }
-      })
+      // Defer cleanup to avoid blocking close handler
+      const channelsToRemove = [...channels]
+      
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          channelsToRemove.forEach(channel => {
+            try {
+              supabase.removeChannel(channel)
+            } catch (err) {
+              // Silently handle cleanup errors - don't block
+            }
+          })
+        })
+      } else {
+        setTimeout(() => {
+          channelsToRemove.forEach(channel => {
+            try {
+              supabase.removeChannel(channel)
+            } catch (err) {
+              // Silently handle cleanup errors - don't block
+            }
+          })
+        }, 0)
+      }
     }
   }, [cartItems, showPayment, showSuccessModal, placingOrder, refetchCart, onProductUpdate])
 

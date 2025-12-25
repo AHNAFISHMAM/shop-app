@@ -456,8 +456,17 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
           filter: 'singleton_guard=eq.true',
         },
         (payload: { new: Partial<StoreSettings> }) => {
-          logger.log('Store settings updated (real-time):', payload)
-          setSettings(normalizeSettings(payload.new))
+          // Defer state update to avoid blocking message handler
+          if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+              setSettings(normalizeSettings(payload.new))
+            })
+          } else {
+            // Use setTimeout to defer update
+            setTimeout(() => {
+              setSettings(normalizeSettings(payload.new))
+            }, 0)
+          }
         }
       )
       .subscribe((status: string) => {
@@ -474,10 +483,27 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         }
       })
 
-    // Cleanup subscription
+    // Cleanup subscription - optimized for fast cleanup
     return () => {
-      logger.log('Cleaning up real-time subscription')
-      supabase.removeChannel(channel)
+      // Use requestIdleCallback or setTimeout to avoid blocking close handler
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          try {
+            supabase.removeChannel(channel)
+          } catch (error) {
+            // Silently handle cleanup errors - don't block
+          }
+        })
+      } else {
+        // Fallback: use setTimeout with 0 delay to defer cleanup
+        setTimeout(() => {
+          try {
+            supabase.removeChannel(channel)
+          } catch (error) {
+            // Silently handle cleanup errors - don't block
+          }
+        }, 0)
+      }
     }
   }, [])
 
