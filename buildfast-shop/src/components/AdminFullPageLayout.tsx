@@ -83,44 +83,8 @@ function AdminFullPageLayout({
     <div
       ref={containerRef}
       className="min-h-screen bg-[var(--bg-main)]"
-      onWheel={e => {
-        const target = e.target as HTMLElement
-        const scrollableParent = target.closest(
-          '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
-        )
-        if (scrollableParent) {
-          // Check if element is actually scrollable (not just overflow-hidden)
-          const style = window.getComputedStyle(scrollableParent)
-          const isScrollable =
-            scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-            (style.overflow === 'auto' ||
-              style.overflow === 'scroll' ||
-              style.overflowY === 'auto' ||
-              style.overflowY === 'scroll')
-          if (isScrollable) {
-            e.stopPropagation()
-          }
-        }
-      }}
-      onTouchMove={e => {
-        const target = e.target as HTMLElement
-        const scrollableParent = target.closest(
-          '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
-        )
-        if (scrollableParent) {
-          // Check if element is actually scrollable (not just overflow-hidden)
-          const style = window.getComputedStyle(scrollableParent)
-          const isScrollable =
-            scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-            (style.overflow === 'auto' ||
-              style.overflow === 'scroll' ||
-              style.overflowY === 'auto' ||
-              style.overflowY === 'scroll')
-          if (isScrollable) {
-            e.stopPropagation()
-          }
-        }
-      }}
+      // Removed onWheel and onTouchMove handlers - they interfere with smooth scrolling
+      // Modern browsers handle scroll containment better with CSS overscroll-behavior
     >
       {/* Minimal Header with Back Button */}
       <header className="sticky top-0 z-40 border-b border-theme bg-[var(--bg-main)]/95 backdrop-blur-sm">

@@ -1067,6 +1067,8 @@
   /* Removed overflow-x: hidden !important; to allow sticky positioning to work */
   box-sizing: border-box;
   position: relative;
+  /* Enable smooth scrolling */
+  scroll-behavior: smooth;
 }
 
 /* Modifier class for pages that need horizontal overflow prevention */
@@ -1148,8 +1150,12 @@ html {
   max-width: 100% !important;
   width: 100% !important;
   box-sizing: border-box;
+  /* Enable smooth scrolling globally for better UX */
+  scroll-behavior: smooth;
   /* Prevent scroll chaining - only allow scrolling when explicitly needed */
   overscroll-behavior: none;
+  /* Optimize scrolling performance */
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -1163,8 +1169,14 @@ body {
   width: 100% !important;
   box-sizing: border-box;
   position: relative;
+  /* Enable smooth scrolling */
+  scroll-behavior: smooth;
+  /* Optimize scrolling performance */
+  -webkit-overflow-scrolling: touch;
   /* Prevent scroll chaining - only allow scrolling when explicitly needed */
   overscroll-behavior: none;
+  /* Optimize paint performance during scroll */
+  contain: layout style paint;
 }
 
 body.modal-open {
@@ -1186,8 +1198,10 @@ body.modal-open {
   }
 }
 
-/* Smooth scrolling for modal content */
-[data-overlay-scroll] {
+/* Smooth scrolling for modal content and scrollable containers */
+[data-overlay-scroll],
+.custom-scrollbar,
+[data-scroll-overlay] {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   overflow-x: hidden !important;
@@ -1195,6 +1209,8 @@ body.modal-open {
   box-sizing: border-box;
   /* Prevent scroll chaining - contain scroll within this element */
   overscroll-behavior: contain;
+  /* Optimize scrolling performance */
+  will-change: scroll-position;
 }
 
 /* Admin sidebar should not be forced to 100% width */
@@ -1231,6 +1247,9 @@ body::-webkit-scrollbar-thumb,
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(197, 157, 95, 0.3) transparent;
+  /* Enable smooth scrolling */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

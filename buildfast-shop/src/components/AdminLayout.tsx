@@ -65,7 +65,8 @@ function AdminLayout() {
       }
     }
 
-    scrollContainer.addEventListener('wheel', handleWheel, { passive: false })
+    // Use passive listener for better scroll performance
+    scrollContainer.addEventListener('wheel', handleWheel, { passive: true })
 
     return () => {
       scrollContainer.removeEventListener('wheel', handleWheel)

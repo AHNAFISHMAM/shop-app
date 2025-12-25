@@ -130,7 +130,10 @@ function AppContent(): JSX.Element {
         visibility: 'hidden',
         transform: 'translate3d(0, 0, 0)',
         transition:
-          'opacity 160ms ease, visibility 160ms ease, background-color 160ms ease, transform 160ms ease',
+          'opacity 160ms ease-out, visibility 160ms ease-out, background-color 160ms ease-out, transform 160ms ease-out',
+        /* Optimize for smooth scrolling */
+        backfaceVisibility: 'hidden',
+        perspective: '1000px',
         zIndex: '9999',
         pointerEvents: 'none',
         boxShadow: `0 6px 18px rgba(197, 157, 95, ${boxShadowAlpha})`,
@@ -354,9 +357,20 @@ function AppContent(): JSX.Element {
       window.addEventListener('resize', handleResize, { passive: true })
       window.addEventListener('scroll', handleViewportScroll, { passive: true })
 
+      // Throttle ResizeObserver callbacks for better performance
+      let resizeObserverScheduled = false
+      const handleResizeObserver = () => {
+        if (resizeObserverScheduled) return
+        resizeObserverScheduled = true
+        requestAnimationFrame(() => {
+          resizeObserverScheduled = false
+          requestUpdate()
+        })
+      }
+      
       const resizeObserver =
         !isDocumentTarget && el instanceof Element
-          ? new ResizeObserver(() => requestUpdate())
+          ? new ResizeObserver(handleResizeObserver)
           : null
       if (resizeObserver && el instanceof Element) {
         resizeObserver.observe(el)
@@ -547,46 +561,10 @@ function AppContent(): JSX.Element {
           overflow: 'visible',
           overflowX: 'visible',
           overflowY: 'visible',
+          scrollBehavior: 'smooth', // Enable smooth scrolling
         }}
-        onWheel={e => {
-          // Prevent scroll bubbling from scrollable children
-          const target = e.target as HTMLElement
-          const scrollableParent = target.closest(
-            '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
-          )
-          if (scrollableParent) {
-            // Check if element is actually scrollable (not just overflow-hidden)
-            const style = window.getComputedStyle(scrollableParent)
-            const isScrollable =
-              scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-              (style.overflow === 'auto' ||
-                style.overflow === 'scroll' ||
-                style.overflowY === 'auto' ||
-                style.overflowY === 'scroll')
-            if (isScrollable) {
-              e.stopPropagation()
-            }
-          }
-        }}
-        onTouchMove={e => {
-          const target = e.target as HTMLElement
-          const scrollableParent = target.closest(
-            '[data-overlay-scroll], .custom-scrollbar, [data-scroll-overlay]'
-          )
-          if (scrollableParent) {
-            // Check if element is actually scrollable (not just overflow-hidden)
-            const style = window.getComputedStyle(scrollableParent)
-            const isScrollable =
-              scrollableParent.scrollHeight > scrollableParent.clientHeight &&
-              (style.overflow === 'auto' ||
-                style.overflow === 'scroll' ||
-                style.overflowY === 'auto' ||
-                style.overflowY === 'scroll')
-            if (isScrollable) {
-              e.stopPropagation()
-            }
-          }
-        }}
+        // Removed onWheel and onTouchMove handlers - they were interfering with smooth scrolling
+        // Modern browsers handle scroll containment better natively
       >
         <ScrollToTop />
         <Toaster
