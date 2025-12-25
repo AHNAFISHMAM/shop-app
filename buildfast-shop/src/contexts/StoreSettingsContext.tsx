@@ -475,9 +475,18 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         } else if (status === 'TIMED_OUT') {
           logger.warn('Real-time subscription timed out - retrying...')
           // Optionally retry subscription
-          setTimeout(() => {
-            channel.subscribe()
-          }, 2000)
+          // Defer retry to avoid blocking
+          if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+              setTimeout(() => {
+                channel.subscribe()
+              }, 2000)
+            })
+          } else {
+            setTimeout(() => {
+              channel.subscribe()
+            }, 2000)
+          }
         } else if (status === 'CLOSED') {
           logger.log('Real-time subscription closed')
         }

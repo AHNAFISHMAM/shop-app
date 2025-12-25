@@ -145,14 +145,31 @@ function AppContent(): JSX.Element {
       return thumb
     }
 
+    // Cache window dimensions to avoid multiple reads (prevents forced reflows)
+    let cachedWindowWidth = window.innerWidth
+    let cachedWindowHeight = window.innerHeight
+    let cacheFrame = 0
+    
+    // Update cache once per frame
+    const updateWindowCache = () => {
+      const currentFrame = performance.now()
+      if (currentFrame - cacheFrame > 16) { // Update max once per frame (~60fps)
+        cachedWindowWidth = window.innerWidth
+        cachedWindowHeight = window.innerHeight
+        cacheFrame = currentFrame
+      }
+    }
+
     const getRect = (
       el: Element | Document | Window
     ): { top: number; right: number; height: number; visible: boolean } => {
+      updateWindowCache() // Update cache before reading
+      
       if (el === html || el === document || el === window) {
         return {
           top: 0,
-          right: window.innerWidth,
-          height: window.innerHeight,
+          right: cachedWindowWidth,
+          height: cachedWindowHeight,
           visible: true,
         }
       }
@@ -165,12 +182,14 @@ function AppContent(): JSX.Element {
           visible: true,
         }
       }
+      
+      // Single getBoundingClientRect call - batch all reads
       const rect = el.getBoundingClientRect()
       const visible =
         rect.bottom > 0 &&
-        rect.top < window.innerHeight &&
+        rect.top < cachedWindowHeight &&
         rect.right > 0 &&
-        rect.left < window.innerWidth
+        rect.left < cachedWindowWidth
 
       return {
         top: rect.top,
@@ -196,21 +215,35 @@ function AppContent(): JSX.Element {
       const minThumbHeight = 32
 
       const calculateMetrics = () => {
+        updateWindowCache() // Update cache before reading
+        
         if (isDocumentTarget) {
+          // Batch all DOM reads together to prevent forced reflows
+          const scrollHeight = html.scrollHeight
+          const viewport = cachedWindowHeight
+          const scrollTop = window.scrollY
+          const rect = getRect(el)
+          
           return {
-            scrollHeight: html.scrollHeight,
-            viewport: window.innerHeight,
-            scrollTop: window.scrollY,
-            rect: getRect(el),
+            scrollHeight,
+            viewport,
+            scrollTop,
+            rect,
           }
         }
 
         const element = el as HTMLElement
+        // Batch all DOM reads together to prevent forced reflows
+        const scrollHeight = element.scrollHeight
+        const viewport = element.clientHeight
+        const scrollTop = element.scrollTop
+        const rect = getRect(el)
+        
         return {
-          scrollHeight: element.scrollHeight,
-          viewport: element.clientHeight,
-          scrollTop: element.scrollTop,
-          rect: getRect(el),
+          scrollHeight,
+          viewport,
+          scrollTop,
+          rect,
         }
       }
 
@@ -225,8 +258,8 @@ function AppContent(): JSX.Element {
         // Batch all DOM reads together to prevent forced reflows
         const { scrollHeight, viewport, scrollTop, rect } = calculateMetrics()
         const scrollable = scrollHeight - viewport
-        const innerHeight = window.innerHeight
-        const innerWidth = window.innerWidth
+        const innerHeight = cachedWindowHeight
+        const innerWidth = cachedWindowWidth
 
         if (!rect.visible || viewport <= 0 || scrollable <= 1) {
           hideThumb()
@@ -257,18 +290,20 @@ function AppContent(): JSX.Element {
 
       const revealThumb = () => {
         requestUpdate()
-        // Batch DOM reads to prevent forced reflow
+        // Batch DOM reads to prevent forced reflow - cache scrollY
+        updateWindowCache()
         const scrollY = isDocumentTarget ? window.scrollY : 0
         const activeColor = Number(thumb.dataset.activeColorAlpha || activeColorAlpha)
         const baseColor = Number(thumb.dataset.baseAlpha || baseColorAlpha)
         const active = Number(thumb.dataset.activeOpacity || activeOpacity)
         const idle = Number(thumb.dataset.idleOpacity || idleOpacity)
+        const isAtTop = isDocumentTarget && scrollY === 0
         
         // Batch DOM writes using requestAnimationFrame
         requestAnimationFrame(() => {
           thumb.style.visibility = 'visible'
-          thumb.style.background = `rgba(197, 157, 95, ${isDocumentTarget && scrollY === 0 ? baseColor : activeColor})`
-          thumb.style.opacity = isDocumentTarget && scrollY === 0 ? String(idle) : String(active)
+          thumb.style.background = `rgba(197, 157, 95, ${isAtTop ? baseColor : activeColor})`
+          thumb.style.opacity = isAtTop ? String(idle) : String(active)
         })
 
         if (hideTimer) {
@@ -283,13 +318,41 @@ function AppContent(): JSX.Element {
         }, 600)
       }
 
-      const handleScroll = () => revealThumb()
-      const handleResize = () => requestUpdate()
-      const handleViewportScroll = () => requestUpdate()
+      // Throttle scroll handlers to prevent excessive updates
+      let scrollScheduled = false
+      const handleScroll = () => {
+        if (scrollScheduled) return
+        scrollScheduled = true
+        requestAnimationFrame(() => {
+          scrollScheduled = false
+          revealThumb()
+        })
+      }
+      
+      let resizeScheduled = false
+      const handleResize = () => {
+        if (resizeScheduled) return
+        resizeScheduled = true
+        requestAnimationFrame(() => {
+          resizeScheduled = false
+          updateWindowCache() // Update cache on resize
+          requestUpdate()
+        })
+      }
+      
+      let viewportScrollScheduled = false
+      const handleViewportScroll = () => {
+        if (viewportScrollScheduled) return
+        viewportScrollScheduled = true
+        requestAnimationFrame(() => {
+          viewportScrollScheduled = false
+          requestUpdate()
+        })
+      }
 
       scrollElement.addEventListener('scroll', handleScroll, { passive: true })
-      window.addEventListener('resize', handleResize)
-      window.addEventListener('scroll', handleViewportScroll, true)
+      window.addEventListener('resize', handleResize, { passive: true })
+      window.addEventListener('scroll', handleViewportScroll, { passive: true })
 
       const resizeObserver =
         !isDocumentTarget && el instanceof Element
@@ -327,33 +390,61 @@ function AppContent(): JSX.Element {
       return manager
     }
 
+    // Throttle scan to prevent excessive DOM queries
+    let scanScheduled = false
     const scan = () => {
-      const elements = new Set<Element | Document | Window>([
-        html,
-        ...document.querySelectorAll(SELECTOR),
-      ])
-      elements.forEach(el => ensureManager(el))
-      managed.forEach((manager, el) => {
-        if (!elements.has(el)) {
-          manager.dispose()
-        }
+      if (scanScheduled) return
+      scanScheduled = true
+      
+      // Defer scan to avoid blocking
+      requestAnimationFrame(() => {
+        scanScheduled = false
+        const elements = new Set<Element | Document | Window>([
+          html,
+          ...document.querySelectorAll(SELECTOR),
+        ])
+        elements.forEach(el => ensureManager(el))
+        managed.forEach((manager, el) => {
+          if (!elements.has(el)) {
+            manager.dispose()
+          }
+        })
       })
     }
 
+    // Throttle mutation observer callbacks
+    let mutationScheduled = false
     const mutationObserver = new MutationObserver(() => {
-      scan()
+      if (mutationScheduled) return
+      mutationScheduled = true
+      requestAnimationFrame(() => {
+        mutationScheduled = false
+        scan()
+      })
     })
     mutationObserver.observe(document.body, { childList: true, subtree: true })
 
-    window.addEventListener('resize', scan)
-    window.addEventListener('orientationchange', scan)
+    // Throttle resize and orientation change handlers
+    let globalResizeScheduled = false
+    const handleGlobalResize = () => {
+      if (globalResizeScheduled) return
+      globalResizeScheduled = true
+      requestAnimationFrame(() => {
+        globalResizeScheduled = false
+        updateWindowCache() // Update cache on resize
+        scan()
+      })
+    }
+    
+    window.addEventListener('resize', handleGlobalResize, { passive: true })
+    window.addEventListener('orientationchange', handleGlobalResize, { passive: true })
 
     scan()
 
     return () => {
       mutationObserver.disconnect()
-      window.removeEventListener('resize', scan)
-      window.removeEventListener('orientationchange', scan)
+      window.removeEventListener('resize', handleGlobalResize)
+      window.removeEventListener('orientationchange', handleGlobalResize)
       managed.forEach(manager => manager.dispose())
       managed.clear()
     }
