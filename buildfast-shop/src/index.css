@@ -5317,7 +5317,7 @@ aside[style*='position: sticky'] {
 .flex.gap-6.items-start.overflow-visible,
 .flex.gap-4.sm\\:gap-6.items-start.overflow-visible {
   transform: none !important;
-  willchange: auto !important;
+  will-change: auto !important;
 }
 
 /* Prevent main element from breaking sticky */
