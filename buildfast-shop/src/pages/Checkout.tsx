@@ -524,7 +524,9 @@ const Checkout = memo(function Checkout() {
     refetchCart,
     refetchAddresses,
     onProductUpdate: (payload: unknown) => {
-      logger.log('Product updated in checkout:', payload)
+      if (import.meta.env.DEV) {
+        logger.log('Product updated in checkout:', payload)
+      }
     },
   })
 
@@ -546,8 +548,10 @@ const Checkout = memo(function Checkout() {
             filter: `user_id=eq.${user.id}`,
           },
           async payload => {
-            logger.log('Address updated in real-time:', payload)
-            logger.log('Address updated in checkout:', payload)
+            if (import.meta.env.DEV) {
+              logger.log('Address updated in real-time:', payload)
+              logger.log('Address updated in checkout:', payload)
+            }
 
             // Refetch addresses to get updated data (debounced)
             if (refetchAddresses) {

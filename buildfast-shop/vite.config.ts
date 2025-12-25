@@ -95,13 +95,23 @@ export default defineConfig(({ mode }) => ({
             // Other node_modules
             return 'vendor-other'
           }
-          // Admin pages chunk
+          // Split admin pages into smaller chunks for better code splitting
+          if (id.includes('/pages/admin/AdminSettings')) {
+            return 'admin-settings'
+          }
+          if (id.includes('/pages/admin/AdminMenuItems')) {
+            return 'admin-menu-items'
+          }
+          if (id.includes('/pages/admin/AdminOrders')) {
+            return 'admin-orders'
+          }
+          // Other admin pages
           if (
             id.includes('/pages/admin/') ||
             id.includes('/pages/Admin') ||
             id.includes('/pages/Kitchen')
           ) {
-            return 'admin'
+            return 'admin-other'
           }
           // Admin components chunk
           if (id.includes('/components/Admin') || id.includes('/components/admin/')) {

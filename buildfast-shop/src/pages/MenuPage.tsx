@@ -687,12 +687,14 @@ const MenuPage = memo(() => {
             paddingRight: 'clamp(1rem, 3vw, 3.5rem)',
           }}
           onWheel={e => {
-            logger.log('[MenuPage Debug] Wheel event:', {
-              deltaY: e.deltaY,
-              target: e.target,
-              currentTarget: e.currentTarget,
-              scrollY: window.scrollY,
-            })
+            if (import.meta.env.DEV) {
+              logger.log('[MenuPage Debug] Wheel event:', {
+                deltaY: e.deltaY,
+                target: e.target,
+                currentTarget: e.currentTarget,
+                scrollY: window.scrollY,
+              })
+            }
           }}
         >
           {/* Desktop Sidebar - outside .app-container to avoid containing block issues */}
