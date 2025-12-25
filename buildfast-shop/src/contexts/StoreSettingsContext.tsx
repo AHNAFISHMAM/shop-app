@@ -258,7 +258,7 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         return
       }
 
-      // Add timeout to prevent infinite loading (5 seconds - reduced for faster fallback)
+      // Fetch settings with timeout - if it hangs, we'll use defaults
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Settings fetch timeout after 5s')), 5000)
       )
@@ -269,7 +269,22 @@ export function StoreSettingsProvider({ children }: StoreSettingsProviderProps) 
         .eq('singleton_guard', true)
         .single()
 
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise])
+      let result: { data: unknown; error: unknown }
+      try {
+        result = await Promise.race([fetchPromise, timeoutPromise])
+      } catch (timeoutErr) {
+        // Timeout occurred - query is hanging (likely table doesn't exist or RLS blocking)
+        logger.warn('⚠️ Settings query timed out - this usually means:')
+        logger.warn('   1. store_settings table does not exist (run migration 022_create_store_settings_table.sql)')
+        logger.warn('   2. RLS policies are blocking access (check public read policy)')
+        logger.warn('   3. Supabase project is paused or has connection issues')
+        logger.warn('   → App will continue with default settings')
+        setSettings(getDefaultSettings())
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = result
 
       if (error) {
         logger.error('Error fetching store settings:', error)
