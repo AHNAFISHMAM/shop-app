@@ -1158,6 +1158,15 @@ html {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Respect user's motion preferences - disable smooth scrolling if user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body,
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   background-color: var(--bg-main);
   min-height: 100vh;
