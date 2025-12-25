@@ -3,10 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { AuthProvider } from './contexts/AuthContext'
 import { StoreSettingsProvider, useStoreSettings } from './contexts/StoreSettingsContext'
 import { Toaster } from 'react-hot-toast'
-import { AnimatePresence, LazyMotion, domAnimation } from 'framer-motion'
 import MainLayout from './layouts/MainLayout'
 import ErrorBoundary from './components/ErrorBoundary'
 import PageErrorBoundary from './components/PageErrorBoundary'
+import SafeLazyMotion from './components/SafeLazyMotion'
+import SafeAnimatePresence from './components/SafeAnimatePresence'
 import AdminLayout from './components/AdminLayout'
 import AdminFullPageLayout from './components/AdminFullPageLayout'
 import AdminRoute from './components/AdminRoute'
@@ -503,7 +504,7 @@ function AppContent(): JSX.Element {
             },
           }}
         />
-        <AnimatePresence mode="wait">
+        <SafeAnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             {/* Main Routes with New Minimalist Design */}
             <Route
@@ -862,7 +863,7 @@ function AppContent(): JSX.Element {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AnimatePresence>
+        </SafeAnimatePresence>
       </div>
     </ErrorBoundary>
   )
@@ -870,15 +871,17 @@ function AppContent(): JSX.Element {
 
 function App(): JSX.Element {
   return (
-    <LazyMotion features={domAnimation} strict>
-      <Router>
-        <AuthProvider>
-          <StoreSettingsProvider>
-            <AppContent />
-          </StoreSettingsProvider>
-        </AuthProvider>
-      </Router>
-    </LazyMotion>
+    <ErrorBoundary>
+      <SafeLazyMotion strict={false}>
+        <Router>
+          <AuthProvider>
+            <StoreSettingsProvider>
+              <AppContent />
+            </StoreSettingsProvider>
+          </AuthProvider>
+        </Router>
+      </SafeLazyMotion>
+    </ErrorBoundary>
   )
 }
 

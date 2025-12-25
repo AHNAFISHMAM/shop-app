@@ -20,6 +20,17 @@ if (typeof window !== 'undefined') {
   console.log('🚀 Environment:', import.meta.env.MODE)
   console.log('🚀 Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? '✅ Set' : '❌ Missing')
   console.log('🚀 Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing')
+  
+  // Verify React is available (important for framer-motion)
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const React = (window as any).React
+    if (!React && import.meta.env.DEV) {
+      console.warn('⚠️ React not found on window object - this may cause framer-motion issues')
+    }
+  } catch (error) {
+    // Ignore - React should be available via imports
+  }
 }
 
 const rootElement = document.getElementById('root')
